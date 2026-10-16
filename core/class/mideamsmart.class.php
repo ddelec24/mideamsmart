@@ -83,6 +83,50 @@ class mideamsmart extends eqLogic {
 		return implode(',', $addresses);
 	}
 
+	/*     * ***********************Dépendances*************************** */
+
+	public static function getVenvPython() {
+		return __DIR__ . '/../../resources/python_venv/bin/python3';
+	}
+
+	/**
+	 * Fingerprint of the install script and of the lock file, written by the
+	 * install script once the installation succeeded.
+	 * @return string
+	 */
+	private static function getDependenciesFingerprint() {
+		$resourcesDir = __DIR__ . '/../../resources';
+		return hash('sha256', file_get_contents($resourcesDir . '/install_apt.sh') . file_get_contents($resourcesDir . '/requirements.lock'));
+	}
+
+	public static function dependancy_info() {
+		$return = array();
+		$return['log'] = __CLASS__ . '_update';
+		$return['progress_file'] = jeedom::getTmpFolder(__CLASS__) . '/dependance';
+		$return['state'] = 'nok';
+		$markerFile = __DIR__ . '/../../resources/python_venv/.mideamsmart_dependencies';
+		if (is_executable(self::getVenvPython()) && file_exists($markerFile) && trim(file_get_contents($markerFile)) === self::getDependenciesFingerprint()) {
+			$return['state'] = 'ok';
+		}
+		return $return;
+	}
+
+	public static function dependancy_install() {
+		log::remove(__CLASS__ . '_update');
+		return array(
+			'script' => __DIR__ . '/../../resources/install_#stype#.sh ' . jeedom::getTmpFolder(__CLASS__) . '/dependance',
+			'log' => log::getPathToLog(__CLASS__ . '_update'),
+		);
+	}
+
+	/**
+	 * Folders excluded from the Jeedom backups (python_venv is already excluded by the core)
+	 * @return array
+	 */
+	public static function backupExclude() {
+		return array('resources/python_runtime');
+	}
+
 	private static function checkPollingInterval($_value) {
 		$value = intval($_value);
 		if ($value < self::MIN_POLLING_INTERVAL) {

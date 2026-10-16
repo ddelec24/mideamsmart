@@ -1,0 +1,3 @@
+# Direct dependencies of the daemon. Lock file: requirements.lock (tools/lock_requirements.sh)
+msmart-ng==2026.9.0
+midea-local==12.3.0

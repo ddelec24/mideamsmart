@@ -36,6 +36,19 @@ Aparatos compatibles:
 
 Tras la instalación, active el plugin y lance la instalación de las dependencias. El plugin instala su propio entorno Python, aislado del sistema.
 
+### Dependencias
+
+La instalación de las dependencias, lanzada desde la página de configuración del plugin, instala únicamente en la carpeta del plugin:
+
+- un **Python 3.13** autónomo, descargado con la herramienta [uv](https://github.com/astral-sh/uv), independientemente de la versión de Python del sistema;
+- un entorno virtual (`resources/python_venv`) con las bibliotecas del plugin, en versiones fijadas y verificadas por huella.
+
+La instalación tarda unos minutos y ocupa unos 130 MB. En un sistema de 32 bits (Raspberry Pi en `armhf`), también se instala un compilador y la operación es más larga, ya que una biblioteca debe compilarse.
+
+Tras una actualización del plugin que cambie estas versiones, las dependencias vuelven al estado *NOK*: basta con relanzar su instalación. No se incluyen en las copias de seguridad de Jeedom; tras una restauración, relance su instalación.
+
+### Parámetros
+
 ![Configuración del plugin](../images/plugin_config.png)
 
 - **Cuenta MSmartHome**

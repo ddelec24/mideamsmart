@@ -1,7 +1,7 @@
 # mideamsmart — Récapitulatif projet
 
 > Document de référence du plugin, à relire avant chaque étape et à mettre à jour à chaque décision.
-> Dernière mise à jour : 2026-10-16 (étape 1 terminée)
+> Dernière mise à jour : 2026-10-16 (étapes 1 et 2 terminées)
 
 ## 1. Contexte
 
@@ -20,7 +20,7 @@
 | Compte | Mono-compte **MSmartHome** saisi dans la configuration générale du plugin |
 | Cloud | MSmartHome uniquement : NetHome Plus est cassé (9999). L'appareil doit être **appairé directement** sur ce compte, un partage ne suffit pas |
 | Libs Python | **Hybride** : `msmart-ng` pour AC (0xAC) et CC (0xCC) ; `midea-local` pour A1 (déshumidificateur), pour le cloud (login, liste des appareils, token/key) et pour la découverte LAN de tous les types |
-| Python | **venv** obligatoire, créé avec **uv** et un **Python 3.13** autonome dans `resources/python_venv` |
+| Python | **venv** obligatoire, créé avec **uv 0.12.21** et un **CPython 3.13.15** autonome (`resources/python_runtime`), venv dans `resources/python_venv` |
 | Découverte | **Cloud + LAN** : liste du compte, puis broadcast UDP pour l'IP, puis token/key récupérés **une seule fois** et stockés. Ensuite, contrôle 100 % local |
 | Secours | Saisie manuelle de l'IP, du port, du token et de la key dans l'équipement |
 | Compatibilité | `require` 4.5, Debian min 12 / max 13.99 |
@@ -50,7 +50,7 @@ API clés :
   - `midealocal.discover`
   - `midealocal.devices.device_selector(...)` puis `open()`, `register_update(cb)`, `set_attribute(attr, value)`, `refresh_status()`
 
-Maintenir les versions épinglées dans `resources/requirements.txt`. Avant chaque montée de version, consulter les changelogs et les issues ouvertes, en particulier [midea-ac-py#482](https://github.com/mill1000/midea-ac-py/issues/482).
+Maintenir les versions épinglées dans `resources/requirements.in`, puis régénérer `resources/requirements.lock`. Avant chaque montée de version, consulter les changelogs et les issues ouvertes, en particulier [midea-ac-py#482](https://github.com/mill1000/midea-ac-py/issues/482).
 
 ## 4. Architecture
 
@@ -87,18 +87,31 @@ mideamsmart/
 ├── desktop/php/  mideamsmart.php
 ├── desktop/js/   mideamsmart.js
 ├── desktop/modal/ (diagnostic d'un appareil : état brut + capacités)
-├── resources/    install_apt.sh, requirements.txt, mideamsmartd/ (mideamsmartd.py, jeedom/, drivers/, services/)
+├── resources/    install_apt.sh, requirements.in, requirements.lock, mideamsmartd/ (mideamsmartd.py, jeedom/, drivers/, services/)
+│               (générés, ignorés par git : python_runtime/, python_venv/)
 ├── docs/<lang>/  index.md, changelog.md  (fr_FR + 6 langues), docs/images/
 └── PROJECT.md    (ce fichier)
 ```
 
-- Logs : `mideamsmart` (PHP) et `mideamsmart_daemon`. Le log des dépendances suit la convention du core (à vérifier).
-- Dépendances : `dependancy_install()` lance `resources/install_apt.sh`, qui :
-  - télécharge un binaire **uv épinglé**, avec vérification de la somme SHA-256 ;
-  - installe Python 3.13 en fixant `UV_PYTHON_INSTALL_DIR` dans le plugin ;
-  - lance `uv venv resources/python_venv`, puis `uv pip install -r requirements.txt`.
-  - Architectures visées : x86_64, aarch64 et armv7.
-- `dependancy_info()` vérifie le binaire Python du venv **et** les versions des libs.
+- Logs : `mideamsmart` (PHP), `mideamsmart_daemon` et `mideamsmart_update` (dépendances, convention des plugins officiels).
+- **Dépendances** (méthode procédurale, pas de `packages.json`) — implémenté et testé à l'étape 2 :
+  - `dependancy_install()` renvoie `resources/install_#stype#.sh <progress_file>`, avec `#stype#` = `apt` et le fichier de progression dans `jeedom::getTmpFolder('mideamsmart')/dependance`. Le core l'exécute en **root** (sudo / at).
+  - `resources/install_apt.sh` :
+    - détecte l'architecture via `dpkg --print-architecture` (amd64, arm64, armhf), pas `uname -m`, car un Pi peut avoir un noyau 64 bits et un système 32 bits ;
+    - installe si besoin `ca-certificates`, `curl`, et `build-essential` **sur armhf seulement** (pycryptodome n'a pas de wheel armv7, il est compilé) ;
+    - télécharge uv dans un dossier temporaire, avec vérification SHA-256 par architecture (sommes en dur dans le script) ;
+    - `UV_PYTHON_INSTALL_DIR=resources/python_runtime`, `UV_CACHE_DIR` temporaire, `UV_NO_CONFIG=1`, `UV_LINK_MODE=copy` ;
+    - lance `uv python install --no-bin 3.13.15`, recrée le venv (`--managed-python`), puis `uv pip sync --require-hashes resources/requirements.lock` ;
+    - vérifie l'import de `msmart` et `midealocal`, puis supprime les **anciennes** versions de Python de `python_runtime` uniquement (jamais le Python système) ;
+    - écrit le marqueur `python_venv/.mideamsmart_dependencies` = sha256(install_apt.sh + requirements.lock) et fait un `chown -R www-data`.
+  - `dependancy_info()` renvoie `ok` si `python_venv/bin/python3` est exécutable **et** que le marqueur correspond à l'empreinte recalculée en PHP. Une mise à jour du script ou du lock repasse donc les dépendances en NOK.
+  - `backupExclude()` exclut `resources/python_runtime` (le core exclut déjà `python_venv`). Le venv survit aux mises à jour du plugin, car le core ne vide pas le dossier.
+  - Taille : environ 106 Mo (runtime) + 25 Mo (venv).
+  - **Testé** dans des conteneurs `debian:12-slim` et `debian:13-slim` en **amd64** : installation, réinstallation, montée 3.13.14 → 3.13.15, Python système intact, import en `www-data`, empreinte PHP = marqueur.
+  - **Non testé** sur arm64 et armhf : pas d'émulation qemu disponible sur le poste de dev. À valider par des testeurs Raspberry Pi.
+- **Versions Python** : `resources/requirements.in` contient les deps directes ; `resources/requirements.lock` est universel et hashé, généré par `tools/lock_requirements.sh <uv>`. Pour monter de version :
+  - modifier `requirements.in` et/ou `UV_VERSION` + `UV_SHA256` / `PYTHON_VERSION` dans `install_apt.sh` (uv ≥ 2 semaines) ;
+  - relancer le lock et retester dans Docker.
 - Démon lancé avec `resources/python_venv/bin/python3`. Port configurable, **55114** par défaut (`mideamsmart::DEFAULT_SOCKET_PORT`).
 
 **Règles de code** (vérifiées à l'étape 1) :
@@ -109,6 +122,7 @@ mideamsmart/
 
 **Outils de dev** (`tools/`, non utilisés par Jeedom) :
 - `tools/i18n.py check|update [traductions.json]` : extrait les chaînes et met à jour `core/i18n/*.json` (fichier source → chaîne FR → traduction).
+- `tools/lock_requirements.sh [uv]` : régénère `resources/requirements.lock`.
 - `tools/make_icons.py <template_icon.png>` : génère `plugin_info/mideamsmart_icon.png` (forme reprise du modèle Jeedom, dégradé bleu `#0E4A8C` → `#20A0DC`) et `desktop/img/{ac,cc,a1}.png`.
 
 ## 6. Configuration
@@ -195,15 +209,14 @@ Les autres types listés par le cloud (FD, FA, B6…) sont affichés comme **« 
 - [ ] Auteur (pseudo Market) dans `info.json` et `LICENSE`.
 - [ ] URL du dépôt GitHub : remplacer `OWNER` dans les liens documentation/changelog de `info.json`.
 - [ ] Captures d'écran à fournir dans `docs/images/` : `plugin_config.png` (configuration du plugin), `plugin_devices.png` (page du plugin), `device_config.png` (onglet Équipement). À compléter plus tard : commandes AC, commandes A1, modal diagnostic.
-- [ ] Vérifier la compatibilité des dépendances msmart-ng ↔ midea-local dans un même venv (`httpx` / `aiohttp` / `pycryptodome`).
-- [ ] Vérifier la convention de nom du log des dépendances et l'usage de `resources/python_venv` face au core 4.5.
+- [ ] Tester l'installation des dépendances sur Raspberry Pi arm64 et armhf.
 - [ ] Vérifier, sur une vraie réponse cloud, l'appariement entre l'`appliance_id` du cloud et le `device_id` de la découverte LAN.
 - [ ] Plan de tests sans matériel : tests unitaires des drivers avec appareils simulés et trames issues des tests des libs.
 
 ## 10. Étapes de réalisation (prévisionnel)
 
 1. ✅ Squelette du plugin depuis plugin-template : info.json, icône, classes, page desktop, config, i18n (6 langues), docs (7 langues).
-2. Dépendances : install via uv, venv, `dependancy_info`.
+2. ✅ Dépendances : install via uv, venv, `dependancy_info` (testé amd64 Debian 12/13).
 3. Démon : socket, callback, cycle de vie, services cloud et découverte.
 4. Synchronisation : création des équipements, récupération de token/key.
 5. Driver AC/CC et création des commandes selon les capacités.

@@ -7,3 +7,4 @@
 # 16/10/2026
 
 - Erstellung des Plugins: Grundstruktur, Konfigurationsseite und Geräteseite
+- Installation der Abhängigkeiten: eigenständiges Python 3.13 (über uv) und eigene virtuelle Umgebung des Plugins

@@ -36,6 +36,19 @@ Supported appliances:
 
 After installation, enable the plugin and start the dependency installation. The plugin installs its own Python environment, isolated from the system.
 
+### Dependencies
+
+The dependency installation, started from the plugin configuration page, installs only inside the plugin folder:
+
+- a standalone **Python 3.13**, downloaded with the [uv](https://github.com/astral-sh/uv) tool, independently of the system Python version;
+- a virtual environment (`resources/python_venv`) holding the plugin libraries, in pinned versions checked by hash.
+
+The installation takes a few minutes and uses about 130 MB. On a 32-bit system (Raspberry Pi on `armhf`), a compiler is also installed and the operation takes longer, because one library has to be compiled there.
+
+After a plugin update that changes these versions, the dependencies go back to the *NOK* state: simply relaunch their installation. They are not included in Jeedom backups; after a restore, relaunch their installation.
+
+### Settings
+
 ![Plugin configuration](../images/plugin_config.png)
 
 - **MSmartHome account**

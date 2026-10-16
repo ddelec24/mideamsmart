@@ -1,6 +1,5 @@
 resources/python_venv/
-resources/uv/
-resources/python/
+resources/python_runtime/
 __pycache__/
 *.pyc
 .pytest_cache/

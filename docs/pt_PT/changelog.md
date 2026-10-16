@@ -7,3 +7,4 @@
 # 16/10/2026
 
 - Criação do plugin: estrutura de base, página de configuração e página dos equipamentos
+- Instalação das dependências: Python 3.13 autónomo (via uv) e ambiente virtual dedicado ao plugin
