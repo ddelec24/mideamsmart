@@ -104,6 +104,17 @@ document.getElementById('bt_mideamsmartUpdateCommands')?.addEventListener('click
   })
 })
 
+document.getElementById('bt_mideamsmartDiagnostic')?.addEventListener('click', function() {
+  const eqLogicId = document.querySelector('.eqLogicAttr[data-l1key="id"]').jeeValue()
+  jeeDialog.dialog({
+    id: 'md_mideamsmartDiagnostic',
+    title: '{{Diagnostic}}',
+    width: '85%',
+    height: '80%',
+    contentUrl: 'index.php?v=d&plugin=mideamsmart&modal=mideamsmart.diagnostic&id=' + eqLogicId
+  })
+})
+
 /* Options that only apply to some appliance types */
 function mideamsmartUpdateTypeFields() {
   const deviceType = document.querySelector('.eqLogicAttr[data-l1key="configuration"][data-l2key="deviceType"]')?.jeeValue() || ''

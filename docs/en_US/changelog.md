@@ -18,3 +18,7 @@
 - Equipment options: beep, setpoint step, power consumption
 - Local control of dehumidifiers (A1) with midea-local: mode, fan, humidity setpoint, tank, swing, ionizer, pump, child lock, filter
 - Tank full and filter alerts displayed with a green or red icon
+- Diagnostic window per equipment, with copy of a summary without secrets for the forum
+- Automatic search on the local network of the appliances that changed IP address
+- Cloud locks and refused password remembered, even after a daemon restart
+- Equipment reported in timeout when the appliance stops answering, Health page and forum information

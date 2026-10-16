@@ -73,6 +73,13 @@ class AirConditionerIntegrationTest(IntegrationTestCase):
         await self.driver.execute('off', None)
         self.assertEqual(self.values['power'], 0)
 
+        diagnostic = self.driver.diagnostic()
+        self.assertEqual((diagnostic['driver'], diagnostic['online'], diagnostic['consecutiveFailures']), ('AcDriver', True, 0))
+        self.assertTrue(diagnostic['capabilitiesReceived'])
+        self.assertTrue(diagnostic['library'].startswith('msmart-ng '))
+        self.assertNotIn('token', diagnostic['deviceState'])
+        self.assertIn('ECO', diagnostic['deviceCapabilities']['additional_capabilities'])
+
 
 class DehumidifierIntegrationTest(IntegrationTestCase):
     fake_class = FakeDehumidifier
@@ -100,6 +107,10 @@ class DehumidifierIntegrationTest(IntegrationTestCase):
         await self.wait_for(lambda: self.values['waterLevelSet'] == '75')
         with self.assertRaises(CommandError):
             await self.driver.execute('setFanSpeed', 'turbo')
+        diagnostic = self.driver.diagnostic()
+        self.assertEqual((diagnostic['driver'], diagnostic['online']), ('A1Driver', True))
+        self.assertTrue(diagnostic['library'].startswith('midea-local '))
+        self.assertEqual(diagnostic['deviceState']['mode'], 'continuous')
 
     async def test_offline(self):
         # Stop the driver first: wait_closed() waits for the open connections
@@ -109,6 +120,7 @@ class DehumidifierIntegrationTest(IntegrationTestCase):
         self.values.clear()
         self.driver.start()
         await self.wait_for(lambda: self.values.get('online') == 0, timeout=30)
+        self.assertIsNotNone(self.driver.offline_since)
         with self.assertRaises(CommandError) as context:
             await self.driver.execute('on', None)
         self.assertEqual(context.exception.reason, 'deviceOffline')

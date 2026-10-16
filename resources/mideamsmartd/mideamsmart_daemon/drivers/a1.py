@@ -7,14 +7,15 @@ updates to the asyncio loop and runs the (blocking) commands in a worker thread.
 
 import asyncio
 import logging
+import time
 from typing import Any
 
 from midealocal.const import ProtocolVersion
 from midealocal.devices import device_selector
 from midealocal.devices.a1 import DeviceAttributes as A1
 
-from .base import BaseDriver, CommandError
-from .msmart_driver import to_float
+from .base import BaseDriver, CommandError, normalize
+from .msmart_driver import library_version, to_float
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,10 +74,12 @@ class A1Driver(BaseDriver):
         if not config.ip_address:
             _LOGGER.error('[%s] No IP address configured', config.label)
             self._publish({'online': 0}, force=True)
+            self.offline_since = time.monotonic()
             return
         if config.protocol_version >= 3 and (not config.token or not config.key):
             _LOGGER.error('[%s] V3 appliance without token/key: synchronize it or enter them', config.label)
             self._publish({'online': 0}, force=True)
+            self.offline_since = time.monotonic()
             return
         self._loop = asyncio.get_running_loop()
         self.device = self.create_device()
@@ -114,6 +117,14 @@ class A1Driver(BaseDriver):
         # next loop iteration (it waits up to 10 s for incoming data between iterations).
         if self.device is not None:
             self.device._previous_refresh = 0  # pylint: disable=protected-access
+
+    def diagnostic(self) -> dict[str, Any]:
+        result = super().diagnostic()
+        result['library'] = f'midea-local {library_version("midea-local")}'
+        if self.device is not None:
+            result['deviceState'] = {key: normalize(value) for key, value in self.device.attributes.items()}
+            result['deviceCapabilities'] = self.device.capabilities
+        return result
 
     # --- Capabilities and values --------------------------------------------
 

@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import time
+from datetime import datetime
 from collections.abc import Awaitable, Callable
 from typing import Any
 
@@ -53,6 +54,11 @@ class BaseDriver:
         self._wake_up = asyncio.Event()
         self._online: bool | None = None
         self._last_values: dict[str, Any] = {}
+        # Diagnostic data
+        self.offline_since: float | None = None
+        self.last_success: float | None = None
+        self.last_error: str | None = None
+        self.consecutive_failures = 0
         self._last_full_publish = 0.0
         self._capabilities_sent: dict[str, Any] | None = None
 
@@ -113,6 +119,7 @@ class BaseDriver:
             except asyncio.CancelledError:
                 raise
             except Exception as error:
+                self.last_error = f'{type(error).__name__}: {error}'
                 _LOGGER.warning('[%s] Communication error: %s', self.config.label, error)
                 _LOGGER.debug('[%s] Error details', self.config.label, exc_info=True)
                 connected = False
@@ -128,7 +135,19 @@ class BaseDriver:
             except TimeoutError:
                 pass
 
+    @property
+    def online(self) -> bool:
+        return bool(self._online)
+
     async def _after_refresh(self, online: bool) -> None:
+        if online:
+            self.last_success = time.time()
+            self.consecutive_failures = 0
+            self.offline_since = None
+        else:
+            self.consecutive_failures += 1
+            if self.offline_since is None:
+                self.offline_since = time.monotonic()
         if online != self._online:
             if online:
                 _LOGGER.info('[%s] Appliance online (%s:%s)', self.config.label, self.config.ip_address, self.config.port)
@@ -160,6 +179,28 @@ class BaseDriver:
                 self._last_values[logical_id] = value
         if changed:
             self._publish_values(self.config.eq_logic_id, changed)
+
+    def diagnostic(self) -> dict[str, Any]:
+        """State of the driver for the diagnostic window (no secret)."""
+        config = self.config
+        return {
+            'driver': type(self).__name__,
+            'deviceType': config.device_type,
+            'deviceId': config.device_id,
+            'ipAddress': config.ip_address,
+            'port': config.port,
+            'protocolVersion': config.protocol_version,
+            'hasToken': bool(config.token),
+            'hasKey': bool(config.key),
+            'pollingInterval': config.polling_interval,
+            'online': self.online,
+            'offlineFor': None if self.offline_since is None else int(time.monotonic() - self.offline_since),
+            'lastSuccess': None if self.last_success is None else datetime.fromtimestamp(self.last_success).isoformat(timespec='seconds'),
+            'consecutiveFailures': self.consecutive_failures,
+            'lastError': self.last_error,
+            'values': dict(self._last_values),
+            'capabilities': self._capabilities_sent,
+        }
 
     def resend_values(self) -> None:
         """Sends every value again at the next refresh (after commands were created in Jeedom)."""

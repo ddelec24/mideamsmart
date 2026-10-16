@@ -4,6 +4,7 @@ import asyncio
 import logging
 import os
 import signal
+import sys
 from typing import Any
 
 from .cloud import CloudGuard
@@ -11,6 +12,7 @@ from .devices import DeviceManager
 from .drivers import CommandError
 from .jeedom import JeedomCallback, JeedomSocketServer
 from .sync import SyncRequest, SyncService
+from .watchdog import AddressWatchdog
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +27,7 @@ class Daemon:
         self._device_manager = DeviceManager(self._callback.add_values, self._callback.send)
         self._sync_service = SyncService(CloudGuard())
         self._sync_lock = asyncio.Lock()
+        self._watchdog = AddressWatchdog(self._device_manager, self._callback.send)
         self._stop_event = asyncio.Event()
         self._handlers = {
             'setDevices': self._on_set_devices,
@@ -33,6 +36,7 @@ class Daemon:
             'syncDevices': self._on_sync_devices,
             'executeCommand': self._on_execute_command,
             'refreshCapabilities': self._on_refresh_capabilities,
+            'getDiagnostic': self._on_get_diagnostic,
             'resendValues': self._on_resend_values,
             'stop': self._on_stop,
         }
@@ -56,6 +60,7 @@ class Daemon:
                 _LOGGER.error('Unable to open the daemon port: %s', error)
                 return 1
             self._callback.start()
+            self._watchdog.start()
             await self._callback.send({'action': 'daemonStarted', 'pid': os.getpid()})
             _LOGGER.info('Daemon started')
             await self._stop_event.wait()
@@ -77,6 +82,7 @@ class Daemon:
         await handler(message)
 
     async def _on_set_devices(self, message: dict[str, Any]) -> None:
+        self._device_manager.set_broadcast_addresses(message.get('broadcastAddress', ''))
         await self._device_manager.set_devices(message.get('devices') or [])
 
     async def _on_update_device(self, message: dict[str, Any]) -> None:
@@ -114,6 +120,15 @@ class Daemon:
         if driver is not None:
             driver.resend_values()
 
+    async def _on_get_diagnostic(self, message: dict[str, Any]) -> None:
+        eq_logic_id = message.get('eqLogicId', 0)
+        driver = self._device_manager.get_driver(eq_logic_id)
+        diagnostic = {
+            'daemon': {'python': sys.version.split()[0], 'pid': os.getpid(), 'equipments': len(self._device_manager.devices)},
+            'driver': driver.diagnostic() if driver is not None else None,
+        }
+        await self._callback.send({'action': 'deviceDiagnostic', 'eqLogicId': eq_logic_id, 'diagnostic': diagnostic})
+
     async def _on_refresh_capabilities(self, message: dict[str, Any]) -> None:
         driver = self._device_manager.get_driver(message.get('eqLogicId', 0))
         if driver is not None:
@@ -146,7 +161,7 @@ class Daemon:
 
     async def _shutdown(self) -> None:
         _LOGGER.info('Stopping the daemon')
-        for step in (self._socket_server.close, self._device_manager.close, self._callback.close):
+        for step in (self._socket_server.close, self._watchdog.stop, self._device_manager.close, self._callback.close):
             try:
                 await step()
             except Exception:

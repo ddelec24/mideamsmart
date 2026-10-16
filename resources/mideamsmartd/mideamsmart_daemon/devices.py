@@ -81,10 +81,18 @@ class DeviceManager:
         self._drivers: dict[int, Any] = {}
         self._publish_values = publish_values
         self._send_event = send_event
+        self.broadcast_addresses: tuple[str, ...] = ()
 
     @property
     def devices(self) -> dict[int, DeviceConfig]:
         return dict(self._devices)
+
+    @property
+    def drivers(self) -> dict[int, Any]:
+        return dict(self._drivers)
+
+    def set_broadcast_addresses(self, value: str) -> None:
+        self.broadcast_addresses = tuple(address.strip() for address in str(value or '').split(',') if address.strip())
 
     def get_driver(self, eq_logic_id: int):
         return self._drivers.get(int(eq_logic_id))

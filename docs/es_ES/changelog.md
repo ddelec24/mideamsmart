@@ -18,3 +18,7 @@
 - Opciones del equipo: pitido, paso de la consigna, consumo eléctrico
 - Control local de los deshumidificadores (A1) con midea-local: modo, ventilación, consigna de humedad, depósito, oscilación, ionizador, bomba, bloqueo infantil, filtro
 - Alertas de depósito lleno y de filtro mostradas con un icono verde o rojo
+- Ventana de diagnóstico por equipo, con copia de un resumen sin secretos para el foro
+- Búsqueda automática en la red local de los aparatos que han cambiado de dirección IP
+- Bloqueos de la nube y contraseña rechazada memorizados, incluso tras reiniciar el demonio
+- Equipo indicado en timeout cuando el aparato deja de responder, página Salud e información para el foro

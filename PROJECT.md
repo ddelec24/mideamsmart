@@ -1,7 +1,7 @@
 # mideamsmart — Récapitulatif projet
 
 > Document de référence du plugin, à relire avant chaque étape et à mettre à jour à chaque décision.
-> Dernière mise à jour : 2026-10-16 (étapes 1 à 6 terminées)
+> Dernière mise à jour : 2026-10-16 (étapes 1 à 7 terminées)
 
 ## 1. Contexte
 
@@ -291,6 +291,37 @@ mideamsmart/
   - Instance de dev : équipement « Déshumidificateur test » (127.0.0.1:6445, V2) créé avec 31 commandes, commandes `off`, `setMode` (avec remise en marche), `setTargetHumidity`, `setFanSpeed` appliquées, widget vérifié.
   - **Non testé** : vrai déshumidificateur, protocole V3, nouveau protocole A1 (B0/B1, lumière).
 
+### Diagnostic et robustesse — implémentés à l'étape 7
+
+- **Modale de diagnostic** :
+  - `desktop/modal/mideamsmart.diagnostic.php`, ouverte par le bouton « Diagnostic » de l'équipement (`jeeDialog.dialog`, `modal=mideamsmart.diagnostic`).
+  - Partie Jeedom rendue côté PHP. Partie démon :
+    1. l'ajax `requestDiagnostic` vide le cache et envoie `getDiagnostic` au démon ;
+    2. le démon répond par `deviceDiagnostic`, stocké dans `cache` (`mideamsmart::diagnostic::<id>`, 120 s) ;
+    3. le JS interroge l'ajax `getDiagnostic` toutes les 0,5 s, pendant 10 s au maximum.
+  - Le bouton « Copier pour le forum » produit un bloc `[details]` + JSON. **Aucun secret** : seuls `hasToken`/`hasKey`, sans email ni mot de passe.
+  - `BaseDriver.diagnostic()` : `online`, `offlineFor`, `lastSuccess` (ISO), `consecutiveFailures`, `lastError`, valeurs, capacités. Les surcharges msmart et A1 ajoutent la version de la lib, `deviceCapabilities` et `deviceState` (sans token ni key).
+- **Statut Jeedom** : `updateValues` fait `setStatus('timeout', online ? 0 : 1)` dès réception de `online`. Le renvoi complet des valeurs toutes les 10 min maintient `lastCommunication`.
+- **Changement d'IP** (`watchdog.py`, `AddressWatchdog`) :
+  - vérification chaque minute ; un appareil hors ligne depuis 5 min ou plus déclenche une découverte LAN, **au plus une fois toutes les 10 min, sans cloud**, sur les adresses de diffusion reçues avec `setDevices` (`broadcastAddress`) ;
+  - si l'ID est trouvé à une autre IP ou un autre port, le démon envoie `deviceAddressChanged`, puis PHP met à jour l'équipement, fait un `save()` et logue un warning ; le driver redémarre via `updateDevice` ;
+  - `postConfig_broadcastAddress` renvoie la liste au démon.
+- **Anti-blocage persistant (PHP)** :
+  - `applySyncResult` mémorise `cloudLockedUntil` (`accountLocked`, 60 s minimum) et `cloudRejectedCredentials` (sha1 du compte et du mot de passe, pour `invalidCredentials`) ;
+  - `getCloudBlockMessage()` est vérifié par `syncDevices` : pendant un blocage, la synchro part **sans compte** (LAN seul) avec un avertissement, et la récupération de clés lève une exception ;
+  - le refus s'applique jusqu'au changement des identifiants. Cela complète le `CloudGuard` du démon, qui est perdu au redémarrage.
+- **`health()`** (page Santé) : appareils joignables x/y (nok si le démon est arrêté ou qu'un appareil est injoignable), état du compte MSmartHome.
+- **`getConfigForCommunity()`** : état du démon, versions des libs (`requirements.in`), appareils par type et protocole, nombre joignables, compte configuré oui/non, diffusion auto/manuelle. **Aucune donnée personnelle.**
+- **Testé** :
+  - 34 tests (watchdog et diagnostic des drivers en intégration) ;
+  - instance de dev :
+    - diagnostic AC et A1 (aussi dans le navigateur) ;
+    - mauvaise IP → `online=0` et `timeout=1`, puis `deviceAddressChanged` → IP corrigée, `online=1`, `timeout=0` ;
+    - blocage simulé → récupération des clés refusée, synchro sans compte (vérifié dans le log du démon) ;
+    - mot de passe refusé → bloqué jusqu'au changement ;
+    - `health()` et `getConfigForCommunity()` vérifiés.
+  - **Non testé** : découverte réelle d'un appareil qui a changé d'IP (les faux appareils ne répondent pas à la découverte UDP).
+
 ## 8. Traductions et documentation
 
 - Langues : **fr_FR** (source), en_US, es_ES, it_IT, ru_RU, pt_PT, de_DE.
@@ -303,7 +334,7 @@ mideamsmart/
 
 - [ ] Auteur (pseudo Market) dans `info.json` et `LICENSE`.
 - [ ] URL du dépôt GitHub : remplacer `OWNER` dans les liens documentation/changelog de `info.json`.
-- [ ] Captures d'écran à fournir dans `docs/images/` : `plugin_config.png` (configuration du plugin), `plugin_devices.png` (page du plugin), `device_config.png` (onglet Équipement). À compléter plus tard : commandes AC, commandes A1, modal diagnostic.
+- [ ] Captures d'écran à fournir dans `docs/images/` : `plugin_config.png` (configuration du plugin), `plugin_devices.png` (page du plugin), `device_config.png` (onglet Équipement), `device_diagnostic.png` (fenêtre Diagnostic). L'instance de dev, avec ses faux appareils, permet de les faire.
 - [ ] Tester l'installation des dépendances sur Raspberry Pi arm64 et armhf.
 - [x] Tester le cycle de vie du démon dans une vraie instance Jeedom (instance Docker de dev `../dev-env`, voir son README).
 - [ ] Valider la synchronisation et le pilotage avec un vrai compte MSmartHome et de vrais appareils V2/V3, AC et CC (testeurs du forum).
@@ -320,5 +351,5 @@ mideamsmart/
 4. ✅ Synchronisation : services cloud (MSmartHome) et découverte LAN, création des équipements, récupération de token/key.
 5. ✅ Driver AC/CC et création des commandes selon les capacités.
 6. ✅ Driver A1.
-7. Modal diagnostic, robustesse (hors ligne, backoff, anti-ban).
+7. ✅ Modal diagnostic, robustesse (hors ligne, backoff, anti-ban, changement d'IP, santé).
 8. Traductions dans les 6 langues, documentation et changelog.

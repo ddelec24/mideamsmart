@@ -18,3 +18,7 @@
 - Opções do equipamento: bip, passo da temperatura definida, consumo elétrico
 - Controlo local dos desumidificadores (A1) com midea-local: modo, ventilação, humidade definida, depósito, oscilação, ionizador, bomba, bloqueio para crianças, filtro
 - Alertas de depósito cheio e de filtro apresentados com um ícone verde ou vermelho
+- Janela de diagnóstico por equipamento, com cópia de um resumo sem segredos para o fórum
+- Procura automática na rede local dos aparelhos que mudaram de endereço IP
+- Bloqueios da nuvem e palavra-passe recusada memorizados, mesmo após reinício do daemon
+- Equipamento assinalado em timeout quando o aparelho deixa de responder, página Saúde e informações para o fórum

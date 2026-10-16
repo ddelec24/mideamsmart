@@ -18,3 +18,7 @@
 - Opzioni del dispositivo: bip, passo del setpoint, consumo elettrico
 - Controllo locale dei deumidificatori (A1) con midea-local: modalità, ventilazione, setpoint di umidità, serbatoio, oscillazione, ionizzatore, pompa, blocco bambini, filtro
 - Avvisi serbatoio pieno e filtro mostrati con un'icona verde o rossa
+- Finestra di diagnostica per dispositivo, con copia di un riepilogo senza segreti per il forum
+- Ricerca automatica sulla rete locale degli apparecchi che hanno cambiato indirizzo IP
+- Blocchi del cloud e password rifiutata memorizzati, anche dopo un riavvio del demone
+- Dispositivo segnalato in timeout quando l'apparecchio non risponde più, pagina Salute e informazioni per il forum

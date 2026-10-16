@@ -237,10 +237,18 @@ class mideamsmart extends eqLogic {
 		foreach (eqLogic::byType(__CLASS__, true) as $eqLogic) {
 			$devices[] = $eqLogic->getDaemonConfig();
 		}
-		self::sendToDaemon(array('action' => 'setDevices', 'devices' => $devices));
+		self::sendToDaemon(array(
+			'action' => 'setDevices',
+			'devices' => $devices,
+			'broadcastAddress' => config::byKey('broadcastAddress', __CLASS__, self::DEFAULT_BROADCAST_ADDRESS),
+		));
 	}
 
 	public static function postConfig_defaultPollingInterval($_value) {
+		self::notifyDaemonOfDevices();
+	}
+
+	public static function postConfig_broadcastAddress($_value) {
 		self::notifyDaemonOfDevices();
 	}
 
@@ -283,6 +291,22 @@ class mideamsmart extends eqLogic {
 				$eqLogic = isset($_message['eqLogicId']) ? eqLogic::byId($_message['eqLogicId']) : null;
 				$name = is_object($eqLogic) ? $eqLogic->getHumanName() : (isset($_message['eqLogicId']) ? $_message['eqLogicId'] : '');
 				log::add(__CLASS__, 'warning', __('Commande non exécutée', __FILE__) . ' ' . $name . ' (' . (isset($_message['command']) ? $_message['command'] : '') . ') : ' . self::getCommandErrorMessage(isset($_message['reason']) ? $_message['reason'] : ''));
+				break;
+			case 'deviceAddressChanged':
+				$eqLogic = isset($_message['eqLogicId']) ? eqLogic::byId($_message['eqLogicId']) : null;
+				if (is_object($eqLogic) && $eqLogic->getEqType_name() == __CLASS__ && isset($_message['ipAddress'])) {
+					log::add(__CLASS__, 'warning', $eqLogic->getHumanName() . ' : ' . __('appareil retrouvé à une nouvelle adresse', __FILE__) . ' ' . $_message['ipAddress'] . ' (' . __('ancienne', __FILE__) . ' : ' . $eqLogic->getConfiguration('ipAddress', '') . ')');
+					$eqLogic->setConfiguration('ipAddress', $_message['ipAddress']);
+					if (!empty($_message['port'])) {
+						$eqLogic->setConfiguration('port', intval($_message['port']));
+					}
+					$eqLogic->save();
+				}
+				break;
+			case 'deviceDiagnostic':
+				if (isset($_message['eqLogicId'])) {
+					cache::set(__CLASS__ . '::diagnostic::' . intval($_message['eqLogicId']), isset($_message['diagnostic']) ? $_message['diagnostic'] : array(), 120);
+				}
 				break;
 			case 'deviceValues':
 				if (isset($_message['devices']) && is_array($_message['devices'])) {
@@ -483,6 +507,86 @@ class mideamsmart extends eqLogic {
 		}
 	}
 
+	/*     * ******************Santé et diagnostic*********************** */
+
+	public static function health() {
+		$return = array();
+		$deamon_info = self::deamon_info();
+		$eqLogics = eqLogic::byType(__CLASS__, true);
+		$offline = array();
+		foreach ($eqLogics as $eqLogic) {
+			$online = $eqLogic->getCmd('info', 'online');
+			if (is_object($online) && $online->execCmd() != 1) {
+				$offline[] = $eqLogic->getHumanName();
+			}
+		}
+		$return[] = array(
+			'test' => __('Appareils joignables', __FILE__),
+			'result' => (count($eqLogics) - count($offline)) . '/' . count($eqLogics),
+			'advice' => (count($offline) > 0) ? __('Injoignables', __FILE__) . ' : ' . implode(', ', $offline) : '',
+			'state' => ($deamon_info['state'] == 'ok' && count($offline) == 0),
+		);
+		$cloudBlock = self::getCloudBlockMessage(config::byKey('cloudAccount', __CLASS__, ''), config::byKey('cloudPassword', __CLASS__, ''));
+		$return[] = array(
+			'test' => __('Compte MSmartHome', __FILE__),
+			'result' => ($cloudBlock !== '') ? $cloudBlock : ((config::byKey('cloudAccount', __CLASS__, '') === '') ? __('Non configuré', __FILE__) : __('OK', __FILE__)),
+			'advice' => '',
+			'state' => ($cloudBlock === ''),
+		);
+		return $return;
+	}
+
+	/**
+	 * Information added to the posts created from Jeedom on the community forum (no personal data).
+	 * @return string
+	 */
+	public static function getConfigForCommunity() {
+		$deamon_info = self::deamon_info();
+		$byType = array();
+		$online = 0;
+		$total = 0;
+		foreach (eqLogic::byType(__CLASS__, true) as $eqLogic) {
+			$type = $eqLogic->getConfiguration('deviceType', '?') . ' V' . $eqLogic->getConfiguration('protocolVersion', '?');
+			$byType[$type] = isset($byType[$type]) ? $byType[$type] + 1 : 1;
+			$cmd = $eqLogic->getCmd('info', 'online');
+			$online += (is_object($cmd) && $cmd->execCmd() == 1) ? 1 : 0;
+			$total++;
+		}
+		$types = array();
+		foreach ($byType as $type => $count) {
+			$types[] = $count . ' × ' . $type;
+		}
+		$requirements = array();
+		foreach (file(__DIR__ . '/../../resources/requirements.in', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+			if (substr(trim($line), 0, 1) != '#') {
+				$requirements[] = trim($line);
+			}
+		}
+		$return = '- ' . __('Démon', __FILE__) . ' : ' . $deamon_info['state'] . '<br>';
+		$return .= '- ' . __('Bibliothèques', __FILE__) . ' : ' . implode(', ', $requirements) . '<br>';
+		$return .= '- ' . __('Appareils', __FILE__) . ' : ' . (($total > 0) ? implode(', ', $types) : '0') . ' (' . $online . '/' . $total . ' ' . __('joignables', __FILE__) . ')<br>';
+		$return .= '- ' . __('Compte MSmartHome configuré', __FILE__) . ' : ' . ((config::byKey('cloudAccount', __CLASS__, '') === '') ? __('non', __FILE__) : __('oui', __FILE__)) . '<br>';
+		$return .= '- ' . __('Adresse de diffusion', __FILE__) . ' : ' . ((config::byKey('broadcastAddress', __CLASS__, '') === '') ? __('automatique', __FILE__) : __('manuelle', __FILE__)) . '<br>';
+		return $return;
+	}
+
+	/**
+	 * Asks the daemon for the diagnostic of the equipment, read afterwards with getDiagnostic().
+	 */
+	public function requestDiagnostic() {
+		cache::delete(__CLASS__ . '::diagnostic::' . $this->getId());
+		self::sendToDaemon(array('action' => 'getDiagnostic', 'eqLogicId' => intval($this->getId())));
+	}
+
+	/**
+	 * @return array|null Diagnostic sent by the daemon, null while it has not answered
+	 */
+	public function getDiagnostic() {
+		$cache = cache::byKey(__CLASS__ . '::diagnostic::' . $this->getId());
+		$value = $cache->getValue(null);
+		return is_array($value) ? $value : null;
+	}
+
 	/*     * ********************Synchronisation************************** */
 
 	/**
@@ -509,6 +613,17 @@ class mideamsmart extends eqLogic {
 			'broadcastAddress' => config::byKey('broadcastAddress', __CLASS__, self::DEFAULT_BROADCAST_ADDRESS),
 			'knownDevices' => $knownDevices,
 		);
+		// The cloud refusals are remembered here too: they must survive a daemon restart
+		$cloudBlock = self::getCloudBlockMessage($message['account'], $message['password']);
+		if ($cloudBlock !== '') {
+			if (is_object($_eqLogic)) {
+				throw new Exception($cloudBlock);
+			}
+			// The local search stays useful (new addresses): synchronize without the cloud
+			$message['account'] = '';
+			$message['password'] = '';
+			self::notifyUser($cloudBlock . '. ' . __('Synchronisation limitée au réseau local', __FILE__), 'warning');
+		}
 		if (is_object($_eqLogic)) {
 			if ($_eqLogic->getLogicalId() === '') {
 				throw new Exception(__('Renseignez l\'identifiant de l\'appareil avant de récupérer ses clés', __FILE__));
@@ -520,6 +635,38 @@ class mideamsmart extends eqLogic {
 			$message['forceKeys'] = true;
 		}
 		self::sendToDaemon($message);
+	}
+
+	private static function getCredentialsFingerprint($_account, $_password) {
+		return sha1($_account . "\0" . $_password);
+	}
+
+	/**
+	 * Reason why the cloud must not be contacted now, or an empty string.
+	 * @return string
+	 */
+	public static function getCloudBlockMessage($_account, $_password) {
+		if ($_account === '' || $_password === '') {
+			return '';
+		}
+		$lockedUntil = intval(config::byKey('cloudLockedUntil', __CLASS__, 0));
+		if ($lockedUntil > time()) {
+			return __('Le cloud Midea a temporairement bloqué le compte, réessayez dans', __FILE__) . ' ' . max(1, ceil(($lockedUntil - time()) / 60)) . ' min';
+		}
+		if (config::byKey('cloudRejectedCredentials', __CLASS__, '') === self::getCredentialsFingerprint($_account, $_password)) {
+			return __('Identifiant ou mot de passe MSmartHome incorrect', __FILE__) . ' : ' . __('modifiez-les dans la configuration du plugin', __FILE__);
+		}
+		return '';
+	}
+
+	private static function recordCloudError($_error) {
+		$reason = isset($_error['reason']) ? $_error['reason'] : '';
+		if ($reason == 'accountLocked') {
+			$retryAfter = max(60, isset($_error['retryAfter']) ? intval($_error['retryAfter']) : 0);
+			config::save('cloudLockedUntil', time() + $retryAfter, __CLASS__);
+		} elseif ($reason == 'invalidCredentials') {
+			config::save('cloudRejectedCredentials', self::getCredentialsFingerprint(config::byKey('cloudAccount', __CLASS__, ''), config::byKey('cloudPassword', __CLASS__, '')), __CLASS__);
+		}
 	}
 
 	private static function notifyUser($_message, $_level) {
@@ -625,6 +772,7 @@ class mideamsmart extends eqLogic {
 		}
 		$level = 'success';
 		if (isset($_result['cloudError']) && is_array($_result['cloudError'])) {
+			self::recordCloudError($_result['cloudError']);
 			$summary .= '. ' . self::getCloudErrorMessage($_result['cloudError']);
 			$level = 'warning';
 		}
@@ -794,6 +942,10 @@ class mideamsmart extends eqLogic {
 	public function updateValues($_values) {
 		foreach ($_values as $logicalId => $value) {
 			$this->checkAndUpdateCmd($logicalId, $value);
+		}
+		// The appliance status is shown at once in the Jeedom health and timeout views
+		if (isset($_values['online'])) {
+			$this->setStatus('timeout', ($_values['online'] == 1) ? 0 : 1);
 		}
 	}
 

@@ -18,3 +18,7 @@
 - Geräteoptionen: Signalton, Sollwert-Schrittweite, Stromverbrauch
 - Lokale Steuerung von Luftentfeuchtern (A1) mit midea-local: Modus, Lüfter, Feuchte-Sollwert, Tank, Schwenkung, Ionisator, Pumpe, Kindersicherung, Filter
 - Hinweise Tank voll und Filter als grünes oder rotes Symbol
+- Diagnosefenster pro Gerät, mit Kopie einer Zusammenfassung ohne Geheimnisse für das Forum
+- Automatische Suche im lokalen Netzwerk nach Geräten, deren IP-Adresse sich geändert hat
+- Cloud-Sperren und abgelehntes Passwort werden gespeichert, auch nach einem Neustart des Dämons
+- Gerät wird als Timeout gemeldet, wenn es nicht mehr antwortet, Gesundheitsseite und Informationen für das Forum

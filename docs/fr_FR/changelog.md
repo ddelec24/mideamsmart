@@ -18,3 +18,7 @@
 - Options d'équipement : bip, pas de consigne, consommation électrique
 - Pilotage local des déshumidificateurs (A1) avec midea-local : mode, ventilation, consigne d'humidité, réservoir, oscillation, ioniseur, pompe, verrouillage enfant, filtre
 - Alertes réservoir plein et filtre affichées par une icône verte ou rouge
+- Fenêtre de diagnostic par équipement, avec copie d'un résumé sans secret pour le forum
+- Recherche automatique sur le réseau local des appareils qui ont changé d'adresse IP
+- Blocages du cloud et mot de passe refusé mémorisés, même après redémarrage du démon
+- Equipement signalé en timeout quand l'appareil ne répond plus, page Santé et informations pour le forum

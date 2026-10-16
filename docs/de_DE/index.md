@@ -140,6 +140,16 @@ Die Schaltfläche **Befehle aktualisieren** im Reiter *Befehle* legt fehlende Be
 | `filterCleaningReminder`, `resetFilter` | A1 | Filterreinigungshinweis und dessen Zurücksetzen |
 | `online`, `refresh` | AC, CC, A1 | Gerät erreichbar (0/1) und sofortige Aktualisierung |
 
+## Diagnose und Zuverlässigkeit
+
+![Diagnose](../images/device_diagnostic.png)
+
+- **Diagnose** (Schaltfläche oben auf der Geräteseite): zeigt die von Jeedom gesehene Konfiguration und den vom Dämon gesehenen Zustand (Verbindung, letzte Antwort, letzter Fehler, Rohfunktionen und -werte des Geräts). Die Schaltfläche **Für das Forum kopieren** kopiert diese Zusammenfassung ohne Passwort, *Token* oder *Key*, bereit zum Einfügen in eine Hilfeanfrage im [Jeedom-Forum](https://community.jeedom.com).
+- **Gerät nicht erreichbar**: Der Befehl `online` wechselt auf 0 und das Gerät wird in Jeedom als *Timeout* gemeldet. Die Abfragen werden schrittweise seltener, bis zu einmal alle 5 Minuten, und kehren zum normalen Rhythmus zurück, sobald das Gerät antwortet.
+- **Änderung der IP-Adresse**: Antwortet ein Gerät seit 5 Minuten nicht, sucht der Dämon es im lokalen Netzwerk (höchstens einmal alle 10 Minuten, ohne Cloud). Findet er es unter einer anderen Adresse, wird die IP-Adresse des Geräts automatisch aktualisiert. Es wird dennoch empfohlen, die Adressen Ihrer Geräte im Router zu reservieren.
+- **Schutz des MSmartHome-Kontos**: Eine Cloud-Sperre (Codes `7610`, `65027`) oder ein abgelehntes Passwort wird gespeichert, auch nach einem Neustart des Dämons. Während einer Sperre beschränkt sich die Synchronisierung auf das lokale Netzwerk und der Abruf der Schlüssel wird verweigert. Ein abgelehntes Passwort wird erst nach einer Änderung erneut verwendet.
+- **Gesundheitsseite** von Jeedom: zeigt die Anzahl der erreichbaren Geräte und den Zustand des MSmartHome-Kontos.
+
 ## Fehlerbehebung
 
 | Meldung | Lösung |

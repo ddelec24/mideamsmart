@@ -3,16 +3,25 @@
 import logging
 import time
 from enum import Enum
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as package_version
 from typing import Any
 
 from msmart.lan import AuthenticationError
 
-from .base import BaseDriver, CommandError
+from .base import BaseDriver, CommandError, normalize
 
 _LOGGER = logging.getLogger(__name__)
 
 # Delay before asking the capabilities again when the appliance did not return them
 CAPABILITIES_RETRY_INTERVAL = 600
+
+
+def library_version(package: str) -> str:
+    try:
+        return package_version(package)
+    except PackageNotFoundError:
+        return '?'
 
 
 def enum_from_code(enum_class: type[Enum], code: Any, allowed: list | None = None) -> Enum:
@@ -104,6 +113,18 @@ class MsmartDriver(BaseDriver):
     async def close(self) -> None:
         if self.device is not None:
             self.device._lan._disconnect()  # pylint: disable=protected-access
+
+    def diagnostic(self) -> dict[str, Any]:
+        result = super().diagnostic()
+        result['library'] = f'msmart-ng {library_version("msmart-ng")}'
+        result['capabilitiesReceived'] = self._capabilities_loaded
+        if self.device is not None:
+            result['deviceCapabilities'] = self.device.serialize_capabilities()
+            state = self.device.to_dict()
+            for secret in ('token', 'key'):
+                state.pop(secret, None)
+            result['deviceState'] = {key: normalize(value) for key, value in state.items()}
+        return result
 
     def common_capabilities(self) -> dict[str, Any]:
         device = self.device

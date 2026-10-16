@@ -140,6 +140,16 @@ The **Update commands** button of the *Commands* tab adds the missing commands, 
 | `filterCleaningReminder`, `resetFilter` | A1 | Filter cleaning reminder and its reset |
 | `online`, `refresh` | AC, CC, A1 | Appliance reachable (0/1) and immediate refresh |
 
+## Diagnostic and reliability
+
+![Diagnostic](../images/device_diagnostic.png)
+
+- **Diagnostic** (button at the top of the equipment page): shows the configuration seen by Jeedom and the state seen by the daemon (connection, last answer, last error, raw capabilities and values of the appliance). The **Copy for the forum** button copies this summary, without password, *token* or *key*, ready to paste in a help request on the [Jeedom forum](https://community.jeedom.com).
+- **Unreachable appliance**: the `online` command goes to 0 and the equipment is reported in *timeout* in Jeedom. Polling is gradually spaced out, down to once every 5 minutes, then goes back to its normal rate as soon as the appliance answers.
+- **IP address change**: if an appliance has not answered for 5 minutes, the daemon looks for it on the local network (at most once every 10 minutes, without the cloud). If it finds it at another address, the IP address of the equipment is updated automatically. Reserving the address of your appliances in your router is still recommended.
+- **MSmartHome account protection**: a cloud lock (codes `7610`, `65027`) or a refused password is remembered, even after a daemon restart. During a lock, the synchronization is limited to the local network and the keys retrieval is refused. A refused password is not tried again until it is changed.
+- Jeedom **Health page**: shows the number of reachable appliances and the state of the MSmartHome account.
+
 ## Troubleshooting
 
 | Message | Solution |

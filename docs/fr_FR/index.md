@@ -140,6 +140,16 @@ Le bouton **Mettre à jour les commandes** de l'onglet *Commandes* ajoute les co
 | `filterCleaningReminder`, `resetFilter` | A1 | Rappel de nettoyage du filtre et sa réinitialisation |
 | `online`, `refresh` | AC, CC, A1 | Appareil joignable (0/1) et rafraîchissement immédiat |
 
+## Diagnostic et fiabilité
+
+![Diagnostic](../images/device_diagnostic.png)
+
+- **Diagnostic** (bouton en haut de la page de l'équipement) : affiche la configuration vue par Jeedom et l'état vu par le démon (connexion, dernière réponse, dernière erreur, capacités et valeurs brutes de l'appareil). Le bouton **Copier pour le forum** copie ce résumé, sans mot de passe, *token* ni *key*, prêt à coller dans une demande d'aide sur le [forum Jeedom](https://community.jeedom.com).
+- **Appareil injoignable** : la commande `online` passe à 0 et l'équipement est signalé en *timeout* dans Jeedom. Les interrogations sont espacées progressivement, jusqu'à une toutes les 5 minutes, puis reprennent leur rythme normal dès que l'appareil répond.
+- **Changement d'adresse IP** : si un appareil ne répond plus depuis 5 minutes, le démon le recherche sur le réseau local (au plus une fois toutes les 10 minutes, sans le cloud). S'il le retrouve à une autre adresse, l'adresse IP de l'équipement est mise à jour automatiquement. Il est tout de même conseillé de réserver l'adresse de vos appareils dans votre box.
+- **Protection du compte MSmartHome** : un blocage du cloud (codes `7610`, `65027`) ou un mot de passe refusé est mémorisé, même après un redémarrage du démon. Pendant un blocage, la synchronisation se limite au réseau local et la récupération des clés est refusée. Un mot de passe refusé n'est plus essayé tant qu'il n'a pas été modifié.
+- **Page Santé** de Jeedom : indique le nombre d'appareils joignables et l'état du compte MSmartHome.
+
 ## Dépannage
 
 | Message | Solution |

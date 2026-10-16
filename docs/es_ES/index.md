@@ -140,6 +140,16 @@ El botón **Actualizar los comandos** de la pestaña *Comandos* añade los coman
 | `filterCleaningReminder`, `resetFilter` | A1 | Aviso de limpieza del filtro y su restablecimiento |
 | `online`, `refresh` | AC, CC, A1 | Aparato accesible (0/1) y actualización inmediata |
 
+## Diagnóstico y fiabilidad
+
+![Diagnóstico](../images/device_diagnostic.png)
+
+- **Diagnóstico** (botón en la parte superior de la página del equipo): muestra la configuración vista por Jeedom y el estado visto por el demonio (conexión, última respuesta, último error, capacidades y valores brutos del aparato). El botón **Copiar para el foro** copia este resumen, sin contraseña, *token* ni *key*, listo para pegarlo en una petición de ayuda en el [foro de Jeedom](https://community.jeedom.com).
+- **Aparato inaccesible**: el comando `online` pasa a 0 y el equipo se indica en *timeout* en Jeedom. Las consultas se espacian progresivamente, hasta una cada 5 minutos, y recuperan su ritmo normal en cuanto el aparato responde.
+- **Cambio de dirección IP**: si un aparato no responde desde hace 5 minutos, el demonio lo busca en la red local (como máximo una vez cada 10 minutos, sin la nube). Si lo encuentra en otra dirección, la dirección IP del equipo se actualiza automáticamente. Aun así, se recomienda reservar la dirección de sus aparatos en su router.
+- **Protección de la cuenta MSmartHome**: un bloqueo de la nube (códigos `7610`, `65027`) o una contraseña rechazada se memoriza, incluso tras reiniciar el demonio. Durante un bloqueo, la sincronización se limita a la red local y se rechaza la obtención de las claves. Una contraseña rechazada no se vuelve a probar hasta que se modifique.
+- **Página Salud** de Jeedom: indica el número de aparatos accesibles y el estado de la cuenta MSmartHome.
+
 ## Solución de problemas
 
 | Mensaje | Solución |

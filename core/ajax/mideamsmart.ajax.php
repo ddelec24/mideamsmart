@@ -35,6 +35,18 @@ try {
 		ajax::success($eqLogic->updateCommands());
 	}
 
+	if (init('action') == 'requestDiagnostic' || init('action') == 'getDiagnostic') {
+		$eqLogic = mideamsmart::byId(init('id'));
+		if (!is_object($eqLogic) || $eqLogic->getEqType_name() != 'mideamsmart') {
+			throw new Exception(__('Équipement introuvable', __FILE__) . ' : ' . init('id'));
+		}
+		if (init('action') == 'requestDiagnostic') {
+			$eqLogic->requestDiagnostic();
+			ajax::success();
+		}
+		ajax::success($eqLogic->getDiagnostic());
+	}
+
 	throw new Exception(__('Aucune méthode correspondante à', __FILE__) . ' : ' . init('action'));
 } catch (Exception $e) {
 	ajax::error(displayException($e), $e->getCode());

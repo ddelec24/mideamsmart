@@ -140,6 +140,16 @@ Il pulsante **Aggiorna i comandi** della scheda *Comandi* aggiunge i comandi man
 | `filterCleaningReminder`, `resetFilter` | A1 | Promemoria di pulizia del filtro e suo azzeramento |
 | `online`, `refresh` | AC, CC, A1 | Apparecchio raggiungibile (0/1) e aggiornamento immediato |
 
+## Diagnostica e affidabilità
+
+![Diagnostica](../images/device_diagnostic.png)
+
+- **Diagnostica** (pulsante in alto nella pagina del dispositivo): mostra la configurazione vista da Jeedom e lo stato visto dal demone (connessione, ultima risposta, ultimo errore, funzionalità e valori grezzi dell'apparecchio). Il pulsante **Copia per il forum** copia questo riepilogo, senza password, *token* né *key*, pronto da incollare in una richiesta di aiuto sul [forum Jeedom](https://community.jeedom.com).
+- **Apparecchio non raggiungibile**: il comando `online` passa a 0 e il dispositivo viene segnalato in *timeout* in Jeedom. Le interrogazioni vengono progressivamente diradate, fino a una ogni 5 minuti, poi riprendono il ritmo normale non appena l'apparecchio risponde.
+- **Cambio di indirizzo IP**: se un apparecchio non risponde da 5 minuti, il demone lo cerca sulla rete locale (al massimo una volta ogni 10 minuti, senza cloud). Se lo trova a un altro indirizzo, l'indirizzo IP del dispositivo viene aggiornato automaticamente. È comunque consigliato riservare l'indirizzo dei tuoi apparecchi nel router.
+- **Protezione dell'account MSmartHome**: un blocco del cloud (codici `7610`, `65027`) o una password rifiutata vengono memorizzati, anche dopo un riavvio del demone. Durante un blocco, la sincronizzazione si limita alla rete locale e il recupero delle chiavi viene rifiutato. Una password rifiutata non viene più provata finché non viene modificata.
+- **Pagina Salute** di Jeedom: indica il numero di apparecchi raggiungibili e lo stato dell'account MSmartHome.
+
 ## Risoluzione dei problemi
 
 | Messaggio | Soluzione |
