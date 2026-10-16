@@ -53,6 +53,7 @@
         "Synchronisation en cours...": "Синхронизация...",
         "Synchronisation limitée au réseau local": "Синхронизация только в локальной сети",
         "Synchronisation terminée": "Синхронизация завершена",
+        "Type d'appareil invalide": "Недопустимый тип устройства",
         "Type non supporté": "Неподдерживаемый тип",
         "Une synchronisation est déjà en cours": "Синхронизация уже выполняется",
         "Veuillez vérifier la configuration": "Проверьте настройки",

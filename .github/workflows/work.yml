@@ -1,0 +1,15 @@
+# Official Jeedom checks of the plugins (PHP lint 7.4 / 8.0 / 8.2)
+on:
+  push:
+    branches:
+      - beta
+  pull_request:
+    branches:
+      - beta
+      - master
+
+name: 'Full Workflows Plugin Jeedom'
+
+jobs:
+  plugin:
+    uses: jeedom/workflows/.github/workflows/plugin.yml@main

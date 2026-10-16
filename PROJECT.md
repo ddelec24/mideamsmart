@@ -1,7 +1,7 @@
 # mideamsmart — Récapitulatif projet
 
 > Document de référence du plugin, à relire avant chaque étape et à mettre à jour à chaque décision.
-> Dernière mise à jour : 2026-10-16 (étapes 1 à 7 terminées)
+> Dernière mise à jour : 2026-10-16 (étapes 1 à 8 terminées : version 0.9.0-beta prête à publier)
 
 ## 1. Contexte
 
@@ -333,8 +333,8 @@ mideamsmart/
 ## 9. Points ouverts / à faire
 
 - [ ] Auteur (pseudo Market) dans `info.json` et `LICENSE`.
-- [ ] URL du dépôt GitHub : remplacer `OWNER` dans les liens documentation/changelog de `info.json`.
-- [ ] Captures d'écran à fournir dans `docs/images/` : `plugin_config.png` (configuration du plugin), `plugin_devices.png` (page du plugin), `device_config.png` (onglet Équipement), `device_diagnostic.png` (fenêtre Diagnostic). L'instance de dev, avec ses faux appareils, permet de les faire.
+- [ ] Compte GitHub : remplacer `OWNER` dans les 4 liens de `info.json` (`https://OWNER.github.io/mideamsmart/#language#/` et `…/changelog`).
+- [x] Captures d'écran dans `docs/images/` : prises sur l'instance de dev par `tools/doc_screenshots.py` (Playwright), à refaire avec cet outil quand l'interface change. Elles sont en français pour les 7 langues.
 - [ ] Tester l'installation des dépendances sur Raspberry Pi arm64 et armhf.
 - [x] Tester le cycle de vie du démon dans une vraie instance Jeedom (instance Docker de dev `../dev-env`, voir son README).
 - [ ] Valider la synchronisation et le pilotage avec un vrai compte MSmartHome et de vrais appareils V2/V3, AC et CC (testeurs du forum).
@@ -352,4 +352,45 @@ mideamsmart/
 5. ✅ Driver AC/CC et création des commandes selon les capacités.
 6. ✅ Driver A1.
 7. ✅ Modal diagnostic, robustesse (hors ligne, backoff, anti-ban, changement d'IP, santé).
-8. Traductions dans les 6 langues, documentation et changelog.
+8. ✅ Relecture finale, README, captures, version 0.9.0-beta, workflows GitHub, installation validée depuis zéro.
+
+## 11. Étape 8 et publication
+
+**Relecture finale** — corrections apportées :
+- `preSave` : `deviceType` limité à 2 caractères hexadécimaux, car il est affiché dans les pages ;
+- « Mettre à jour les commandes » supprime aussi les commandes d'un autre type d'appareil (type changé à la main) ;
+- `DeviceManager` : opérations sérialisées par `asyncio.Lock`, sinon `setDevices` et `updateDevice` en parallèle pouvaient démarrer deux drivers ; échec de démarrage d'un driver rattrapé et logué.
+
+**Ajouts** :
+- `README.md` (FR et résumé EN) ;
+- `pluginVersion` à `0.9.0-beta` et ligne bêta dans les changelogs ;
+- `.github/workflows/work.yml` (contrôles officiels `jeedom/workflows`, lint PHP 7.4/8.0/8.2 sur `beta` et les PR) ;
+- `.github/workflows/daemon-tests.yml` (Python 3.13, `pip install --require-hashes -r resources/requirements.lock`, `unittest`), rejoué dans `python:3.13-slim` vierge : 34 OK.
+
+**Installation depuis zéro validée** : conteneur Jeedom 4.6.1 jetable, plugin copié depuis `git archive` (comme le Market).
+- `setIsEnable(1)` a créé les valeurs par défaut (port 55114, polling 30, diffusion automatique) et lancé seul l'installation des dépendances (`at`), terminée avec succès ;
+- démon démarré, synchro sans compte OK ;
+- par défaut, le niveau de log du plugin est « erreur » : aucun log info n'est écrit, c'est normal.
+
+**Check-list de publication** (actions de Damien, ou de Claude avec son accord explicite) :
+1. Créer le dépôt GitHub `mideamsmart` avec les branches `beta` et `master`, remplacer `OWNER` dans `info.json`, puis pousser.
+2. Activer GitHub Pages (source : branche `master`, dossier `/docs`), puis vérifier `https://OWNER.github.io/mideamsmart/fr_FR/`.
+3. Compte développeur sur le Market : Market > Ajouter (ID `mideamsmart`, gratuit), source GitHub, branches Beta = `beta` et Stable = `master`, puis synchroniser.
+4. Présenter le plugin dans le Salon des développeurs du forum (catégorie « Présentation Plugin »), avec les étiquettes `dependance_intall`, `demon`, `python`, `beta`, `gratuit`. Brouillon ci-dessous.
+5. Appeler des testeurs bêta, notamment les participants du fil #151000 (splits V3 Breezeless), avec le bouton Diagnostic pour les retours.
+6. Après validation en stable, utiliser l'étiquette `plugin-mideamsmart` (déjà dans `info.json` > `link.forum`).
+
+**Brouillon de présentation pour le forum** :
+
+> **Midea MSmart (`mideamsmart`)** — pilotage local des climatiseurs (AC, CC) et déshumidificateurs (A1) Midea et marques associées, compatibles MSmartHome.
+> - Fonctionnalités :
+>   - synchronisation du compte MSmartHome et recherche sur le réseau local ;
+>   - clés V3 récupérées une fois et vérifiées sur l'appareil, puis 100 % local ;
+>   - commandes créées selon les capacités de l'appareil ;
+>   - IP retrouvée automatiquement ;
+>   - protection contre les blocages du compte ;
+>   - fenêtre de diagnostic.
+> - Langages : PHP, JS (vanilla core 4.4+), Python 3.13 (msmart-ng, midea-local).
+> - Démon Python : oui. Dépendances : oui (Python autonome installé avec uv dans le plugin). Crons et listeners : non. Panel : non.
+> - Gratuit. Licence MIT. GitHub : `https://github.com/OWNER/mideamsmart`. Documentation : `https://OWNER.github.io/mideamsmart/fr_FR/`.
+

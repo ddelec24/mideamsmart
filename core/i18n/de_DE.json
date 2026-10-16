@@ -53,6 +53,7 @@
         "Synchronisation en cours...": "Synchronisierung läuft...",
         "Synchronisation limitée au réseau local": "Synchronisierung auf das lokale Netzwerk beschränkt",
         "Synchronisation terminée": "Synchronisierung abgeschlossen",
+        "Type d'appareil invalide": "Ungültiger Gerätetyp",
         "Type non supporté": "Nicht unterstützter Typ",
         "Une synchronisation est déjà en cours": "Eine Synchronisierung läuft bereits",
         "Veuillez vérifier la configuration": "Bitte überprüfen Sie die Konfiguration",

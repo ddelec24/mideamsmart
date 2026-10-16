@@ -108,6 +108,10 @@ Mit der Schaltfläche **Hinzufügen** können Sie ein Gerät manuell anlegen, zu
 
 ## Befehle
 
+![Widgets der Klimaanlage und des Luftentfeuchters](../images/dashboard_ac.png) ![](../images/dashboard_a1.png)
+
+![Reiter Befehle](../images/device_commands.png)
+
 Die Befehle werden automatisch **entsprechend den von jedem Gerät gemeldeten Funktionen** angelegt, sobald es zum ersten Mal antwortet. Meldet das Gerät seine Funktionen nicht, werden Standardfunktionen verwendet und die Abfrage alle 10 Minuten wiederholt.
 
 Text-Infobefehle enthalten einen **stabilen, sprachunabhängigen Code** (zum Beispiel `cool`): Verwenden Sie diese Codes in Ihren Szenarien. Die zugehörigen Aktionsbefehle bieten übersetzte Bezeichnungen. Infos, die bereits von einer verknüpften Aktion angezeigt werden, sind standardmäßig ausgeblendet.

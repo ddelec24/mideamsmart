@@ -108,6 +108,10 @@ The **Add** button creates an equipment manually, for example for an appliance o
 
 ## Commands
 
+![Air conditioner and dehumidifier widgets](../images/dashboard_ac.png) ![](../images/dashboard_a1.png)
+
+![Commands tab](../images/device_commands.png)
+
 Commands are created automatically **according to the capabilities reported by each appliance**, as soon as it answers for the first time. If the appliance does not return its capabilities, default ones are used and the request is repeated every 10 minutes.
 
 Text info commands hold a **stable code**, independent of the language (for example `cool`): use these codes in your scenarios. The related action commands offer translated labels. Infos already displayed by a linked action are hidden by default.

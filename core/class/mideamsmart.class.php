@@ -387,6 +387,20 @@ class mideamsmart extends eqLogic {
 		$definitions = self::getCommandDefinitions();
 		$created = 0;
 		$order = 0;
+		if ($_removeObsolete) {
+			// Commands of another appliance type (type changed by hand)
+			$typeLogicalIds = array();
+			foreach ($definitions['commands'] as $definition) {
+				if (in_array($deviceType, $definition['types'])) {
+					$typeLogicalIds[] = $definition['logicalId'];
+				}
+			}
+			foreach ($this->getCmd() as $cmd) {
+				if (!in_array($cmd->getLogicalId(), $typeLogicalIds)) {
+					$cmd->remove();
+				}
+			}
+		}
 		// Infos first, so that the actions can be linked to them
 		foreach (array('info', 'action') as $type) {
 			foreach ($definitions['commands'] as $definition) {
@@ -843,7 +857,11 @@ class mideamsmart extends eqLogic {
 	/*     * *********************Méthodes d'instance************************* */
 
 	public function preSave() {
+		// Midea type in hexadecimal (AC, CC, A1…): it is displayed in the pages
 		$deviceType = strtoupper(trim($this->getConfiguration('deviceType', '')));
+		if ($deviceType !== '' && !preg_match('/^[0-9A-F]{2}$/', $deviceType)) {
+			throw new Exception(__('Type d\'appareil invalide', __FILE__) . ' : ' . htmlspecialchars($deviceType));
+		}
 		$this->setConfiguration('deviceType', $deviceType);
 
 		$ipAddress = trim($this->getConfiguration('ipAddress', ''));

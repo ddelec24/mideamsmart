@@ -108,6 +108,10 @@ O botão **Adicionar** permite criar um equipamento manualmente, por exemplo par
 
 ## Comandos
 
+![Widgets do ar condicionado e do desumidificador](../images/dashboard_ac.png) ![](../images/dashboard_a1.png)
+
+![Separador Comandos](../images/device_commands.png)
+
 Os comandos são criados automaticamente **de acordo com as capacidades comunicadas por cada aparelho**, assim que responde pela primeira vez. Se o aparelho não devolver as suas capacidades, são usadas capacidades predefinidas e o pedido é repetido a cada 10 minutos.
 
 Os comandos info de tipo texto contêm um **código estável**, independente do idioma (por exemplo `cool`): use estes códigos nos seus cenários. Os comandos action associados propõem etiquetas traduzidas. As infos já apresentadas por uma ação ligada ficam ocultas por predefinição.

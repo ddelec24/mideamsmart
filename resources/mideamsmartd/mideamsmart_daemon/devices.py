@@ -1,5 +1,6 @@
 """Configuration of the equipments managed by the daemon."""
 
+import asyncio
 import logging
 from dataclasses import dataclass, field
 from typing import Any
@@ -82,6 +83,8 @@ class DeviceManager:
         self._publish_values = publish_values
         self._send_event = send_event
         self.broadcast_addresses: tuple[str, ...] = ()
+        # Jeedom messages are handled concurrently: the drivers are started and stopped one at a time
+        self._lock = asyncio.Lock()
 
     @property
     def devices(self) -> dict[int, DeviceConfig]:
@@ -107,10 +110,11 @@ class DeviceManager:
                 _LOGGER.error('Equipment ignored: %s', error)
                 continue
             configs[config.eq_logic_id] = config
-        for eq_logic_id in set(self._devices) - set(configs):
-            await self.remove_device(eq_logic_id)
-        for config in configs.values():
-            await self._store(config)
+        async with self._lock:
+            for eq_logic_id in set(self._devices) - set(configs):
+                await self._remove(eq_logic_id)
+            for config in configs.values():
+                await self._store(config)
         _LOGGER.info('%s equipment(s) configured', len(self._devices))
 
     async def update_device(self, data: dict[str, Any]) -> None:
@@ -119,18 +123,23 @@ class DeviceManager:
         except DeviceConfigError as error:
             _LOGGER.error('Equipment ignored: %s', error)
             return
-        await self._store(config)
+        async with self._lock:
+            await self._store(config)
 
     async def remove_device(self, eq_logic_id: int) -> None:
-        eq_logic_id = int(eq_logic_id)
+        async with self._lock:
+            await self._remove(int(eq_logic_id))
+
+    async def _remove(self, eq_logic_id: int) -> None:
         await self._stop_driver(eq_logic_id)
         config = self._devices.pop(eq_logic_id, None)
         if config is not None:
             _LOGGER.info('Equipment %s removed', config.label)
 
     async def close(self) -> None:
-        for eq_logic_id in list(self._drivers):
-            await self._stop_driver(eq_logic_id)
+        async with self._lock:
+            for eq_logic_id in list(self._drivers):
+                await self._stop_driver(eq_logic_id)
 
     async def _store(self, config: DeviceConfig) -> None:
         previous = self._devices.get(config.eq_logic_id)
@@ -152,8 +161,12 @@ class DeviceManager:
             _LOGGER.warning('Equipment %s: appliance type %s not handled yet', config.label, config.device_type or '?')
             return
         driver = driver_class(config, self._publish_values, self._send_event)
+        try:
+            driver.start()
+        except Exception:
+            _LOGGER.exception('Equipment %s: unable to start its driver', config.label)
+            return
         self._drivers[config.eq_logic_id] = driver
-        driver.start()
 
     async def _stop_driver(self, eq_logic_id: int) -> None:
         driver = self._drivers.pop(eq_logic_id, None)

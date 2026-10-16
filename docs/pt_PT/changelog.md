@@ -6,6 +6,7 @@
 
 # 16/10/2026
 
+- Primeira versão beta (0.9.0), a testar com aparelhos reais: os seus comentários são bem-vindos no fórum
 - Criação do plugin: estrutura de base, página de configuração e página dos equipamentos
 - Instalação das dependências: Python 3.13 autónomo (via uv) e ambiente virtual dedicado ao plugin
 - Daemon Python (asyncio): arranque, paragem limpa, comunicação com o Jeedom e transmissão da lista de equipamentos

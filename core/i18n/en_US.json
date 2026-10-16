@@ -53,6 +53,7 @@
         "Synchronisation en cours...": "Synchronization in progress...",
         "Synchronisation limitée au réseau local": "Synchronization limited to the local network",
         "Synchronisation terminée": "Synchronization completed",
+        "Type d'appareil invalide": "Invalid appliance type",
         "Type non supporté": "Unsupported type",
         "Une synchronisation est déjà en cours": "A synchronization is already running",
         "Veuillez vérifier la configuration": "Please check the configuration",

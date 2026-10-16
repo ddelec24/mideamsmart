@@ -6,6 +6,7 @@
 
 # 16/10/2026
 
+- Erste Betaversion (0.9.0), zum Testen mit echten Geräten: Ihr Feedback ist im Forum willkommen
 - Erstellung des Plugins: Grundstruktur, Konfigurationsseite und Geräteseite
 - Installation der Abhängigkeiten: eigenständiges Python 3.13 (über uv) und eigene virtuelle Umgebung des Plugins
 - Python-Dämon (asyncio): Start, sauberes Beenden, Kommunikation mit Jeedom und Übertragung der Geräteliste

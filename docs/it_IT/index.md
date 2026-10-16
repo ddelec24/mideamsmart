@@ -108,6 +108,10 @@ Il pulsante **Aggiungi** permette di creare un dispositivo manualmente, ad esemp
 
 ## Comandi
 
+![Widget del climatizzatore e del deumidificatore](../images/dashboard_ac.png) ![](../images/dashboard_a1.png)
+
+![Scheda Comandi](../images/device_commands.png)
+
 I comandi vengono creati automaticamente **in base alle funzionalità comunicate da ciascun apparecchio**, non appena risponde per la prima volta. Se l'apparecchio non restituisce le sue funzionalità, vengono usate quelle predefinite e la richiesta viene ripetuta ogni 10 minuti.
 
 I comandi info di tipo testo contengono un **codice stabile**, indipendente dalla lingua (ad esempio `cool`): usa questi codici negli scenari. I comandi action associati propongono etichette tradotte. Le info già mostrate da un'azione collegata sono nascoste per impostazione predefinita.

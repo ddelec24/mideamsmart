@@ -108,6 +108,10 @@ Le bouton **Ajouter** permet de créer un équipement à la main, par exemple po
 
 ## Commandes
 
+![Widgets du climatiseur et du déshumidificateur](../images/dashboard_ac.png) ![](../images/dashboard_a1.png)
+
+![Onglet Commandes](../images/device_commands.png)
+
 Les commandes sont créées automatiquement **selon les capacités remontées par chaque appareil**, dès qu'il répond pour la première fois. Si l'appareil ne renvoie pas ses capacités, des capacités par défaut sont utilisées et la demande est renouvelée toutes les 10 minutes.
 
 Les commandes info de type texte contiennent un **code stable**, indépendant de la langue (par exemple `cool`) : utilisez ces codes dans vos scénarios. Les commandes action associées proposent des libellés traduits. Les infos déjà affichées par une action liée sont masquées par défaut.
