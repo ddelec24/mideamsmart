@@ -54,7 +54,7 @@ Dopo un aggiornamento del plugin che modifica queste versioni, le dipendenze tor
 - **Account MSmartHome**
   - **Nome utente (email)** e **Password** dell'account MSmartHome.
 - **Rete locale**
-  - **Indirizzo di broadcast**: indirizzo/i di broadcast usato/i per individuare gli apparecchi, separati da virgole. Il valore predefinito `255.255.255.255` va bene nella maggior parte dei casi. Se gli apparecchi non vengono trovati, indica l'indirizzo di broadcast della tua rete (ad esempio `192.168.1.255`).
+  - **Indirizzo di broadcast**: indirizzo/i di broadcast usato/i per individuare gli apparecchi, separati da virgole. Lascia vuoto (predefinito) per trasmettere su tutte le interfacce di rete di Jeedom. Se gli apparecchi non vengono trovati, indica l'indirizzo di broadcast della loro rete (ad esempio `192.168.1.255`).
   - **Intervallo di interrogazione predefinito**: tempo in secondi tra due letture dello stato degli apparecchi (30 s per impostazione predefinita, minimo 10 s).
 - **Demone**
   - **Porta del demone**: porta locale usata dal demone (55114 per impostazione predefinita). Modificala solo in caso di conflitto con un altro plugin.
@@ -69,7 +69,14 @@ Il demone gestisce la comunicazione locale con gli apparecchi. Una volta install
 
 ## Aggiunta degli apparecchi
 
-Nella pagina del plugin, il pulsante **Sincronizza** recupera gli apparecchi dell'account MSmartHome, li cerca sulla rete locale e crea i dispositivi corrispondenti.
+Nella pagina del plugin, il pulsante **Sincronizza** (il demone deve essere avviato):
+
+1. cerca gli apparecchi sulla rete locale;
+2. se è configurato un account MSmartHome, vi si connette e recupera l'elenco degli apparecchi dell'account;
+3. per ogni apparecchio V3 le cui chiavi non sono ancora note, recupera il *token* e la *key* dal cloud, poi **li verifica direttamente con l'apparecchio** prima di salvarli;
+4. crea i nuovi dispositivi, oppure aggiorna l'indirizzo IP, la porta e il protocollo di quelli esistenti. I nomi e le chiavi già presenti non vengono mai modificati.
+
+Un messaggio riassume l'operazione e segnala gli apparecchi per i quali non è stato possibile ottenere le chiavi. Gli apparecchi di un tipo non supportato vengono ignorati. Senza account MSmartHome viene effettuata solo la ricerca locale.
 
 ![Pagina del plugin](../images/plugin_devices.png)
 
@@ -86,6 +93,7 @@ Il pulsante **Aggiungi** permette di creare un dispositivo manualmente, ad esemp
   - **Indirizzo IP** e **Porta** (6444 per impostazione predefinita).
   - **Versione del protocollo**: V3 per la maggior parte degli apparecchi recenti, V2 per quelli più vecchi.
   - **Token** e **Key**: chiavi di autenticazione degli apparecchi V3, recuperate automaticamente.
+  - **Recupera token/key dal cloud**: richiede di nuovo al cloud le chiavi di questo apparecchio e le verifica, ad esempio dopo un reset del modulo Wi-Fi. Salva il dispositivo prima di usarlo.
 - **Opzioni**
   - **Intervallo di interrogazione**: lascia vuoto per usare il valore della configurazione del plugin.
 - **Informazioni**
@@ -98,6 +106,17 @@ Il pulsante **Aggiungi** permette di creare un dispositivo manualmente, ad esemp
 ## Comandi
 
 I comandi vengono creati automaticamente in base alle funzionalità comunicate da ciascun apparecchio. Il loro elenco dettagliato sarà aggiunto qui non appena saranno disponibili.
+
+## Risoluzione dei problemi
+
+| Messaggio | Soluzione |
+|---|---|
+| *Nome utente o password MSmartHome errati* | Verifica l'account nella configurazione del plugin. Il plugin non riprova finché le credenziali non cambiano. |
+| *Il cloud Midea ha bloccato temporaneamente l'account* | Troppe connessioni (codici `7610`, `65027`). Attendi il tempo indicato senza avviare un'altra sincronizzazione. |
+| *apparecchio non associato direttamente a questo account (condiviso?)* | Nell'app MSmartHome, associa l'apparecchio a questo account, non solo tramite condivisione. |
+| *apparecchio assente dall'account MSmartHome* | L'apparecchio è sulla rete ma in un altro account: inserisci *token* e *key* manualmente, oppure associalo a questo account. |
+| *chiavi rifiutate dall'apparecchio* | Rilancia **Recupera token/key dal cloud**; se il problema persiste, associa di nuovo l'apparecchio nell'app. |
+| *apparecchio non trovato sulla rete locale* / *non raggiungibile* | Verifica che l'apparecchio sia acceso e sulla stessa rete di Jeedom, oppure indica l'**indirizzo di broadcast** della sua rete. |
 
 ## Crediti
 

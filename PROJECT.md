@@ -1,7 +1,7 @@
 # mideamsmart — Récapitulatif projet
 
 > Document de référence du plugin, à relire avant chaque étape et à mettre à jour à chaque décision.
-> Dernière mise à jour : 2026-10-16 (étapes 1 à 3 terminées)
+> Dernière mise à jour : 2026-10-16 (étapes 1 à 4 terminées)
 
 ## 1. Contexte
 
@@ -71,6 +71,44 @@ Jeedom PHP  ──socket TCP (apikey)──▶  démon Python (asyncio, venv 3.1
   - Une seule session réutilisée, backoff exponentiel, arrêt immédiat sur les codes 7610 et 65027 avec un message clair.
 - Le démon reçoit au démarrage, via socket, la liste des équipements actifs (id, type, ip, port, protocole, token, key, options). Il est notifié lors de toute sauvegarde ou suppression d'équipement.
 - Gestion **hors ligne** : commande info `online` et backoff de reconnexion par appareil.
+
+### Synchronisation — implémentée à l'étape 4
+
+- **Déclenchement**, toujours asynchrone :
+  - le bouton « Synchroniser » appelle l'ajax `syncDevices` ;
+  - le bouton « Récupérer token/key depuis le cloud » de l'équipement appelle l'ajax `fetchDeviceKeys` ;
+  - les deux passent par `mideamsmart::syncDevices($eqLogic = null)`, qui envoie au démon `syncDevices {account, password, broadcastAddress, knownDevices: {deviceId: {hasKeys, ipAddress, port}}, onlyDeviceId?, forceKeys?}`.
+  - Les identifiants transitent uniquement par le socket local, jamais en ligne de commande.
+- **Démon** (`sync.py` `SyncService`, avec dépendances injectables pour les tests) :
+  1. Découverte LAN (`discovery.py`) : `midealocal.discover.discover(ip_address=…)` est synchrone, avec un timeout de 5 s, donc lancé via `asyncio.to_thread` en parallèle sur chaque adresse. Une liste vide signifie toutes les interfaces privées (`enum_all_broadcast`). Avec `onlyDeviceId`, la requête part en unicast vers l'IP connue.
+  2. Cloud, si un compte est configuré (`cloud.py`) :
+     - `CloudSession` (aiohttp + `midealocal.cloud.get_midea_cloud('SmartHome')`) : `login`, `list_appliances(None)`, `get_cloud_keys(id)`. La seconde renvoie deux couples (udpid méthodes 1 et 2).
+     - L'**ID cloud** de l'appareil est l'ID LAN, ce qui sert de clé de fusion.
+  3. Clés, seulement pour les types supportés en V3 dont les clés sont inconnues (ou forcées) :
+     - chaque couple est essayé via `msmart.lan.LAN.authenticate`, qui fait le handshake 8370 indépendamment du type ;
+     - seul un couple **accepté par l'appareil** est renvoyé.
+  - `keysStatus` : `notNeeded`, `known`, `valid`, `invalid`, `unreachable`, `notOwned` (3201), `notInCloud`, `notOnLan`, `noAccount`, `cloudError`, `unsupported`.
+  - Progression : `syncProgress {step: discovery|cloudLogin|cloudDevices|keys}`, puis `syncResult {devices, cloudError: {reason, cloudCode, retryAfter}|null, onlyDeviceId}` ou `{failed: alreadyRunning|internalError}`. Une seule synchro à la fois (`asyncio.Lock`).
+- **Anti-ban** (`CloudGuard`, en mémoire du démon) :
+  - 30 s minimum entre deux logins ;
+  - après `7610`, blocage de 15 min ; après `65027`, 60 min ;
+  - après `3101`/`3102`, refus tant que les identifiants ne changent pas.
+  - Aucun login au démarrage du démon.
+- **PHP** (`applySyncResult`) :
+  - Les types non supportés sont ignorés et comptés.
+  - Création d'un équipement : nom cloud, ou « Midea <type> » ; suffixe `<id>` si le nom est déjà pris sans objet ; catégorie `heating`.
+  - `updateFromSync()` n'écrase **jamais** avec une valeur vide et ne renomme pas. Les clés ne sont écrites que si elles sont fournies (donc validées).
+  - Messages traduits via `event::add('jeedom::alert', {page: 'mideamsmart'})`. Les noms sont échappés (`htmlspecialchars`), car les messages acceptent du HTML.
+  - `event::add('mideamsmart::syncDone', {created, message, level})`. Le JS écoute en DOM **et** en jQuery, car le core déclenche les événements non-core via jQuery quand il est chargé. Il recharge la page seulement si des équipements ont été créés, et réaffiche alors le résumé via `sessionStorage`.
+- **Adresse de diffusion** : vide par défaut, c'est-à-dire automatique (`DEFAULT_BROADCAST_ADDRESS = ''`).
+- **Testé** :
+  - 22 tests unitaires : guard, session cloud factice, scénarios de synchro complète, sans compte, cloud bloqué, appareil unique ;
+  - appels réels à la découverte (0 appareil) et à `check_keys` (port fermé → `unreachable`) ;
+  - sur l'instance de dev Jeedom 4.6.1 :
+    - synchro sans compte de bout en bout ;
+    - faux `syncResult` posté sur le vrai callback : création, mise à jour, clés chiffrées en base, alertes ;
+    - UI dans le navigateur : bouton Synchroniser, rechargement et résumé, bouton des clés sans compte → message clair.
+  - **Non testé** avec un vrai compte MSmartHome ni avec de vrais appareils : à valider par des testeurs.
 
 ### Démon — implémenté à l'étape 3
 
@@ -239,7 +277,9 @@ Les autres types listés par le cloud (FD, FA, B6…) sont affichés comme **« 
 - [ ] URL du dépôt GitHub : remplacer `OWNER` dans les liens documentation/changelog de `info.json`.
 - [ ] Captures d'écran à fournir dans `docs/images/` : `plugin_config.png` (configuration du plugin), `plugin_devices.png` (page du plugin), `device_config.png` (onglet Équipement). À compléter plus tard : commandes AC, commandes A1, modal diagnostic.
 - [ ] Tester l'installation des dépendances sur Raspberry Pi arm64 et armhf.
-- [ ] Tester le cycle de vie du démon dans une vraie instance Jeedom 4.5/4.6 (idéalement une instance Docker de dev).
+- [x] Tester le cycle de vie du démon dans une vraie instance Jeedom (instance Docker de dev `../dev-env`, voir son README).
+- [ ] Valider la synchronisation avec un vrai compte MSmartHome et de vrais appareils V2/V3 (testeurs du forum).
+- [ ] Dev en Docker bridge : la découverte LAN ne voit que le réseau du conteneur. Prévoir `network_mode: host` pour tester avec de vrais appareils.
 - [ ] Vérifier, sur une vraie réponse cloud, l'appariement entre l'`appliance_id` du cloud et le `device_id` de la découverte LAN.
 - [ ] Plan de tests sans matériel : tests unitaires des drivers avec appareils simulés et trames issues des tests des libs.
 
@@ -248,7 +288,7 @@ Les autres types listés par le cloud (FD, FA, B6…) sont affichés comme **« 
 1. ✅ Squelette du plugin depuis plugin-template : info.json, icône, classes, page desktop, config, i18n (6 langues), docs (7 langues).
 2. ✅ Dépendances : install via uv, venv, `dependancy_info` (testé amd64 Debian 12/13).
 3. ✅ Démon : socket, callback, cycle de vie (services cloud et découverte déplacés à l'étape 4).
-4. Synchronisation : services cloud (MSmartHome) et découverte LAN, création des équipements, récupération de token/key.
+4. ✅ Synchronisation : services cloud (MSmartHome) et découverte LAN, création des équipements, récupération de token/key.
 5. Driver AC/CC et création des commandes selon les capacités.
 6. Driver A1.
 7. Modal diagnostic, robustesse (hors ligne, backoff, anti-ban).

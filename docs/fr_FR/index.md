@@ -54,7 +54,7 @@ Après une mise à jour du plugin qui change ces versions, les dépendances repa
 - **Compte MSmartHome**
   - **Identifiant (email)** et **Mot de passe** du compte MSmartHome.
 - **Réseau local**
-  - **Adresse de diffusion** : adresse(s) de broadcast utilisée(s) pour découvrir les appareils, séparées par des virgules. La valeur par défaut `255.255.255.255` convient dans la plupart des cas. Si les appareils ne sont pas trouvés, indiquez l'adresse de broadcast de votre réseau (par exemple `192.168.1.255`).
+  - **Adresse de diffusion** : adresse(s) de broadcast utilisée(s) pour découvrir les appareils, séparées par des virgules. Laissez vide (par défaut) pour diffuser sur toutes les interfaces réseau de Jeedom. Si les appareils ne sont pas trouvés, indiquez l'adresse de broadcast de leur réseau (par exemple `192.168.1.255`).
   - **Intervalle d'interrogation par défaut** : délai en secondes entre deux lectures de l'état des appareils (30 s par défaut, 10 s minimum).
 - **Démon**
   - **Port du démon** : port local utilisé par le démon (55114 par défaut). Ne le modifiez qu'en cas de conflit avec un autre plugin.
@@ -69,7 +69,14 @@ Le démon assure la communication locale avec les appareils. Une fois les dépen
 
 ## Ajout des appareils
 
-Sur la page du plugin, le bouton **Synchroniser** récupère les appareils du compte MSmartHome, les recherche sur le réseau local et crée les équipements correspondants.
+Sur la page du plugin, le bouton **Synchroniser** (le démon doit être démarré) :
+
+1. recherche les appareils sur le réseau local ;
+2. si un compte MSmartHome est configuré, s'y connecte et récupère la liste des appareils du compte ;
+3. pour chaque appareil V3 dont les clés ne sont pas encore connues, récupère le *token* et la *key* sur le cloud, puis les **vérifie directement auprès de l'appareil** avant de les enregistrer ;
+4. crée les nouveaux équipements, ou met à jour l'adresse IP, le port et le protocole des équipements existants. Les noms et les clés déjà présents ne sont jamais modifiés.
+
+Un message résume l'opération et signale les appareils pour lesquels les clés n'ont pas pu être obtenues. Les appareils d'un type non pris en charge sont ignorés. Sans compte MSmartHome, seule la recherche locale est faite.
 
 ![Page du plugin](../images/plugin_devices.png)
 
@@ -86,6 +93,7 @@ Le bouton **Ajouter** permet de créer un équipement à la main, par exemple po
   - **Adresse IP** et **Port** (6444 par défaut).
   - **Version du protocole** : V3 pour la plupart des appareils récents, V2 pour les plus anciens.
   - **Token** et **Key** : clés d'authentification des appareils V3, récupérées automatiquement.
+  - **Récupérer token/key depuis le cloud** : redemande les clés de cet appareil au cloud et les vérifie, par exemple après une réinitialisation du module Wi-Fi. Sauvegardez l'équipement avant de l'utiliser.
 - **Options**
   - **Intervalle d'interrogation** : laissez vide pour utiliser la valeur de la configuration du plugin.
 - **Informations**
@@ -98,6 +106,17 @@ Le bouton **Ajouter** permet de créer un équipement à la main, par exemple po
 ## Commandes
 
 Les commandes sont créées automatiquement selon les capacités remontées par chaque appareil. Leur liste détaillée sera ajoutée ici dès qu'elles seront disponibles.
+
+## Dépannage
+
+| Message | Solution |
+|---|---|
+| *Identifiant ou mot de passe MSmartHome incorrect* | Vérifiez le compte dans la configuration du plugin. Le plugin ne retente pas tant que les identifiants ne changent pas. |
+| *Le cloud Midea a temporairement bloqué le compte* | Trop de connexions (codes `7610`, `65027`). Attendez le délai indiqué, sans relancer de synchronisation. |
+| *appareil non appairé directement sur ce compte (partagé ?)* | Dans l'application MSmartHome, appairez l'appareil avec ce compte, pas seulement via un partage. |
+| *appareil absent du compte MSmartHome* | L'appareil est sur le réseau mais dans un autre compte : saisissez *token* et *key* à la main, ou appairez-le avec ce compte. |
+| *clés refusées par l'appareil* | Relancez **Récupérer token/key depuis le cloud** ; si le problème persiste, réappairez l'appareil dans l'application. |
+| *appareil introuvable sur le réseau local* / *injoignable* | Vérifiez que l'appareil est allumé et sur le même réseau que Jeedom, ou renseignez l'**adresse de diffusion** de son réseau. |
 
 ## Crédits
 

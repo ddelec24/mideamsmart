@@ -54,7 +54,7 @@ After a plugin update that changes these versions, the dependencies go back to t
 - **MSmartHome account**
   - **Login (email)** and **Password** of the MSmartHome account.
 - **Local network**
-  - **Broadcast address**: broadcast address(es) used to discover the appliances, separated by commas. The default value `255.255.255.255` works in most cases. If the appliances are not found, enter the broadcast address of your network (for example `192.168.1.255`).
+  - **Broadcast address**: broadcast address(es) used to discover the appliances, separated by commas. Leave empty (default) to broadcast on every network interface of Jeedom. If the appliances are not found, enter the broadcast address of their network (for example `192.168.1.255`).
   - **Default polling interval**: delay in seconds between two readings of the appliance state (30 s by default, 10 s minimum).
 - **Daemon**
   - **Daemon port**: local port used by the daemon (55114 by default). Only change it in case of conflict with another plugin.
@@ -69,7 +69,14 @@ The daemon handles the local communication with the appliances. Once the depende
 
 ## Adding appliances
 
-On the plugin page, the **Synchronize** button retrieves the appliances of the MSmartHome account, looks for them on the local network and creates the matching equipments.
+On the plugin page, the **Synchronize** button (the daemon must be running):
+
+1. looks for the appliances on the local network;
+2. if an MSmartHome account is set, logs in and retrieves the list of appliances of the account;
+3. for each V3 appliance whose keys are not known yet, retrieves the *token* and *key* from the cloud, then **checks them directly with the appliance** before saving them;
+4. creates the new equipments, or updates the IP address, port and protocol of the existing ones. Names and existing keys are never changed.
+
+A message summarizes the operation and reports the appliances whose keys could not be obtained. Appliances of an unsupported type are ignored. Without an MSmartHome account, only the local search is done.
 
 ![Plugin page](../images/plugin_devices.png)
 
@@ -86,6 +93,7 @@ The **Add** button creates an equipment manually, for example for an appliance o
   - **IP address** and **Port** (6444 by default).
   - **Protocol version**: V3 for most recent appliances, V2 for older ones.
   - **Token** and **Key**: authentication keys of V3 appliances, retrieved automatically.
+  - **Retrieve token/key from the cloud**: asks the cloud again for the keys of this appliance and checks them, for example after a reset of the Wi-Fi module. Save the equipment before using it.
 - **Options**
   - **Polling interval**: leave empty to use the value from the plugin configuration.
 - **Information**
@@ -98,6 +106,17 @@ The **Add** button creates an equipment manually, for example for an appliance o
 ## Commands
 
 Commands are created automatically according to the capabilities reported by each appliance. Their detailed list will be added here as soon as they are available.
+
+## Troubleshooting
+
+| Message | Solution |
+|---|---|
+| *Wrong MSmartHome login or password* | Check the account in the plugin configuration. The plugin does not retry until the credentials change. |
+| *The Midea cloud temporarily locked the account* | Too many logins (codes `7610`, `65027`). Wait for the indicated delay without starting another synchronization. |
+| *appliance not paired directly with this account (shared?)* | In the MSmartHome app, pair the appliance with this account, not only through sharing. |
+| *appliance not in the MSmartHome account* | The appliance is on the network but in another account: enter *token* and *key* manually, or pair it with this account. |
+| *keys refused by the appliance* | Run **Retrieve token/key from the cloud** again; if the problem persists, pair the appliance again in the app. |
+| *appliance not found on the local network* / *unreachable* | Check that the appliance is on and on the same network as Jeedom, or enter the **broadcast address** of its network. |
 
 ## Credits
 

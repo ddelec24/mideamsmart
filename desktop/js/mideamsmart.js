@@ -7,14 +7,13 @@
 if (typeof jeeFrontEnd.mideamsmart === 'undefined') {
   jeeFrontEnd.mideamsmart = {
     defaultImage: 'plugins/mideamsmart/plugin_info/mideamsmart_icon.png',
-    syncDevices: function() {
-      jeedomUtils.showAlert({ message: '{{Synchronisation en cours...}}', level: 'warning' })
+    // Equipment whose keys were requested, redisplayed when the synchronization ends
+    pendingEqLogicId: null,
+    request: function(_action, _data, _successMessage) {
       domUtils.ajax({
         type: 'POST',
         url: 'plugins/mideamsmart/core/ajax/mideamsmart.ajax.php',
-        data: {
-          action: 'syncDevices'
-        },
+        data: Object.assign({ action: _action }, _data),
         dataType: 'json',
         error: function(error) {
           jeedomUtils.showAlert({ message: error.message, level: 'danger' })
@@ -24,16 +23,68 @@ if (typeof jeeFrontEnd.mideamsmart === 'undefined') {
             jeedomUtils.showAlert({ message: data.result, level: 'danger' })
             return
           }
-          jeedomUtils.showAlert({ message: '{{Synchronisation terminée}}', level: 'success' })
-          jeedomUtils.loadPage(document.URL)
+          jeedomUtils.showAlert({ message: _successMessage, level: 'warning' })
         }
       })
+    },
+    syncDevices: function() {
+      this.pendingEqLogicId = null
+      this.request('syncDevices', {}, '{{Synchronisation lancée...}}')
+    },
+    fetchDeviceKeys: function() {
+      const eqLogicId = document.querySelector('.eqLogicAttr[data-l1key="id"]').jeeValue()
+      if (modifyWithoutSave) {
+        jeedomUtils.showAlert({ message: '{{Sauvegardez l\'équipement avant de récupérer ses clés}}', level: 'warning' })
+        return
+      }
+      this.pendingEqLogicId = eqLogicId
+      this.request('fetchDeviceKeys', { id: eqLogicId }, '{{Récupération des clés lancée...}}')
+    },
+    storageKey: 'mideamsmart::syncSummary',
+    // detail: {created, message, level}, from a DOM event (event.detail) or a jQuery one (second argument)
+    onSyncDone: function(_event, _jQueryDetail) {
+      const detail = _jQueryDetail || (_event && _event.detail) || {}
+      const eqLogicId = jeeFrontEnd.mideamsmart.pendingEqLogicId
+      jeeFrontEnd.mideamsmart.pendingEqLogicId = null
+      if (eqLogicId != null && document.querySelector('.eqLogic').isVisible()) {
+        jeeFrontEnd.pluginTemplate.displayEqlogic(null, eqLogicId)
+        return
+      }
+      if (!(detail.created > 0) || !document.querySelector('.eqLogicThumbnailDisplay').isVisible()) {
+        return
+      }
+      try {
+        sessionStorage.setItem(jeeFrontEnd.mideamsmart.storageKey, JSON.stringify({ message: detail.message, level: detail.level }))
+      } catch (error) {}
+      jeedomUtils.loadPage('index.php?v=d&m=mideamsmart&p=mideamsmart')
+    },
+    showPendingSummary: function() {
+      let summary = null
+      try {
+        summary = JSON.parse(sessionStorage.getItem(this.storageKey))
+        sessionStorage.removeItem(this.storageKey)
+      } catch (error) {}
+      if (summary && summary.message) {
+        jeedomUtils.showAlert({ message: summary.message, level: summary.level || 'success' })
+      }
     }
+  }
+  // Sent by the plugin (event::add) when a synchronization ends
+  document.body.addEventListener('mideamsmart::syncDone', jeeFrontEnd.mideamsmart.onSyncDone)
+  if (typeof jQuery === 'function') {
+    // The core still triggers non-core events through jQuery when it is loaded
+    $('body').off('mideamsmart::syncDone').on('mideamsmart::syncDone', jeeFrontEnd.mideamsmart.onSyncDone)
   }
 }
 
+jeeFrontEnd.mideamsmart.showPendingSummary()
+
 document.getElementById('bt_mideamsmartSyncDevices')?.addEventListener('click', function() {
   jeeFrontEnd.mideamsmart.syncDevices()
+})
+
+document.getElementById('bt_mideamsmartFetchKeys')?.addEventListener('click', function() {
+  jeeFrontEnd.mideamsmart.fetchDeviceKeys()
 })
 
 /* Called by the core when an equipment is displayed */

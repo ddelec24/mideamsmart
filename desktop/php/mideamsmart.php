@@ -186,6 +186,11 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									<input type="text" class="eqLogicAttr form-control inputPassword" data-l1key="configuration" data-l2key="key" autocomplete="off">
 								</div>
 							</div>
+							<div class="form-group">
+								<div class="col-sm-offset-4 col-sm-6">
+									<a class="btn btn-sm btn-default" id="bt_mideamsmartFetchKeys"><i class="fas fa-key"></i> {{Récupérer token/key depuis le cloud}}</a>
+								</div>
+							</div>
 
 							<legend><i class="fas fa-cogs"></i> {{Options}}</legend>
 							<div class="form-group">

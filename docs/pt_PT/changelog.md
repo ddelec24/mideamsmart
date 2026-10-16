@@ -9,3 +9,7 @@
 - Criação do plugin: estrutura de base, página de configuração e página dos equipamentos
 - Instalação das dependências: Python 3.13 autónomo (via uv) e ambiente virtual dedicado ao plugin
 - Daemon Python (asyncio): arranque, paragem limpa, comunicação com o Jeedom e transmissão da lista de equipamentos
+- Sincronização dos aparelhos: conta MSmartHome, procura na rede local, criação e atualização dos equipamentos
+- Obtenção do token e da key, verificados junto do aparelho, e botão para os voltar a pedir
+- Proteção contra o bloqueio da conta Midea (códigos 7610 e 65027)
+- Endereço de difusão automático por predefinição (todas as interfaces de rede)

@@ -6,8 +6,10 @@ import os
 import signal
 from typing import Any
 
+from .cloud import CloudGuard
 from .devices import DeviceManager
 from .jeedom import JeedomCallback, JeedomSocketServer
+from .sync import SyncRequest, SyncService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,11 +22,14 @@ class Daemon:
         self._callback = JeedomCallback(callback_url, apikey, cycle)
         self._socket_server = JeedomSocketServer(socket_host, socket_port, apikey, self.handle_message)
         self._device_manager = DeviceManager()
+        self._sync_service = SyncService(CloudGuard())
+        self._sync_lock = asyncio.Lock()
         self._stop_event = asyncio.Event()
         self._handlers = {
             'setDevices': self._on_set_devices,
             'updateDevice': self._on_update_device,
             'removeDevice': self._on_remove_device,
+            'syncDevices': self._on_sync_devices,
             'stop': self._on_stop,
         }
 
@@ -78,6 +83,27 @@ class Daemon:
     async def _on_remove_device(self, message: dict[str, Any]) -> None:
         if 'eqLogicId' in message:
             self._device_manager.remove_device(message['eqLogicId'])
+
+    async def _on_sync_devices(self, message: dict[str, Any]) -> None:
+        request = SyncRequest.from_jeedom(message)
+        if self._sync_lock.locked():
+            _LOGGER.warning('A synchronization is already running')
+            await self._callback.send({'action': 'syncResult', 'failed': 'alreadyRunning', 'onlyDeviceId': message.get('onlyDeviceId')})
+            return
+        async with self._sync_lock:
+            _LOGGER.info('Synchronization requested%s', f' for the appliance {request.only_device_id}' if request.only_device_id else '')
+
+            async def progress(step: str) -> None:
+                await self._callback.send({'action': 'syncProgress', 'step': step})
+
+            try:
+                result = await self._sync_service.run(request, progress)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                _LOGGER.exception('Synchronization failed')
+                result = {'failed': 'internalError', 'onlyDeviceId': message.get('onlyDeviceId')}
+            await self._callback.send({'action': 'syncResult', **result})
 
     async def _on_stop(self, message: dict[str, Any]) -> None:
         _LOGGER.info('Stop requested by Jeedom')

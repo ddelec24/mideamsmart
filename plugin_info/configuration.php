@@ -37,10 +37,10 @@ if (!isConnect()) {
 		<legend><i class="fas fa-network-wired"></i> {{Réseau local}}</legend>
 		<div class="form-group">
 			<label class="col-md-4 control-label">{{Adresse de diffusion}}
-				<sup><i class="fas fa-question-circle tooltips" title="{{Adresse(s) de broadcast utilisée(s) pour découvrir les appareils, séparées par des virgules (ex. : 192.168.1.255)}}"></i></sup>
+				<sup><i class="fas fa-question-circle tooltips" title="{{Adresse(s) de broadcast utilisée(s) pour découvrir les appareils, séparées par des virgules (ex. : 192.168.1.255). Laisser vide pour utiliser toutes les interfaces réseau de Jeedom}}"></i></sup>
 			</label>
 			<div class="col-md-4">
-				<input class="configKey form-control" data-l1key="broadcastAddress" placeholder="<?php echo mideamsmart::DEFAULT_BROADCAST_ADDRESS; ?>">
+				<input class="configKey form-control" data-l1key="broadcastAddress" placeholder="{{Automatique}}">
 			</div>
 		</div>
 		<div class="form-group">

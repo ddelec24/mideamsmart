@@ -13,6 +13,20 @@ try {
 
 	ajax::init();
 
+	if (init('action') == 'syncDevices') {
+		mideamsmart::syncDevices();
+		ajax::success();
+	}
+
+	if (init('action') == 'fetchDeviceKeys') {
+		$eqLogic = mideamsmart::byId(init('id'));
+		if (!is_object($eqLogic) || $eqLogic->getEqType_name() != 'mideamsmart') {
+			throw new Exception(__('Équipement introuvable', __FILE__) . ' : ' . init('id'));
+		}
+		mideamsmart::syncDevices($eqLogic);
+		ajax::success();
+	}
+
 	throw new Exception(__('Aucune méthode correspondante à', __FILE__) . ' : ' . init('action'));
 } catch (Exception $e) {
 	ajax::error(displayException($e), $e->getCode());

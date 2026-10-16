@@ -54,7 +54,7 @@ Nach einem Plugin-Update, das diese Versionen ändert, wechseln die Abhängigkei
 - **MSmartHome-Konto**
   - **Benutzername (E-Mail)** und **Passwort** des MSmartHome-Kontos.
 - **Lokales Netzwerk**
-  - **Broadcast-Adresse**: Broadcast-Adresse(n) zur Erkennung der Geräte, durch Kommas getrennt. Der Standardwert `255.255.255.255` passt in den meisten Fällen. Werden die Geräte nicht gefunden, geben Sie die Broadcast-Adresse Ihres Netzwerks an (zum Beispiel `192.168.1.255`).
+  - **Broadcast-Adresse**: Broadcast-Adresse(n) zur Erkennung der Geräte, durch Kommas getrennt. Leer lassen (Standard), um auf allen Netzwerkschnittstellen von Jeedom zu senden. Werden die Geräte nicht gefunden, geben Sie die Broadcast-Adresse ihres Netzwerks an (zum Beispiel `192.168.1.255`).
   - **Standard-Abfrageintervall**: Zeit in Sekunden zwischen zwei Abfragen des Gerätezustands (standardmäßig 30 s, mindestens 10 s).
 - **Dämon**
   - **Dämon-Port**: lokaler Port des Dämons (standardmäßig 55114). Ändern Sie ihn nur bei einem Konflikt mit einem anderen Plugin.
@@ -69,7 +69,14 @@ Der Dämon übernimmt die lokale Kommunikation mit den Geräten. Sobald die Abh�
 
 ## Geräte hinzufügen
 
-Auf der Plugin-Seite ruft die Schaltfläche **Synchronisieren** die Geräte des MSmartHome-Kontos ab, sucht sie im lokalen Netzwerk und legt die entsprechenden Geräte in Jeedom an.
+Auf der Plugin-Seite führt die Schaltfläche **Synchronisieren** (der Dämon muss laufen) Folgendes aus:
+
+1. Sie sucht die Geräte im lokalen Netzwerk.
+2. Ist ein MSmartHome-Konto eingerichtet, meldet sie sich an und ruft die Geräteliste des Kontos ab.
+3. Für jedes V3-Gerät, dessen Schlüssel noch unbekannt sind, ruft sie *Token* und *Key* aus der Cloud ab und **prüft sie direkt am Gerät**, bevor sie gespeichert werden.
+4. Sie legt die neuen Geräte an oder aktualisiert IP-Adresse, Port und Protokoll der vorhandenen. Namen und bereits vorhandene Schlüssel werden nie geändert.
+
+Eine Meldung fasst den Vorgang zusammen und nennt die Geräte, deren Schlüssel nicht abgerufen werden konnten. Geräte eines nicht unterstützten Typs werden ignoriert. Ohne MSmartHome-Konto erfolgt nur die lokale Suche.
 
 ![Plugin-Seite](../images/plugin_devices.png)
 
@@ -86,6 +93,7 @@ Mit der Schaltfläche **Hinzufügen** können Sie ein Gerät manuell anlegen, zu
   - **IP-Adresse** und **Port** (standardmäßig 6444).
   - **Protokollversion**: V3 für die meisten neueren Geräte, V2 für ältere.
   - **Token** und **Key**: Authentifizierungsschlüssel von V3-Geräten, werden automatisch abgerufen.
+  - **Token/Key aus der Cloud abrufen**: fragt die Schlüssel dieses Geräts erneut in der Cloud ab und prüft sie, zum Beispiel nach einem Reset des WLAN-Moduls. Speichern Sie das Gerät vorher.
 - **Optionen**
   - **Abfrageintervall**: leer lassen, um den Wert aus der Plugin-Konfiguration zu verwenden.
 - **Informationen**
@@ -98,6 +106,17 @@ Mit der Schaltfläche **Hinzufügen** können Sie ein Gerät manuell anlegen, zu
 ## Befehle
 
 Die Befehle werden automatisch entsprechend den von jedem Gerät gemeldeten Funktionen angelegt. Ihre detaillierte Liste wird hier ergänzt, sobald sie verfügbar sind.
+
+## Fehlerbehebung
+
+| Meldung | Lösung |
+|---|---|
+| *Falscher MSmartHome-Benutzername oder falsches Passwort* | Prüfen Sie das Konto in der Plugin-Konfiguration. Das Plugin versucht es erst wieder, wenn sich die Zugangsdaten ändern. |
+| *Die Midea-Cloud hat das Konto vorübergehend gesperrt* | Zu viele Anmeldungen (Codes `7610`, `65027`). Warten Sie die angegebene Zeit ab, ohne eine weitere Synchronisierung zu starten. |
+| *Gerät nicht direkt mit diesem Konto gekoppelt (freigegeben?)* | Koppeln Sie das Gerät in der MSmartHome-App mit diesem Konto, nicht nur über eine Freigabe. |
+| *Gerät nicht im MSmartHome-Konto* | Das Gerät ist im Netzwerk, gehört aber zu einem anderen Konto: Geben Sie *Token* und *Key* manuell ein oder koppeln Sie es mit diesem Konto. |
+| *Schlüssel vom Gerät abgelehnt* | Führen Sie **Token/Key aus der Cloud abrufen** erneut aus; besteht das Problem weiter, koppeln Sie das Gerät in der App neu. |
+| *Gerät im lokalen Netzwerk nicht gefunden* / *nicht erreichbar* | Prüfen Sie, ob das Gerät eingeschaltet und im selben Netzwerk wie Jeedom ist, oder geben Sie die **Broadcast-Adresse** seines Netzwerks an. |
 
 ## Danksagung
 

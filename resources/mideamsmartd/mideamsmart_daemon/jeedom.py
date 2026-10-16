@@ -32,7 +32,7 @@ LOG_LEVELS = {
     'none': logging.CRITICAL + 10,
 }
 
-SENSITIVE_KEYS = frozenset({'apikey', 'token', 'key', 'password', 'cloudPassword', 'cloudAccount'})
+SENSITIVE_KEYS = frozenset({'apikey', 'token', 'key', 'password', 'account', 'cloudPassword', 'cloudAccount'})
 MAX_MESSAGE_SIZE = 1024 * 1024
 READ_TIMEOUT = 10
 

@@ -54,7 +54,7 @@ Tras una actualización del plugin que cambie estas versiones, las dependencias 
 - **Cuenta MSmartHome**
   - **Usuario (email)** y **Contraseña** de la cuenta MSmartHome.
 - **Red local**
-  - **Dirección de difusión**: dirección(es) de broadcast usada(s) para descubrir los aparatos, separadas por comas. El valor por defecto `255.255.255.255` sirve en la mayoría de los casos. Si no se encuentran los aparatos, indique la dirección de broadcast de su red (por ejemplo `192.168.1.255`).
+  - **Dirección de difusión**: dirección(es) de broadcast usada(s) para descubrir los aparatos, separadas por comas. Déjelo vacío (por defecto) para difundir en todas las interfaces de red de Jeedom. Si no se encuentran los aparatos, indique la dirección de broadcast de su red (por ejemplo `192.168.1.255`).
   - **Intervalo de consulta por defecto**: tiempo en segundos entre dos lecturas del estado de los aparatos (30 s por defecto, 10 s como mínimo).
 - **Demonio**
   - **Puerto del demonio**: puerto local usado por el demonio (55114 por defecto). Modifíquelo solo en caso de conflicto con otro plugin.
@@ -69,7 +69,14 @@ El demonio gestiona la comunicación local con los aparatos. Una vez instaladas 
 
 ## Añadir aparatos
 
-En la página del plugin, el botón **Sincronizar** obtiene los aparatos de la cuenta MSmartHome, los busca en la red local y crea los equipos correspondientes.
+En la página del plugin, el botón **Sincronizar** (el demonio debe estar iniciado):
+
+1. busca los aparatos en la red local;
+2. si hay una cuenta MSmartHome configurada, se conecta a ella y obtiene la lista de aparatos de la cuenta;
+3. para cada aparato V3 cuyas claves aún no se conocen, obtiene el *token* y la *key* desde la nube y luego **los verifica directamente con el aparato** antes de guardarlos;
+4. crea los nuevos equipos, o actualiza la dirección IP, el puerto y el protocolo de los existentes. Los nombres y las claves ya presentes nunca se modifican.
+
+Un mensaje resume la operación e indica los aparatos cuyas claves no se han podido obtener. Los aparatos de un tipo no compatible se ignoran. Sin cuenta MSmartHome, solo se realiza la búsqueda local.
 
 ![Página del plugin](../images/plugin_devices.png)
 
@@ -86,6 +93,7 @@ El botón **Añadir** permite crear un equipo manualmente, por ejemplo para un a
   - **Dirección IP** y **Puerto** (6444 por defecto).
   - **Versión del protocolo**: V3 para la mayoría de los aparatos recientes, V2 para los más antiguos.
   - **Token** y **Key**: claves de autenticación de los aparatos V3, obtenidas automáticamente.
+  - **Obtener token/key desde la nube**: vuelve a pedir a la nube las claves de este aparato y las verifica, por ejemplo tras reiniciar el módulo Wi-Fi. Guarde el equipo antes de usarlo.
 - **Opciones**
   - **Intervalo de consulta**: déjelo vacío para usar el valor de la configuración del plugin.
 - **Información**
@@ -98,6 +106,17 @@ El botón **Añadir** permite crear un equipo manualmente, por ejemplo para un a
 ## Comandos
 
 Los comandos se crean automáticamente según las capacidades que comunica cada aparato. Su lista detallada se añadirá aquí en cuanto estén disponibles.
+
+## Solución de problemas
+
+| Mensaje | Solución |
+|---|---|
+| *Usuario o contraseña de MSmartHome incorrectos* | Compruebe la cuenta en la configuración del plugin. El plugin no lo vuelve a intentar mientras no cambien las credenciales. |
+| *La nube de Midea ha bloqueado temporalmente la cuenta* | Demasiadas conexiones (códigos `7610`, `65027`). Espere el tiempo indicado sin lanzar otra sincronización. |
+| *aparato no vinculado directamente a esta cuenta (¿compartido?)* | En la aplicación MSmartHome, vincule el aparato a esta cuenta, no solo mediante un uso compartido. |
+| *aparato ausente de la cuenta MSmartHome* | El aparato está en la red pero en otra cuenta: introduzca *token* y *key* manualmente, o vincúlelo a esta cuenta. |
+| *claves rechazadas por el aparato* | Vuelva a lanzar **Obtener token/key desde la nube**; si el problema persiste, vuelva a vincular el aparato en la aplicación. |
+| *aparato no encontrado en la red local* / *inaccesible* | Compruebe que el aparato está encendido y en la misma red que Jeedom, o indique la **dirección de difusión** de su red. |
 
 ## Créditos
 

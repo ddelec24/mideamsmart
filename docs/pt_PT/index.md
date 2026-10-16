@@ -54,7 +54,7 @@ Após uma atualização do plugin que altere estas versões, as dependências vo
 - **Conta MSmartHome**
   - **Utilizador (email)** e **Palavra-passe** da conta MSmartHome.
 - **Rede local**
-  - **Endereço de difusão**: endereço(s) de broadcast usado(s) para descobrir os aparelhos, separados por vírgulas. O valor predefinido `255.255.255.255` serve na maioria dos casos. Se os aparelhos não forem encontrados, indique o endereço de broadcast da sua rede (por exemplo `192.168.1.255`).
+  - **Endereço de difusão**: endereço(s) de broadcast usado(s) para descobrir os aparelhos, separados por vírgulas. Deixe vazio (predefinição) para difundir em todas as interfaces de rede do Jeedom. Se os aparelhos não forem encontrados, indique o endereço de broadcast da sua rede (por exemplo `192.168.1.255`).
   - **Intervalo de consulta predefinido**: tempo em segundos entre duas leituras do estado dos aparelhos (30 s por predefinição, 10 s no mínimo).
 - **Daemon**
   - **Porta do daemon**: porta local usada pelo daemon (55114 por predefinição). Altere-a apenas em caso de conflito com outro plugin.
@@ -69,7 +69,14 @@ O daemon assegura a comunicação local com os aparelhos. Depois de instaladas a
 
 ## Adicionar aparelhos
 
-Na página do plugin, o botão **Sincronizar** obtém os aparelhos da conta MSmartHome, procura-os na rede local e cria os equipamentos correspondentes.
+Na página do plugin, o botão **Sincronizar** (o daemon deve estar iniciado):
+
+1. procura os aparelhos na rede local;
+2. se houver uma conta MSmartHome configurada, liga-se a ela e obtém a lista dos aparelhos da conta;
+3. para cada aparelho V3 cujas chaves ainda não são conhecidas, obtém o *token* e a *key* na nuvem e depois **verifica-os diretamente junto do aparelho** antes de os guardar;
+4. cria os novos equipamentos, ou atualiza o endereço IP, a porta e o protocolo dos existentes. Os nomes e as chaves já presentes nunca são alterados.
+
+Uma mensagem resume a operação e indica os aparelhos cujas chaves não puderam ser obtidas. Os aparelhos de um tipo não suportado são ignorados. Sem conta MSmartHome, é feita apenas a procura local.
 
 ![Página do plugin](../images/plugin_devices.png)
 
@@ -86,6 +93,7 @@ O botão **Adicionar** permite criar um equipamento manualmente, por exemplo par
   - **Endereço IP** e **Porta** (6444 por predefinição).
   - **Versão do protocolo**: V3 para a maioria dos aparelhos recentes, V2 para os mais antigos.
   - **Token** e **Key**: chaves de autenticação dos aparelhos V3, obtidas automaticamente.
+  - **Obter token/key a partir da nuvem**: volta a pedir à nuvem as chaves deste aparelho e verifica-as, por exemplo após uma reposição do módulo Wi-Fi. Guarde o equipamento antes de o usar.
 - **Opções**
   - **Intervalo de consulta**: deixe vazio para usar o valor da configuração do plugin.
 - **Informações**
@@ -98,6 +106,17 @@ O botão **Adicionar** permite criar um equipamento manualmente, por exemplo par
 ## Comandos
 
 Os comandos são criados automaticamente de acordo com as capacidades comunicadas por cada aparelho. A sua lista detalhada será adicionada aqui assim que estiverem disponíveis.
+
+## Resolução de problemas
+
+| Mensagem | Solução |
+|---|---|
+| *Utilizador ou palavra-passe MSmartHome incorretos* | Verifique a conta na configuração do plugin. O plugin não volta a tentar enquanto as credenciais não mudarem. |
+| *A nuvem da Midea bloqueou temporariamente a conta* | Demasiadas ligações (códigos `7610`, `65027`). Aguarde o tempo indicado sem iniciar outra sincronização. |
+| *aparelho não emparelhado diretamente com esta conta (partilhado?)* | Na aplicação MSmartHome, emparelhe o aparelho com esta conta, e não apenas através de uma partilha. |
+| *aparelho ausente da conta MSmartHome* | O aparelho está na rede mas noutra conta: introduza *token* e *key* manualmente, ou emparelhe-o com esta conta. |
+| *chaves recusadas pelo aparelho* | Volte a usar **Obter token/key a partir da nuvem**; se o problema persistir, volte a emparelhar o aparelho na aplicação. |
+| *aparelho não encontrado na rede local* / *inacessível* | Verifique se o aparelho está ligado e na mesma rede que o Jeedom, ou indique o **endereço de difusão** da sua rede. |
 
 ## Créditos
 
