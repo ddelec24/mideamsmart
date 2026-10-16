@@ -22,7 +22,7 @@ try {
 		die();
 	}
 
-	log::add('mideamsmart', 'debug', __('Message du démon non traité', __FILE__) . ' : ' . json_encode($result));
+	mideamsmart::handleDaemonMessage($result);
 } catch (Exception $e) {
 	log::add('mideamsmart', 'error', displayException($e));
 }

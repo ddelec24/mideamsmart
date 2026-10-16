@@ -59,6 +59,14 @@ Após uma atualização do plugin que altere estas versões, as dependências vo
 - **Daemon**
   - **Porta do daemon**: porta local usada pelo daemon (55114 por predefinição). Altere-a apenas em caso de conflito com outro plugin.
 
+### Daemon
+
+O daemon assegura a comunicação local com os aparelhos. Depois de instaladas as dependências, inicia-se automaticamente (gestão automática ativada), ou com o botão **(Re)Iniciar** da página de configuração do plugin.
+
+- Escuta apenas na máquina Jeedom (`127.0.0.1`), na porta definida acima.
+- **Nunca** se liga à nuvem da Midea ao iniciar, o que evita os bloqueios da conta.
+- As suas mensagens estão no log `mideamsmart_daemon`, as da instalação das dependências em `mideamsmart_update`. Coloque o nível de log do plugin em *Debug* para obter o detalhe das trocas. O plugin oculta neles as palavras-passe, o *token* e a *key*.
+
 ## Adicionar aparelhos
 
 Na página do plugin, o botão **Sincronizar** obtém os aparelhos da conta MSmartHome, procura-os na rede local e cria os equipamentos correspondentes.

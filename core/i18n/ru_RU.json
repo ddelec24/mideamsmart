@@ -8,14 +8,22 @@
         "Adresse de diffusion invalide": "Недопустимый широковещательный адрес",
         "Climatiseur": "Кондиционер",
         "Climatiseur commercial": "Коммерческий кондиционер",
+        "Démon démarré": "Демон запущен",
+        "Démon prêt, envoi de la liste des équipements": "Демон готов, отправка списка оборудования",
         "Déshumidificateur": "Осушитель",
+        "Erreur lors de l'envoi au démon": "Ошибка при отправке демону",
+        "Impossible de contacter le démon": "Не удаётся связаться с демоном",
+        "Impossible de lancer le démon, consultez le log": "Не удаётся запустить демон, проверьте журнал",
         "L'intervalle d'interrogation doit être d'au moins": "Интервал опроса должен составлять не менее",
+        "Lancement du démon": "Запуск демона",
+        "Le démon n'est pas démarré": "Демон не запущен",
         "Le port du démon doit être compris entre 1024 et 65535": "Порт демона должен быть в диапазоне от 1024 до 65535",
+        "Message du démon non traité": "Необработанное сообщение демона",
         "Port de l'appareil invalide": "Недопустимый порт устройства",
-        "Type non supporté": "Неподдерживаемый тип"
+        "Type non supporté": "Неподдерживаемый тип",
+        "Veuillez vérifier la configuration": "Проверьте настройки"
     },
     "plugins/mideamsmart/core/php/jeemideamsmart.php": {
-        "Message du démon non traité": "Необработанное сообщение демона",
         "Vous n'êtes pas autorisé à effectuer cette action": "У вас нет прав на выполнение этого действия"
     },
     "plugins/mideamsmart/desktop/js/mideamsmart.js": {

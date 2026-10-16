@@ -59,6 +59,14 @@ Après une mise à jour du plugin qui change ces versions, les dépendances repa
 - **Démon**
   - **Port du démon** : port local utilisé par le démon (55114 par défaut). Ne le modifiez qu'en cas de conflit avec un autre plugin.
 
+### Démon
+
+Le démon assure la communication locale avec les appareils. Une fois les dépendances installées, il démarre automatiquement (gestion automatique activée), ou se lance avec le bouton **(Re)Démarrer** de la page de configuration du plugin.
+
+- Il n'écoute que sur la machine Jeedom (`127.0.0.1`), sur le port défini ci-dessus.
+- Il ne se connecte **jamais** au cloud Midea à son démarrage, ce qui évite les blocages de compte.
+- Ses messages sont dans le log `mideamsmart_daemon`, ceux de l'installation des dépendances dans `mideamsmart_update`. Passez le niveau de log du plugin en *Debug* pour obtenir le détail des échanges. Le plugin y masque les mots de passe, *token* et *key*.
+
 ## Ajout des appareils
 
 Sur la page du plugin, le bouton **Synchroniser** récupère les appareils du compte MSmartHome, les recherche sur le réseau local et crée les équipements correspondants.

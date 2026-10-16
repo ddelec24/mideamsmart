@@ -59,6 +59,14 @@ Dopo un aggiornamento del plugin che modifica queste versioni, le dipendenze tor
 - **Demone**
   - **Porta del demone**: porta locale usata dal demone (55114 per impostazione predefinita). Modificala solo in caso di conflitto con un altro plugin.
 
+### Demone
+
+Il demone gestisce la comunicazione locale con gli apparecchi. Una volta installate le dipendenze, si avvia automaticamente (gestione automatica attiva), oppure con il pulsante **(Ri)Avvia** della pagina di configurazione del plugin.
+
+- Ascolta solo sulla macchina Jeedom (`127.0.0.1`), sulla porta definita sopra.
+- **Non** si connette **mai** al cloud Midea all'avvio, il che evita i blocchi dell'account.
+- I suoi messaggi sono nel log `mideamsmart_daemon`, quelli dell'installazione delle dipendenze in `mideamsmart_update`. Imposta il livello di log del plugin su *Debug* per ottenere il dettaglio degli scambi. Il plugin vi nasconde password, *token* e *key*.
+
 ## Aggiunta degli apparecchi
 
 Nella pagina del plugin, il pulsante **Sincronizza** recupera gli apparecchi dell'account MSmartHome, li cerca sulla rete locale e crea i dispositivi corrispondenti.

@@ -1,7 +1,7 @@
 # mideamsmart — Récapitulatif projet
 
 > Document de référence du plugin, à relire avant chaque étape et à mettre à jour à chaque décision.
-> Dernière mise à jour : 2026-10-16 (étapes 1 et 2 terminées)
+> Dernière mise à jour : 2026-10-16 (étapes 1 à 3 terminées)
 
 ## 1. Contexte
 
@@ -71,6 +71,35 @@ Jeedom PHP  ──socket TCP (apikey)──▶  démon Python (asyncio, venv 3.1
   - Une seule session réutilisée, backoff exponentiel, arrêt immédiat sur les codes 7610 et 65027 avec un message clair.
 - Le démon reçoit au démarrage, via socket, la liste des équipements actifs (id, type, ip, port, protocole, token, key, options). Il est notifié lors de toute sauvegarde ou suppression d'équipement.
 - Gestion **hors ligne** : commande info `online` et backoff de reconnexion par appareil.
+
+### Démon — implémenté à l'étape 3
+
+- Code dans `resources/mideamsmartd/` : `mideamsmartd.py` (entrée, argparse) et le paquet `mideamsmart_daemon/`.
+  - `jeedom.py` : `JeedomSocketServer`, `JeedomCallback`, `setup_logging`, `redact`.
+  - `devices.py` : `DeviceConfig` (token et key en `repr=False`), `DeviceManager`.
+  - `daemon.py` : `Daemon` (cycle de vie, table `_handlers` action → coroutine).
+  - Tests `unittest` dans `tests/`. Lancement : `cd resources/mideamsmartd && <venv>/bin/python3 -m unittest discover -s tests -t .` (aiohttp, présent dans le venv, sert de faux Jeedom).
+- Arguments : `--loglevel --sockethost(127.0.0.1) --socketport --callback --apikey --pid --cycle(0.5)`. Le PID est dans `jeedom::getTmpFolder('mideamsmart')/deamon.pid`, et la sortie part dans le log `mideamsmart_daemon`.
+- **Jeedom → démon** (`mideamsmart::sendToDaemon`) : `stream_socket_client` vers `127.0.0.1:port`, **une ligne JSON par connexion**, avec `apikey` (comparée via `hmac.compare_digest`) et `action`. Taille max 1 Mo, timeout de lecture 10 s. Chaque handler tourne dans sa propre tâche, pour ne jamais bloquer le socket.
+  - Actions : `setDevices {devices: [...]}`, `updateDevice {device}`, `removeDevice {eqLogicId}`, `stop`.
+- **Démon → Jeedom** (`JeedomCallback`, httpx) : POST JSON sur `core/php/jeemideamsmart.php?apikey=…`, 3 essais. Le test de démarrage (`GET …&test=1`) attend `OK`, sinon exit 1.
+  - Messages : `daemonStarted {pid}`, auquel PHP répond par `setDevices` ; `deviceValues {devices: {eqLogicId: {logicalId: valeur}}}`, fusionnés et envoyés tous les `cycle` s, puis appliqués via `checkAndUpdateCmd`.
+  - Dispatch PHP dans `mideamsmart::handleDaemonMessage()`.
+- Config envoyée par équipement : `mideamsmart::getDaemonConfig()`, avec les clés `eqLogicId, deviceId(logicalId), deviceType, name, ipAddress, port, protocolVersion, token, key, pollingInterval`.
+  - `postSave` envoie `updateDevice`, ou `removeDevice` si l'équipement est désactivé ; `preRemove` envoie `removeDevice`.
+  - `postConfig_defaultPollingInterval` renvoie toute la liste.
+- Arrêt :
+  - `deamon_stop` : SIGTERM sur le PID, attente de 5 s, puis `system::kill('mideamsmartd.py')` en dernier recours. Pas de `fuserk` sur le port, pour ne pas tuer un autre processus.
+  - Côté démon : SIGTERM/SIGINT provoquent la fermeture du socket, le flush du callback et la suppression du PID.
+- **Logs** : jamais de secret.
+  - Les messages sont passés par `redact` (apikey, token, key, password, cloudAccount, cloudPassword).
+  - Les loggers `httpx` et `httpcore` sont forcés à WARNING, car ils écrivent l'URL contenant l'apikey.
+  - `msmart` et `midealocal` ne sont verbeux qu'en debug.
+- **Testé** :
+  - 11 tests unitaires et de bout en bout ;
+  - processus réel lancé en CLI puis arrêté par SIGTERM ;
+  - classe PHP réelle (avec un faux core minimal, en PHP 8.2) envoyant 143 Ko au démon réel.
+  - **Non testé** dans une vraie instance Jeedom (`deamon_start`, callback HTTP via Apache).
 
 ## 5. Arborescence et nommage (conventions du core)
 
@@ -210,6 +239,7 @@ Les autres types listés par le cloud (FD, FA, B6…) sont affichés comme **« 
 - [ ] URL du dépôt GitHub : remplacer `OWNER` dans les liens documentation/changelog de `info.json`.
 - [ ] Captures d'écran à fournir dans `docs/images/` : `plugin_config.png` (configuration du plugin), `plugin_devices.png` (page du plugin), `device_config.png` (onglet Équipement). À compléter plus tard : commandes AC, commandes A1, modal diagnostic.
 - [ ] Tester l'installation des dépendances sur Raspberry Pi arm64 et armhf.
+- [ ] Tester le cycle de vie du démon dans une vraie instance Jeedom 4.5/4.6 (idéalement une instance Docker de dev).
 - [ ] Vérifier, sur une vraie réponse cloud, l'appariement entre l'`appliance_id` du cloud et le `device_id` de la découverte LAN.
 - [ ] Plan de tests sans matériel : tests unitaires des drivers avec appareils simulés et trames issues des tests des libs.
 
@@ -217,8 +247,8 @@ Les autres types listés par le cloud (FD, FA, B6…) sont affichés comme **« 
 
 1. ✅ Squelette du plugin depuis plugin-template : info.json, icône, classes, page desktop, config, i18n (6 langues), docs (7 langues).
 2. ✅ Dépendances : install via uv, venv, `dependancy_info` (testé amd64 Debian 12/13).
-3. Démon : socket, callback, cycle de vie, services cloud et découverte.
-4. Synchronisation : création des équipements, récupération de token/key.
+3. ✅ Démon : socket, callback, cycle de vie (services cloud et découverte déplacés à l'étape 4).
+4. Synchronisation : services cloud (MSmartHome) et découverte LAN, création des équipements, récupération de token/key.
 5. Driver AC/CC et création des commandes selon les capacités.
 6. Driver A1.
 7. Modal diagnostic, robustesse (hors ligne, backoff, anti-ban).

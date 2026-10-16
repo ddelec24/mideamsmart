@@ -59,6 +59,14 @@ Tras una actualización del plugin que cambie estas versiones, las dependencias 
 - **Demonio**
   - **Puerto del demonio**: puerto local usado por el demonio (55114 por defecto). Modifíquelo solo en caso de conflicto con otro plugin.
 
+### Demonio
+
+El demonio gestiona la comunicación local con los aparatos. Una vez instaladas las dependencias, se inicia automáticamente (gestión automática activada), o con el botón **(Re)Iniciar** de la página de configuración del plugin.
+
+- Solo escucha en la máquina Jeedom (`127.0.0.1`), en el puerto definido arriba.
+- **Nunca** se conecta a la nube de Midea al iniciarse, lo que evita los bloqueos de la cuenta.
+- Sus mensajes están en el log `mideamsmart_daemon`, los de la instalación de las dependencias en `mideamsmart_update`. Ponga el nivel de log del plugin en *Debug* para obtener el detalle de los intercambios. El plugin oculta en ellos las contraseñas, el *token* y la *key*.
+
 ## Añadir aparatos
 
 En la página del plugin, el botón **Sincronizar** obtiene los aparatos de la cuenta MSmartHome, los busca en la red local y crea los equipos correspondientes.

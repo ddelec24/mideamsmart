@@ -8,3 +8,4 @@
 
 - Creazione del plugin: struttura di base, pagina di configurazione e pagina dei dispositivi
 - Installazione delle dipendenze: Python 3.13 autonomo (tramite uv) e ambiente virtuale dedicato al plugin
+- Demone Python (asyncio): avvio, arresto pulito, comunicazione con Jeedom e trasmissione dell'elenco dei dispositivi

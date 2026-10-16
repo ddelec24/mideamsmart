@@ -8,14 +8,22 @@
         "Adresse de diffusion invalide": "Invalid broadcast address",
         "Climatiseur": "Air conditioner",
         "Climatiseur commercial": "Commercial air conditioner",
+        "Démon démarré": "Daemon started",
+        "Démon prêt, envoi de la liste des équipements": "Daemon ready, sending the list of equipments",
         "Déshumidificateur": "Dehumidifier",
+        "Erreur lors de l'envoi au démon": "Error while sending to the daemon",
+        "Impossible de contacter le démon": "Unable to contact the daemon",
+        "Impossible de lancer le démon, consultez le log": "Unable to start the daemon, check the log",
         "L'intervalle d'interrogation doit être d'au moins": "The polling interval must be at least",
+        "Lancement du démon": "Starting the daemon",
+        "Le démon n'est pas démarré": "The daemon is not started",
         "Le port du démon doit être compris entre 1024 et 65535": "The daemon port must be between 1024 and 65535",
+        "Message du démon non traité": "Unhandled daemon message",
         "Port de l'appareil invalide": "Invalid appliance port",
-        "Type non supporté": "Unsupported type"
+        "Type non supporté": "Unsupported type",
+        "Veuillez vérifier la configuration": "Please check the configuration"
     },
     "plugins/mideamsmart/core/php/jeemideamsmart.php": {
-        "Message du démon non traité": "Unhandled daemon message",
         "Vous n'êtes pas autorisé à effectuer cette action": "You are not allowed to perform this action"
     },
     "plugins/mideamsmart/desktop/js/mideamsmart.js": {

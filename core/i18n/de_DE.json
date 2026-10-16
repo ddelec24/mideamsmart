@@ -8,14 +8,22 @@
         "Adresse de diffusion invalide": "Ungültige Broadcast-Adresse",
         "Climatiseur": "Klimaanlage",
         "Climatiseur commercial": "Gewerbliche Klimaanlage",
+        "Démon démarré": "Dämon gestartet",
+        "Démon prêt, envoi de la liste des équipements": "Dämon bereit, Geräteliste wird gesendet",
         "Déshumidificateur": "Luftentfeuchter",
+        "Erreur lors de l'envoi au démon": "Fehler beim Senden an den Dämon",
+        "Impossible de contacter le démon": "Dämon nicht erreichbar",
+        "Impossible de lancer le démon, consultez le log": "Dämon kann nicht gestartet werden, siehe Log",
         "L'intervalle d'interrogation doit être d'au moins": "Das Abfrageintervall muss mindestens betragen:",
+        "Lancement du démon": "Dämon wird gestartet",
+        "Le démon n'est pas démarré": "Der Dämon ist nicht gestartet",
         "Le port du démon doit être compris entre 1024 et 65535": "Der Dämon-Port muss zwischen 1024 und 65535 liegen",
+        "Message du démon non traité": "Nicht verarbeitete Dämon-Nachricht",
         "Port de l'appareil invalide": "Ungültiger Geräte-Port",
-        "Type non supporté": "Nicht unterstützter Typ"
+        "Type non supporté": "Nicht unterstützter Typ",
+        "Veuillez vérifier la configuration": "Bitte überprüfen Sie die Konfiguration"
     },
     "plugins/mideamsmart/core/php/jeemideamsmart.php": {
-        "Message du démon non traité": "Nicht verarbeitete Dämon-Nachricht",
         "Vous n'êtes pas autorisé à effectuer cette action": "Sie sind nicht berechtigt, diese Aktion auszuführen"
     },
     "plugins/mideamsmart/desktop/js/mideamsmart.js": {

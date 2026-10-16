@@ -13,6 +13,8 @@ class mideamsmart extends eqLogic {
 	const DEFAULT_POLLING_INTERVAL = 30;
 	const MIN_POLLING_INTERVAL = 10;
 	const DEFAULT_DEVICE_PORT = 6444;
+	const DAEMON_START_TIMEOUT = 30;
+	const DAEMON_STOP_TIMEOUT = 5;
 
 	const DEVICE_TYPE_AC = 'AC';
 	const DEVICE_TYPE_CC = 'CC';
@@ -127,6 +129,159 @@ class mideamsmart extends eqLogic {
 		return array('resources/python_runtime');
 	}
 
+	/*     * ***************************Démon***************************** */
+
+	private static function getDaemonPidFile() {
+		return jeedom::getTmpFolder(__CLASS__) . '/deamon.pid';
+	}
+
+	private static function getDaemonPid() {
+		$pidFile = self::getDaemonPidFile();
+		if (!file_exists($pidFile)) {
+			return 0;
+		}
+		return intval(trim(file_get_contents($pidFile)));
+	}
+
+	public static function deamon_info() {
+		$return = array();
+		$return['log'] = __CLASS__ . '_daemon';
+		$return['state'] = 'nok';
+		$pid = self::getDaemonPid();
+		if ($pid > 0) {
+			if (@posix_getsid($pid) !== false) {
+				$return['state'] = 'ok';
+			} else {
+				@unlink(self::getDaemonPidFile());
+			}
+		}
+		$return['launchable'] = 'ok';
+		return $return;
+	}
+
+	public static function deamon_start() {
+		self::deamon_stop();
+		$deamon_info = self::deamon_info();
+		if ($deamon_info['launchable'] != 'ok') {
+			throw new Exception(__('Veuillez vérifier la configuration', __FILE__));
+		}
+		$cmd = escapeshellarg(self::getVenvPython()) . ' ' . escapeshellarg(realpath(__DIR__ . '/../../resources/mideamsmartd/mideamsmartd.py'));
+		$cmd .= ' --loglevel ' . escapeshellarg(log::convertLogLevel(log::getLogLevel(__CLASS__)));
+		$cmd .= ' --socketport ' . intval(config::byKey('socketport', __CLASS__, self::DEFAULT_SOCKET_PORT));
+		$cmd .= ' --callback ' . escapeshellarg(network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/' . __CLASS__ . '/core/php/jee' . __CLASS__ . '.php');
+		$cmd .= ' --apikey ' . escapeshellarg(jeedom::getApiKey(__CLASS__));
+		$cmd .= ' --pid ' . escapeshellarg(self::getDaemonPidFile());
+		log::add(__CLASS__, 'info', __('Lancement du démon', __FILE__));
+		exec($cmd . ' >> ' . escapeshellarg(log::getPathToLog(__CLASS__ . '_daemon')) . ' 2>&1 &');
+		for ($i = 0; $i < self::DAEMON_START_TIMEOUT; $i++) {
+			sleep(1);
+			$deamon_info = self::deamon_info();
+			if ($deamon_info['state'] == 'ok') {
+				message::removeAll(__CLASS__, 'unableStartDeamon');
+				log::add(__CLASS__, 'info', __('Démon démarré', __FILE__));
+				return true;
+			}
+		}
+		log::add(__CLASS__, 'error', __('Impossible de lancer le démon, consultez le log', __FILE__) . ' ' . __CLASS__ . '_daemon', 'unableStartDeamon');
+		return false;
+	}
+
+	public static function deamon_stop() {
+		$pid = self::getDaemonPid();
+		if ($pid > 0) {
+			// SIGTERM first so that the daemon closes its connections properly
+			system::kill($pid, false);
+			for ($i = 0; $i < self::DAEMON_STOP_TIMEOUT * 2 && @posix_getsid($pid) !== false; $i++) {
+				usleep(500000);
+			}
+		}
+		system::kill('mideamsmartd.py');
+		@unlink(self::getDaemonPidFile());
+	}
+
+	/**
+	 * Sends a message (one JSON line) to the daemon socket.
+	 * @param array $_params Message, with at least an 'action' key
+	 */
+	public static function sendToDaemon($_params) {
+		$deamon_info = self::deamon_info();
+		if ($deamon_info['state'] != 'ok') {
+			throw new Exception(__('Le démon n\'est pas démarré', __FILE__));
+		}
+		$_params['apikey'] = jeedom::getApiKey(__CLASS__);
+		$payload = json_encode($_params) . "\n";
+		$port = intval(config::byKey('socketport', __CLASS__, self::DEFAULT_SOCKET_PORT));
+		$socket = @stream_socket_client('tcp://127.0.0.1:' . $port, $errorCode, $errorMessage, 5);
+		if ($socket === false) {
+			throw new Exception(__('Impossible de contacter le démon', __FILE__) . ' : ' . $errorMessage . ' (' . $errorCode . ')');
+		}
+		$written = 0;
+		$length = strlen($payload);
+		while ($written < $length) {
+			$result = fwrite($socket, substr($payload, $written));
+			if ($result === false || $result === 0) {
+				fclose($socket);
+				throw new Exception(__('Erreur lors de l\'envoi au démon', __FILE__));
+			}
+			$written += $result;
+		}
+		fclose($socket);
+	}
+
+	/**
+	 * Sends the configuration of every enabled equipment (when the daemon starts).
+	 */
+	public static function sendDevicesToDaemon() {
+		$devices = array();
+		foreach (eqLogic::byType(__CLASS__, true) as $eqLogic) {
+			$devices[] = $eqLogic->getDaemonConfig();
+		}
+		self::sendToDaemon(array('action' => 'setDevices', 'devices' => $devices));
+	}
+
+	public static function postConfig_defaultPollingInterval($_value) {
+		self::notifyDaemonOfDevices();
+	}
+
+	private static function notifyDaemonOfDevices() {
+		$deamon_info = self::deamon_info();
+		if ($deamon_info['state'] != 'ok') {
+			return;
+		}
+		try {
+			self::sendDevicesToDaemon();
+		} catch (Exception $e) {
+			log::add(__CLASS__, 'warning', $e->getMessage());
+		}
+	}
+
+	/**
+	 * Handles a message posted by the daemon on the callback (core/php/jeemideamsmart.php).
+	 * @param array $_message
+	 */
+	public static function handleDaemonMessage($_message) {
+		$action = isset($_message['action']) ? $_message['action'] : '';
+		switch ($action) {
+			case 'daemonStarted':
+				log::add(__CLASS__, 'debug', __('Démon prêt, envoi de la liste des équipements', __FILE__));
+				self::sendDevicesToDaemon();
+				break;
+			case 'deviceValues':
+				if (isset($_message['devices']) && is_array($_message['devices'])) {
+					foreach ($_message['devices'] as $eqLogicId => $values) {
+						$eqLogic = eqLogic::byId($eqLogicId);
+						if (!is_object($eqLogic) || $eqLogic->getEqType_name() != __CLASS__ || !is_array($values)) {
+							continue;
+						}
+						$eqLogic->updateValues($values);
+					}
+				}
+				break;
+			default:
+				log::add(__CLASS__, 'debug', __('Message du démon non traité', __FILE__) . ' : ' . json_encode($_message));
+		}
+	}
+
 	private static function checkPollingInterval($_value) {
 		$value = intval($_value);
 		if ($value < self::MIN_POLLING_INTERVAL) {
@@ -160,6 +315,63 @@ class mideamsmart extends eqLogic {
 		$pollingInterval = trim($this->getConfiguration('pollingInterval', ''));
 		if ($pollingInterval !== '') {
 			$this->setConfiguration('pollingInterval', self::checkPollingInterval($pollingInterval));
+		}
+	}
+
+	public function postSave() {
+		$deamon_info = self::deamon_info();
+		if ($deamon_info['state'] != 'ok') {
+			return;
+		}
+		try {
+			if ($this->getIsEnable() == 1) {
+				self::sendToDaemon(array('action' => 'updateDevice', 'device' => $this->getDaemonConfig()));
+			} else {
+				self::sendToDaemon(array('action' => 'removeDevice', 'eqLogicId' => intval($this->getId())));
+			}
+		} catch (Exception $e) {
+			log::add(__CLASS__, 'warning', $e->getMessage());
+		}
+	}
+
+	public function preRemove() {
+		$deamon_info = self::deamon_info();
+		if ($deamon_info['state'] != 'ok') {
+			return;
+		}
+		try {
+			self::sendToDaemon(array('action' => 'removeDevice', 'eqLogicId' => intval($this->getId())));
+		} catch (Exception $e) {
+			log::add(__CLASS__, 'warning', $e->getMessage());
+		}
+	}
+
+	/**
+	 * Equipment configuration as expected by the daemon (DeviceConfig.from_jeedom)
+	 * @return array
+	 */
+	public function getDaemonConfig() {
+		return array(
+			'eqLogicId' => intval($this->getId()),
+			'deviceId' => $this->getLogicalId(),
+			'deviceType' => $this->getConfiguration('deviceType', ''),
+			'name' => $this->getHumanName(),
+			'ipAddress' => $this->getConfiguration('ipAddress', ''),
+			'port' => intval($this->getConfiguration('port', self::DEFAULT_DEVICE_PORT)),
+			'protocolVersion' => intval($this->getConfiguration('protocolVersion', 3)),
+			'token' => $this->getConfiguration('token', ''),
+			'key' => $this->getConfiguration('key', ''),
+			'pollingInterval' => $this->getPollingInterval(),
+		);
+	}
+
+	/**
+	 * Updates the info commands from values sent by the daemon.
+	 * @param array $_values Values indexed by command logicalId
+	 */
+	public function updateValues($_values) {
+		foreach ($_values as $logicalId => $value) {
+			$this->checkAndUpdateCmd($logicalId, $value);
 		}
 	}
 

@@ -8,14 +8,22 @@
         "Adresse de diffusion invalide": "Endereço de difusão inválido",
         "Climatiseur": "Ar condicionado",
         "Climatiseur commercial": "Ar condicionado comercial",
+        "Démon démarré": "Daemon iniciado",
+        "Démon prêt, envoi de la liste des équipements": "Daemon pronto, envio da lista de equipamentos",
         "Déshumidificateur": "Desumidificador",
+        "Erreur lors de l'envoi au démon": "Erro ao enviar para o daemon",
+        "Impossible de contacter le démon": "Não é possível contactar o daemon",
+        "Impossible de lancer le démon, consultez le log": "Não é possível iniciar o daemon, consulte o log",
         "L'intervalle d'interrogation doit être d'au moins": "O intervalo de consulta deve ser de pelo menos",
+        "Lancement du démon": "A iniciar o daemon",
+        "Le démon n'est pas démarré": "O daemon não está iniciado",
         "Le port du démon doit être compris entre 1024 et 65535": "A porta do daemon deve estar entre 1024 e 65535",
+        "Message du démon non traité": "Mensagem do daemon não tratada",
         "Port de l'appareil invalide": "Porta do aparelho inválida",
-        "Type non supporté": "Tipo não suportado"
+        "Type non supporté": "Tipo não suportado",
+        "Veuillez vérifier la configuration": "Verifique a configuração"
     },
     "plugins/mideamsmart/core/php/jeemideamsmart.php": {
-        "Message du démon non traité": "Mensagem do daemon não tratada",
         "Vous n'êtes pas autorisé à effectuer cette action": "Não está autorizado a efetuar esta ação"
     },
     "plugins/mideamsmart/desktop/js/mideamsmart.js": {

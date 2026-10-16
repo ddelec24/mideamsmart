@@ -59,6 +59,14 @@ Nach einem Plugin-Update, das diese Versionen ändert, wechseln die Abhängigkei
 - **Dämon**
   - **Dämon-Port**: lokaler Port des Dämons (standardmäßig 55114). Ändern Sie ihn nur bei einem Konflikt mit einem anderen Plugin.
 
+### Dämon
+
+Der Dämon übernimmt die lokale Kommunikation mit den Geräten. Sobald die Abhängigkeiten installiert sind, startet er automatisch (automatische Verwaltung aktiviert) oder über die Schaltfläche **(Neu)starten** auf der Konfigurationsseite des Plugins.
+
+- Er lauscht nur auf dem Jeedom-Rechner (`127.0.0.1`), auf dem oben festgelegten Port.
+- Beim Start verbindet er sich **nie** mit der Midea-Cloud, wodurch Kontosperren vermieden werden.
+- Seine Meldungen stehen im Log `mideamsmart_daemon`, die der Installation der Abhängigkeiten in `mideamsmart_update`. Stellen Sie die Log-Stufe des Plugins auf *Debug*, um die Einzelheiten des Austauschs zu sehen. Das Plugin maskiert dort Passwörter, *Token* und *Key*.
+
 ## Geräte hinzufügen
 
 Auf der Plugin-Seite ruft die Schaltfläche **Synchronisieren** die Geräte des MSmartHome-Kontos ab, sucht sie im lokalen Netzwerk und legt die entsprechenden Geräte in Jeedom an.

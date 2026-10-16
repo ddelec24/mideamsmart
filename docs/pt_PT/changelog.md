@@ -8,3 +8,4 @@
 
 - Criação do plugin: estrutura de base, página de configuração e página dos equipamentos
 - Instalação das dependências: Python 3.13 autónomo (via uv) e ambiente virtual dedicado ao plugin
+- Daemon Python (asyncio): arranque, paragem limpa, comunicação com o Jeedom e transmissão da lista de equipamentos

@@ -59,6 +59,14 @@ After a plugin update that changes these versions, the dependencies go back to t
 - **Daemon**
   - **Daemon port**: local port used by the daemon (55114 by default). Only change it in case of conflict with another plugin.
 
+### Daemon
+
+The daemon handles the local communication with the appliances. Once the dependencies are installed, it starts automatically (automatic management enabled), or with the **(Re)Start** button of the plugin configuration page.
+
+- It only listens on the Jeedom machine (`127.0.0.1`), on the port set above.
+- It **never** connects to the Midea cloud when it starts, which avoids account blocking.
+- Its messages are in the `mideamsmart_daemon` log, those of the dependency installation in `mideamsmart_update`. Set the plugin log level to *Debug* to get the details of the exchanges. The plugin masks passwords, *token* and *key* in its messages.
+
 ## Adding appliances
 
 On the plugin page, the **Synchronize** button retrieves the appliances of the MSmartHome account, looks for them on the local network and creates the matching equipments.
