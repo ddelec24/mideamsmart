@@ -4,3 +4,17 @@ resources/python/
 __pycache__/
 *.pyc
 .pytest_cache/
+nbproject/
+test.php
+core/config/common.config.php
+plugins
+sftp-config.json
+.project
+.DS_Store
+Thumbs.db
+*.php~
+docs/_site/
+docs/Gemfile.lock
+docs/.sass-cache/
+.remote-sync.json
+.vscode

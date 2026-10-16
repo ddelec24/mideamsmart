@@ -1,7 +1,7 @@
 # mideamsmart — Récapitulatif projet
 
 > Document de référence du plugin, à relire avant chaque étape et à mettre à jour à chaque décision.
-> Dernière mise à jour : 2026-10-16
+> Dernière mise à jour : 2026-10-16 (étape 1 terminée)
 
 ## 1. Contexte
 
@@ -26,7 +26,7 @@
 | Compatibilité | `require` 4.5, Debian min 12 / max 13.99 |
 | Catégorie | `energy` |
 | Licence | Jeedom n'impose pas de licence aux plugins tiers, d'où **MIT**, cohérente avec msmart-ng et midea-local. À revérifier au moment de la publication sur le Market |
-| Auteur | **À confirmer** (pseudo Market) |
+| Auteur | `Damien` provisoire dans info.json, **à confirmer** (pseudo Market) |
 | Icône | Générée à partir de `template_icon.png` (PNG 309×348), avec une couleur distincte des plugins officiels |
 | Git | Dépôt local, un commit par étape, sans remote pour l'instant |
 | Tests | Aucun appareil disponible : tests unitaires et simulateur, puis testeurs du forum. Les captures d'écran de la doc seront fournies par Damien ; je prépare les emplacements |
@@ -99,7 +99,17 @@ mideamsmart/
   - lance `uv venv resources/python_venv`, puis `uv pip install -r requirements.txt`.
   - Architectures visées : x86_64, aarch64 et armv7.
 - `dependancy_info()` vérifie le binaire Python du venv **et** les versions des libs.
-- Démon lancé avec `resources/python_venv/bin/python3`. Le port est configurable, valeur par défaut à choisir (libre, ≠ 55009).
+- Démon lancé avec `resources/python_venv/bin/python3`. Port configurable, **55114** par défaut (`mideamsmart::DEFAULT_SOCKET_PORT`).
+
+**Règles de code** (vérifiées à l'étape 1) :
+- PHP compatible **7.4, 8.0 et 8.2** : le workflow `jeedom/workflows` lint ces trois versions. Pas de `match`, ni de `?->`, ni d'arguments nommés, ni de `str_contains` côté PHP.
+- JS en **vanilla core 4.4+**, sans jQuery : `domUtils.ajax`, `jeedomUtils.showAlert`, `setJeeValues`, `jeeFrontEnd.mideamsmart`. Le tri du tableau des commandes est géré par le core.
+- Textes : `{{…}}` en PHP/JS, `__('…', __FILE__)` en PHP, en français. Logs utilisateur traduits.
+- Lint local : `docker run --rm -v "$PWD":/app:ro -w /app php:7.4-cli …` (idem 8.2), `node --check` via `node:22-alpine`.
+
+**Outils de dev** (`tools/`, non utilisés par Jeedom) :
+- `tools/i18n.py check|update [traductions.json]` : extrait les chaînes et met à jour `core/i18n/*.json` (fichier source → chaîne FR → traduction).
+- `tools/make_icons.py <template_icon.png>` : génère `plugin_info/mideamsmart_icon.png` (forme reprise du modèle Jeedom, dégradé bleu `#0E4A8C` → `#20A0DC`) et `desktop/img/{ac,cc,a1}.png`.
 
 ## 6. Configuration
 
@@ -108,9 +118,11 @@ mideamsmart/
 - Port du démon.
 - Adresse(s) de broadcast pour la découverte (par défaut `255.255.255.255`).
 - Intervalle de polling par défaut.
-- Bouton **« Synchroniser les appareils »**.
+- Clés de config : `cloudAccount` et `cloudPassword` (chiffrées via `$_encryptConfigKey`), `broadcastAddress`, `defaultPollingInterval`, `socketport`.
 
-**Équipement** (`logicalId` = ID appareil Midea) :
+**Page du plugin** : bouton **« Synchroniser »** (`#bt_mideamsmartSyncDevices`, action ajax `syncDevices`), « Ajouter » (création manuelle) et « Configuration ».
+
+**Équipement** (`logicalId` = ID appareil Midea). Clés de configuration : `deviceType` (AC/CC/A1), `ipAddress`, `port`, `protocolVersion`, `token` et `key` (chiffrées via `encrypt()`/`decrypt()`), `pollingInterval`, `serialNumber`, `model`.
 - Champs **lecture seule** : type (AC/CC/A1…), SN, modèle.
 - Connexion : IP, port (6444), version de protocole (2/3), token et key (champs masqués, éditables).
 - Actions :
@@ -180,8 +192,9 @@ Les autres types listés par le cloud (FD, FA, B6…) sont affichés comme **« 
 
 ## 9. Points ouverts / à faire
 
-- [ ] Auteur (pseudo Market) dans `info.json`.
-- [ ] Choisir le port par défaut du démon (vérifier qu'il n'entre pas en conflit avec des plugins connus).
+- [ ] Auteur (pseudo Market) dans `info.json` et `LICENSE`.
+- [ ] URL du dépôt GitHub : remplacer `OWNER` dans les liens documentation/changelog de `info.json`.
+- [ ] Captures d'écran à fournir dans `docs/images/` : `plugin_config.png` (configuration du plugin), `plugin_devices.png` (page du plugin), `device_config.png` (onglet Équipement). À compléter plus tard : commandes AC, commandes A1, modal diagnostic.
 - [ ] Vérifier la compatibilité des dépendances msmart-ng ↔ midea-local dans un même venv (`httpx` / `aiohttp` / `pycryptodome`).
 - [ ] Vérifier la convention de nom du log des dépendances et l'usage de `resources/python_venv` face au core 4.5.
 - [ ] Vérifier, sur une vraie réponse cloud, l'appariement entre l'`appliance_id` du cloud et le `device_id` de la découverte LAN.
@@ -189,7 +202,7 @@ Les autres types listés par le cloud (FD, FA, B6…) sont affichés comme **« 
 
 ## 10. Étapes de réalisation (prévisionnel)
 
-1. Squelette du plugin depuis plugin-template : info.json, icône, classes, page desktop, config, i18n vide.
+1. ✅ Squelette du plugin depuis plugin-template : info.json, icône, classes, page desktop, config, i18n (6 langues), docs (7 langues).
 2. Dépendances : install via uv, venv, `dependancy_info`.
 3. Démon : socket, callback, cycle de vie, services cloud et découverte.
 4. Synchronisation : création des équipements, récupération de token/key.

@@ -1,0 +1,49 @@
+{
+	"id": "mideamsmart",
+	"name": "Midea MSmart",
+	"pluginVersion": "0.1.0",
+	"description": {
+		"fr_FR": "Pilotage local des climatiseurs et déshumidificateurs Midea (et marques associées : Comfee, Inventor, Qlima…) compatibles avec l'application MSmartHome.<br/>Le compte MSmartHome sert uniquement à lister les appareils et à récupérer leurs clés d'authentification, ensuite tout le contrôle se fait sur le réseau local, sans cloud.",
+		"en_US": "Local control of Midea air conditioners and dehumidifiers (and related brands: Comfee, Inventor, Qlima…) compatible with the MSmartHome app.<br/>The MSmartHome account is only used to list the appliances and retrieve their authentication keys, then all control happens on the local network, without the cloud.",
+		"es_ES": "Control local de los aires acondicionados y deshumidificadores Midea (y marcas asociadas: Comfee, Inventor, Qlima…) compatibles con la aplicación MSmartHome.<br/>La cuenta MSmartHome solo se usa para listar los aparatos y obtener sus claves de autenticación; después, todo el control se realiza en la red local, sin la nube.",
+		"it_IT": "Controllo locale dei climatizzatori e deumidificatori Midea (e marchi associati: Comfee, Inventor, Qlima…) compatibili con l'app MSmartHome.<br/>L'account MSmartHome serve solo a elencare gli apparecchi e a recuperarne le chiavi di autenticazione, poi tutto il controllo avviene sulla rete locale, senza cloud.",
+		"ru_RU": "Локальное управление кондиционерами и осушителями Midea (и связанных брендов: Comfee, Inventor, Qlima…), совместимыми с приложением MSmartHome.<br/>Учётная запись MSmartHome используется только для получения списка устройств и их ключей аутентификации, далее всё управление происходит в локальной сети, без облака.",
+		"pt_PT": "Controlo local dos aparelhos de ar condicionado e desumidificadores Midea (e marcas associadas: Comfee, Inventor, Qlima…) compatíveis com a aplicação MSmartHome.<br/>A conta MSmartHome serve apenas para listar os aparelhos e obter as suas chaves de autenticação; depois, todo o controlo é feito na rede local, sem a nuvem.",
+		"de_DE": "Lokale Steuerung von Midea-Klimaanlagen und -Luftentfeuchtern (und verbundenen Marken: Comfee, Inventor, Qlima…), die mit der MSmartHome-App kompatibel sind.<br/>Das MSmartHome-Konto dient nur dazu, die Geräte aufzulisten und ihre Authentifizierungsschlüssel abzurufen; danach erfolgt die gesamte Steuerung im lokalen Netzwerk, ohne Cloud."
+	},
+	"licence": "MIT",
+	"author": "Damien",
+	"require": "4.5",
+	"os": {
+		"min": 12,
+		"max": 13.99
+	},
+	"category": "energy",
+	"hasDependency": true,
+	"hasOwnDeamon": true,
+	"maxDependancyInstallTime": 30,
+	"changelog_beta": "https://github.com/OWNER/mideamsmart/blob/beta/docs/#language#/changelog.md",
+	"documentation_beta": "https://github.com/OWNER/mideamsmart/blob/beta/docs/#language#/index.md",
+	"changelog": "https://github.com/OWNER/mideamsmart/blob/master/docs/#language#/changelog.md",
+	"documentation": "https://github.com/OWNER/mideamsmart/blob/master/docs/#language#/index.md",
+	"link": {
+		"forum": "https://community.jeedom.com/tag/plugin-mideamsmart"
+	},
+	"language": [
+		"fr_FR",
+		"en_US",
+		"es_ES",
+		"it_IT",
+		"ru_RU",
+		"pt_PT",
+		"de_DE"
+	],
+	"compatibility": [
+		"smart",
+		"luna",
+		"atlas",
+		"rpi",
+		"docker",
+		"diy"
+	]
+}
