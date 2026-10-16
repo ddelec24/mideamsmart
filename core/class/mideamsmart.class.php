@@ -401,6 +401,9 @@ class mideamsmart extends eqLogic {
 						$cmd->setTemplate('dashboard', $definition['template']);
 						$cmd->setTemplate('mobile', $definition['template']);
 					}
+					if (isset($definition['displayParameters'])) {
+						$cmd->setDisplay('parameters', $definition['displayParameters']);
+					}
 					$created++;
 				}
 				$this->updateCommandFromCapabilities($cmd, $definition, $capabilities, $definitions['enums']);

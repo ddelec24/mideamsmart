@@ -1,7 +1,7 @@
 # mideamsmart — Récapitulatif projet
 
 > Document de référence du plugin, à relire avant chaque étape et à mettre à jour à chaque décision.
-> Dernière mise à jour : 2026-10-16 (étapes 1 à 5 terminées)
+> Dernière mise à jour : 2026-10-16 (étapes 1 à 6 terminées)
 
 ## 1. Contexte
 
@@ -264,24 +264,32 @@ mideamsmart/
 
 - `tests/test_drivers.py` : faux appareils qui héritent des **vraies** classes msmart-ng (seuls les appels réseau sont remplacés, capacités via `override_capabilities`).
 - **`tools/fake_ac.py`** : faux climatiseur LAN **V2** qui répond avec les trames réelles des tests msmart-ng (capacités 0xB5, état 0xC0) et applique alimentation, mode, consigne et ventilation des SetState.
-  - Dans l'instance de dev : `docker exec -d jeedom-dev sh -c 'cd /var/www/html/plugins/mideamsmart && exec resources/python_venv/bin/python3 tools/fake_ac.py > /tmp/fake_ac.log 2>&1'`, puis équipement « Clim test » en 127.0.0.1:6444, V2. Il faut le relancer après un redémarrage du conteneur.
+  - Dans l'instance de dev : `docker exec -d jeedom-dev sh -c 'cd /var/www/html/plugins/mideamsmart && exec resources/python_venv/bin/python3 tools/fake_device.py --type ac --port 6444 > /tmp/fake_ac.log 2>&1'` (idem `--type a1 --port 6445`), puis équipements « Clim test » (127.0.0.1:6444) et « Déshumidificateur test » (127.0.0.1:6445), en V2. Il faut les relancer après un redémarrage du conteneur. Pour les arrêter : `docker exec jeedom-dev pkill -f "^resources/python_venv/bin/python3 tools/fake"`.
   - **Validé de bout en bout** : capacités lues via le vrai protocole, 19 commandes créées, valeurs remontées, `setMode`, `setTargetTemperature`, `on`, `off` et `setFanSpeed` appliqués, `ieco` refusé (`unsupportedValue`), widget du dashboard correct.
 - **Non testé** : appareils réels, protocole V3 (handshake), appareils CC réels, consommation électrique.
 
-### A1 déshumidificateur — midea-local
-| Info | Action(s) | Générique |
-|---|---|---|
-| `power` | `on`, `off` | ENERGY_* |
-| `mode` (manual, continuous, auto, clothes_dry, shoes_dry, silent) | `setMode` | — |
-| `fanSpeed` | `setFanSpeed` | FAN_SPEED_STATE / FAN_SPEED |
-| `targetHumidity` | `setTargetHumidity` | HUMIDITY_SETPOINT / HUMIDITY_SET_SETPOINT |
-| `currentHumidity` | — | HUMIDITY |
-| `currentTemperature` | — | TEMPERATURE |
-| `tankLevel` (%), `tankFull` | — | — |
-| `swing`, `childLock`, `anion`, `pump` | `xxxOn` / `xxxOff` | — |
-| `filterCleaningReminder` | — | — |
+### A1 déshumidificateur — implémenté à l'étape 6 (midea-local)
 
-Les autres types listés par le cloud (FD, FA, B6…) sont affichés comme **« non supporté »**, sans création de commandes. L'architecture par drivers permet de les ajouter plus tard.
+- **`A1Driver`** (`drivers/a1.py`) : adaptateur du **thread** midea-local (`MideaA1Device`, créé via `device_selector`) vers asyncio.
+  - Le thread gère la connexion, la reconnexion (backoff de 5 à 600 s), la requête périodique (`set_refresh_interval` = intervalle de l'équipement) et le heartbeat.
+  - `register_update` est relayé dans la boucle par `call_soon_threadsafe`. Les mises à jour sont traitées une par une (`_update_lock`) ; `available` donne la commande `online`.
+  - Les commandes passent par `set_attribute` dans `asyncio.to_thread` : l'appel est bloquant et l'appareil répond avec son nouvel état. **Choisir un mode** sur un appareil éteint envoie la mise en marche, **attend sa confirmation** (10 s maximum), puis envoie le mode. Sans cette attente, le message de mode, construit depuis les attributs connus, ferait repasser l'appareil à l'arrêt.
+  - `request_refresh` remet `_previous_refresh` à 0 : seul le thread doit écrire les requêtes sur le socket.
+  - `prompt_tone` est réglé selon l'option bip. Le pas de consigne est masqué pour A1.
+  - Capacités : `features` = `targetHumidity, swing, childLock, anion, waterLevelSet`, plus `pump` si le bit `pump_enable` est présent. `enums` = `mode` (`device.modes`), `fanSpeed` (sauf `off`), `waterLevelSet`. Consigne d'humidité de 35 à 85 %.
+- **Commandes A1** (dans `commands.json`, `types: ["A1"]`) :
+  - communes : `refresh, online, power/on/off, fanSpeed/setFanSpeed, targetHumidity/setTargetHumidity` (min et max via `minTargetHumidity`/`maxTargetHumidity`) ;
+  - `mode/setMode` sans type générique thermostat ;
+  - `currentHumidity` (HUMIDITY), `currentTemperature` (TEMPERATURE), `tankLevel`, `tankFull`, `waterLevelSet/setWaterLevelSet` ;
+  - `swing`, `childLock`, `anion`, `pump` avec `…On`/`…Off` ;
+  - `filterCleaningReminder`, `resetFilter`.
+- **Alertes binaires** (`tankFull`, `filterCleaningReminder`, `filterAlert`) : template `core::tmplicon` avec `displayParameters` `_icon_on_` (rouge) et `_icon_off_` (vert). Le HTML des icônes doit être en **guillemets simples**, car le template l'injecte dans une chaîne JS entre guillemets doubles.
+- **Concurrence** : `_capabilities_sent` est mis à jour **avant** l'envoi, sinon deux mises à jour simultanées créaient les commandes deux fois (erreur MySQL « Duplicate entry »).
+- **`tools/fake_device.py --type ac|a1`** remplace `fake_ac.py`. Le faux A1 répond aux requêtes appliance (0xA0), query (0x41) et set (0x48) avec la disposition des réponses midea-local.
+- **Testé** :
+  - `tests/test_integration.py` : drivers AC et A1 avec les **vraies** libs contre les faux appareils (état, commandes, appareil hors ligne) ; 32 tests au total.
+  - Instance de dev : équipement « Déshumidificateur test » (127.0.0.1:6445, V2) créé avec 31 commandes, commandes `off`, `setMode` (avec remise en marche), `setTargetHumidity`, `setFanSpeed` appliquées, widget vérifié.
+  - **Non testé** : vrai déshumidificateur, protocole V3, nouveau protocole A1 (B0/B1, lumière).
 
 ## 8. Traductions et documentation
 
@@ -311,6 +319,6 @@ Les autres types listés par le cloud (FD, FA, B6…) sont affichés comme **« 
 3. ✅ Démon : socket, callback, cycle de vie (services cloud et découverte déplacés à l'étape 4).
 4. ✅ Synchronisation : services cloud (MSmartHome) et découverte LAN, création des équipements, récupération de token/key.
 5. ✅ Driver AC/CC et création des commandes selon les capacités.
-6. Driver A1.
+6. ✅ Driver A1.
 7. Modal diagnostic, robustesse (hors ligne, backoff, anti-ban).
 8. Traductions dans les 6 langues, documentation et changelog.

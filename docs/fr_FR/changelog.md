@@ -16,3 +16,5 @@
 - Pilotage local des climatiseurs (AC) et climatiseurs commerciaux (CC) avec msmart-ng : état, interrogation périodique, appareil hors ligne
 - Commandes créées selon les capacités de chaque appareil, avec codes stables pour les scénarios et bouton de mise à jour
 - Options d'équipement : bip, pas de consigne, consommation électrique
+- Pilotage local des déshumidificateurs (A1) avec midea-local : mode, ventilation, consigne d'humidité, réservoir, oscillation, ioniseur, pompe, verrouillage enfant, filtre
+- Alertes réservoir plein et filtre affichées par une icône verte ou rouge

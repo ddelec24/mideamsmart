@@ -16,3 +16,5 @@
 - Local control of air conditioners (AC) and commercial air conditioners (CC) with msmart-ng: state, periodic polling, offline appliance
 - Commands created according to the capabilities of each appliance, with stable codes for scenarios and an update button
 - Equipment options: beep, setpoint step, power consumption
+- Local control of dehumidifiers (A1) with midea-local: mode, fan, humidity setpoint, tank, swing, ionizer, pump, child lock, filter
+- Tank full and filter alerts displayed with a green or red icon

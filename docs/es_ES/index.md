@@ -97,7 +97,7 @@ El botón **Añadir** permite crear un equipo manualmente, por ejemplo para un a
 - **Opciones**
   - **Intervalo de consulta**: déjelo vacío para usar el valor de la configuración del plugin.
   - **Pitido de confirmación**: el aparato emite un pitido con cada comando recibido.
-  - **Paso de la consigna**: 1 °C o 0,5 °C.
+  - **Paso de la consigna** (aires acondicionados): 1 °C o 0,5 °C.
   - **Consumo eléctrico** (aires acondicionados): crea los comandos de potencia y consumo. Si los valores son incoherentes, cambie el **formato** (BCD o binario) o el **factor de escala**.
 - **Información**
   - Número de serie y modelo del aparato, en solo lectura.
@@ -116,7 +116,7 @@ El botón **Actualizar los comandos** de la pestaña *Comandos* añade los coman
 
 | Identificador lógico | Aparatos | Contenido |
 |---|---|---|
-| `power`, `on`, `off` | AC, CC | Estado (0/1), encender, apagar |
+| `power`, `on`, `off` | AC, CC, A1 | Estado (0/1), encender, apagar |
 | `mode`, `setMode` | AC, CC | Modo: `auto`, `cool`, `dry`, `smart_dry`, `heat`, `fan_only` (CC: `fan`). Elegir un modo enciende el aparato |
 | `targetTemperature`, `setTargetTemperature` | AC, CC | Consigna en °C, con los límites del aparato y el paso elegido en el equipo |
 | `indoorTemperature`, `outdoorTemperature` | AC, CC | Temperaturas interior y exterior |
@@ -132,7 +132,13 @@ El botón **Actualizar los comandos** de la pestaña *Comandos* añade los coman
 | `flash`, `outSilent`, `cascadeMode`, `freshAirFanSpeed`, `rateSelect`, `auxMode` + actions | AC (CC : `auxMode`) | Funciones avanzadas, según el modelo |
 | `selfCleanActive`, `startSelfClean`, `filterAlert`, `defrostActive`, `errorCode` | AC | Autolimpieza, alerta de filtro, desescarche, código de error |
 | `realTimePower`, `currentEnergy`, `totalEnergy` | AC | Potencia (W) y consumos (kWh), si la opción *Consumo eléctrico* está marcada |
-| `online`, `refresh` | AC, CC | Aparato accesible (0/1) y actualización inmediata |
+| `mode`, `setMode` | A1 | Modo: `manual`, `continuous`, `auto`, `clothes_dry`, `shoes_dry`, `silent`. Elegir un modo enciende el aparato |
+| `fanSpeed`, `setFanSpeed` | A1 | Ventilación: `lowest`, `low`, `medium`, `high`, `auto` |
+| `currentHumidity`, `currentTemperature`, `targetHumidity`, `setTargetHumidity` | A1 | Humedad y temperatura ambiente, consigna de humedad de 35 a 85 % |
+| `tankLevel`, `tankFull`, `waterLevelSet`, `setWaterLevelSet` | A1 | Nivel del depósito (%), depósito lleno, umbral del depósito (`25`, `50`, `75`, `100`) |
+| `swing`, `childLock`, `anion`, `pump` + `…On`, `…Off` | A1 | Oscilación, bloqueo infantil, ionizador, bomba (si el aparato tiene una) |
+| `filterCleaningReminder`, `resetFilter` | A1 | Aviso de limpieza del filtro y su restablecimiento |
+| `online`, `refresh` | AC, CC, A1 | Aparato accesible (0/1) y actualización inmediata |
 
 ## Solución de problemas
 

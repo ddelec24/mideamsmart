@@ -16,3 +16,5 @@
 - Lokale Steuerung von Klimaanlagen (AC) und gewerblichen Klimaanlagen (CC) mit msmart-ng: Zustand, regelmäßige Abfrage, Gerät offline
 - Befehle werden entsprechend den Funktionen jedes Geräts angelegt, mit stabilen Codes für Szenarien und Aktualisierungsschaltfläche
 - Geräteoptionen: Signalton, Sollwert-Schrittweite, Stromverbrauch
+- Lokale Steuerung von Luftentfeuchtern (A1) mit midea-local: Modus, Lüfter, Feuchte-Sollwert, Tank, Schwenkung, Ionisator, Pumpe, Kindersicherung, Filter
+- Hinweise Tank voll und Filter als grünes oder rotes Symbol

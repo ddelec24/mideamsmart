@@ -140,9 +140,10 @@ class BaseDriver:
             return
         capabilities = self.read_capabilities()
         if capabilities != self._capabilities_sent:
+            # Marked as sent before the (awaited) sending: Jeedom must not create the commands twice
+            self._capabilities_sent = capabilities
             await self._send_event({'action': 'deviceCapabilities', 'eqLogicId': self.config.eq_logic_id,
                                     'deviceType': self.config.device_type, 'capabilities': capabilities})
-            self._capabilities_sent = capabilities
         force = time.monotonic() - self._last_full_publish > FULL_REFRESH_INTERVAL
         self._publish(self.read_values(), force=force)
         if force:

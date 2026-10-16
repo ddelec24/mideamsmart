@@ -16,3 +16,5 @@
 - Controllo locale dei climatizzatori (AC) e climatizzatori commerciali (CC) con msmart-ng: stato, interrogazione periodica, apparecchio offline
 - Comandi creati in base alle funzionalità di ogni apparecchio, con codici stabili per gli scenari e pulsante di aggiornamento
 - Opzioni del dispositivo: bip, passo del setpoint, consumo elettrico
+- Controllo locale dei deumidificatori (A1) con midea-local: modalità, ventilazione, setpoint di umidità, serbatoio, oscillazione, ionizzatore, pompa, blocco bambini, filtro
+- Avvisi serbatoio pieno e filtro mostrati con un'icona verde o rossa

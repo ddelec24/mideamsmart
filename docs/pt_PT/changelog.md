@@ -16,3 +16,5 @@
 - Controlo local dos aparelhos de ar condicionado (AC) e ar condicionado comercial (CC) com msmart-ng: estado, consulta periódica, aparelho offline
 - Comandos criados de acordo com as capacidades de cada aparelho, com códigos estáveis para os cenários e botão de atualização
 - Opções do equipamento: bip, passo da temperatura definida, consumo elétrico
+- Controlo local dos desumidificadores (A1) com midea-local: modo, ventilação, humidade definida, depósito, oscilação, ionizador, bomba, bloqueio para crianças, filtro
+- Alertas de depósito cheio e de filtro apresentados com um ícone verde ou vermelho

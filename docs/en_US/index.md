@@ -97,7 +97,7 @@ The **Add** button creates an equipment manually, for example for an appliance o
 - **Options**
   - **Polling interval**: leave empty to use the value from the plugin configuration.
   - **Confirmation beep**: the appliance beeps on each command received.
-  - **Setpoint step**: 1 °C or 0.5 °C.
+  - **Setpoint step** (air conditioners): 1 °C or 0.5 °C.
   - **Power consumption** (air conditioners): creates the power and consumption commands. If the values are inconsistent, change the **format** (BCD or binary) or the **scale factor**.
 - **Information**
   - Serial number and model of the appliance, read-only.
@@ -116,7 +116,7 @@ The **Update commands** button of the *Commands* tab adds the missing commands, 
 
 | Logical ID | Appliances | Content |
 |---|---|---|
-| `power`, `on`, `off` | AC, CC | State (0/1), turn on, turn off |
+| `power`, `on`, `off` | AC, CC, A1 | State (0/1), turn on, turn off |
 | `mode`, `setMode` | AC, CC | Mode: `auto`, `cool`, `dry`, `smart_dry`, `heat`, `fan_only` (CC: `fan`). Choosing a mode turns the appliance on |
 | `targetTemperature`, `setTargetTemperature` | AC, CC | Setpoint in °C, with the limits of the appliance and the step chosen in the equipment |
 | `indoorTemperature`, `outdoorTemperature` | AC, CC | Indoor and outdoor temperatures |
@@ -132,7 +132,13 @@ The **Update commands** button of the *Commands* tab adds the missing commands, 
 | `flash`, `outSilent`, `cascadeMode`, `freshAirFanSpeed`, `rateSelect`, `auxMode` + actions | AC (CC : `auxMode`) | Advanced features, depending on the model |
 | `selfCleanActive`, `startSelfClean`, `filterAlert`, `defrostActive`, `errorCode` | AC | Self-cleaning, filter alert, defrost, error code |
 | `realTimePower`, `currentEnergy`, `totalEnergy` | AC | Power (W) and consumptions (kWh), if the *Power consumption* option is checked |
-| `online`, `refresh` | AC, CC | Appliance reachable (0/1) and immediate refresh |
+| `mode`, `setMode` | A1 | Mode: `manual`, `continuous`, `auto`, `clothes_dry`, `shoes_dry`, `silent`. Choosing a mode turns the appliance on |
+| `fanSpeed`, `setFanSpeed` | A1 | Fan: `lowest`, `low`, `medium`, `high`, `auto` |
+| `currentHumidity`, `currentTemperature`, `targetHumidity`, `setTargetHumidity` | A1 | Room humidity and temperature, humidity setpoint from 35 to 85 % |
+| `tankLevel`, `tankFull`, `waterLevelSet`, `setWaterLevelSet` | A1 | Tank level (%), tank full, tank threshold (`25`, `50`, `75`, `100`) |
+| `swing`, `childLock`, `anion`, `pump` + `…On`, `…Off` | A1 | Swing, child lock, ionizer, pump (if the appliance has one) |
+| `filterCleaningReminder`, `resetFilter` | A1 | Filter cleaning reminder and its reset |
+| `online`, `refresh` | AC, CC, A1 | Appliance reachable (0/1) and immediate refresh |
 
 ## Troubleshooting
 

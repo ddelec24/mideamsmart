@@ -97,7 +97,7 @@ Mit der Schaltfläche **Hinzufügen** können Sie ein Gerät manuell anlegen, zu
 - **Optionen**
   - **Abfrageintervall**: leer lassen, um den Wert aus der Plugin-Konfiguration zu verwenden.
   - **Bestätigungston**: Das Gerät piept bei jedem empfangenen Befehl.
-  - **Sollwert-Schrittweite**: 1 °C oder 0,5 °C.
+  - **Sollwert-Schrittweite** (Klimaanlagen): 1 °C oder 0,5 °C.
   - **Stromverbrauch** (Klimaanlagen): legt die Leistungs- und Verbrauchsbefehle an. Sind die Werte unplausibel, ändern Sie das **Format** (BCD oder binär) oder den **Skalierungsfaktor**.
 - **Informationen**
   - Seriennummer und Modell des Geräts, schreibgeschützt.
@@ -116,7 +116,7 @@ Die Schaltfläche **Befehle aktualisieren** im Reiter *Befehle* legt fehlende Be
 
 | Logische ID | Geräte | Inhalt |
 |---|---|---|
-| `power`, `on`, `off` | AC, CC | Zustand (0/1), einschalten, ausschalten |
+| `power`, `on`, `off` | AC, CC, A1 | Zustand (0/1), einschalten, ausschalten |
 | `mode`, `setMode` | AC, CC | Modus: `auto`, `cool`, `dry`, `smart_dry`, `heat`, `fan_only` (CC: `fan`). Die Wahl eines Modus schaltet das Gerät ein |
 | `targetTemperature`, `setTargetTemperature` | AC, CC | Sollwert in °C, mit den Grenzen des Geräts und der im Gerät gewählten Schrittweite |
 | `indoorTemperature`, `outdoorTemperature` | AC, CC | Raum- und Außentemperatur |
@@ -132,7 +132,13 @@ Die Schaltfläche **Befehle aktualisieren** im Reiter *Befehle* legt fehlende Be
 | `flash`, `outSilent`, `cascadeMode`, `freshAirFanSpeed`, `rateSelect`, `auxMode` + actions | AC (CC : `auxMode`) | Erweiterte Funktionen, je nach Modell |
 | `selfCleanActive`, `startSelfClean`, `filterAlert`, `defrostActive`, `errorCode` | AC | Selbstreinigung, Filterhinweis, Abtauen, Fehlercode |
 | `realTimePower`, `currentEnergy`, `totalEnergy` | AC | Leistung (W) und Verbrauch (kWh), wenn die Option *Stromverbrauch* aktiviert ist |
-| `online`, `refresh` | AC, CC | Gerät erreichbar (0/1) und sofortige Aktualisierung |
+| `mode`, `setMode` | A1 | Modus: `manual`, `continuous`, `auto`, `clothes_dry`, `shoes_dry`, `silent`. Die Wahl eines Modus schaltet das Gerät ein |
+| `fanSpeed`, `setFanSpeed` | A1 | Lüfter: `lowest`, `low`, `medium`, `high`, `auto` |
+| `currentHumidity`, `currentTemperature`, `targetHumidity`, `setTargetHumidity` | A1 | Raumfeuchte und -temperatur, Feuchte-Sollwert von 35 bis 85 % |
+| `tankLevel`, `tankFull`, `waterLevelSet`, `setWaterLevelSet` | A1 | Tankfüllstand (%), Tank voll, Tankschwelle (`25`, `50`, `75`, `100`) |
+| `swing`, `childLock`, `anion`, `pump` + `…On`, `…Off` | A1 | Schwenkung, Kindersicherung, Ionisator, Pumpe (falls vorhanden) |
+| `filterCleaningReminder`, `resetFilter` | A1 | Filterreinigungshinweis und dessen Zurücksetzen |
+| `online`, `refresh` | AC, CC, A1 | Gerät erreichbar (0/1) und sofortige Aktualisierung |
 
 ## Fehlerbehebung
 

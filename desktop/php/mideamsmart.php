@@ -209,7 +209,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									<input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="beep" checked>
 								</div>
 							</div>
-							<div class="form-group">
+							<div class="form-group mideamsmartDeviceType" data-device-types="AC,CC">
 								<label class="col-sm-4 control-label">{{Pas de la consigne}}</label>
 								<div class="col-sm-6">
 									<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="temperatureStep">

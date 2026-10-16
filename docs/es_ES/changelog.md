@@ -16,3 +16,5 @@
 - Control local de los aires acondicionados (AC) y aires acondicionados comerciales (CC) con msmart-ng: estado, consulta periódica, aparato fuera de línea
 - Comandos creados según las capacidades de cada aparato, con códigos estables para los escenarios y botón de actualización
 - Opciones del equipo: pitido, paso de la consigna, consumo eléctrico
+- Control local de los deshumidificadores (A1) con midea-local: modo, ventilación, consigna de humedad, depósito, oscilación, ionizador, bomba, bloqueo infantil, filtro
+- Alertas de depósito lleno y de filtro mostradas con un icono verde o rojo
