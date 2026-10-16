@@ -96,6 +96,9 @@ The **Add** button creates an equipment manually, for example for an appliance o
   - **Retrieve token/key from the cloud**: asks the cloud again for the keys of this appliance and checks them, for example after a reset of the Wi-Fi module. Save the equipment before using it.
 - **Options**
   - **Polling interval**: leave empty to use the value from the plugin configuration.
+  - **Confirmation beep**: the appliance beeps on each command received.
+  - **Setpoint step**: 1 °C or 0.5 °C.
+  - **Power consumption** (air conditioners): creates the power and consumption commands. If the values are inconsistent, change the **format** (BCD or binary) or the **scale factor**.
 - **Information**
   - Serial number and model of the appliance, read-only.
 
@@ -105,7 +108,31 @@ The **Add** button creates an equipment manually, for example for an appliance o
 
 ## Commands
 
-Commands are created automatically according to the capabilities reported by each appliance. Their detailed list will be added here as soon as they are available.
+Commands are created automatically **according to the capabilities reported by each appliance**, as soon as it answers for the first time. If the appliance does not return its capabilities, default ones are used and the request is repeated every 10 minutes.
+
+Text info commands hold a **stable code**, independent of the language (for example `cool`): use these codes in your scenarios. The related action commands offer translated labels. Infos already displayed by a linked action are hidden by default.
+
+The **Update commands** button of the *Commands* tab adds the missing commands, removes those of the features the appliance no longer reports, then reads its capabilities again. The names and settings of your existing commands are kept.
+
+| Logical ID | Appliances | Content |
+|---|---|---|
+| `power`, `on`, `off` | AC, CC | State (0/1), turn on, turn off |
+| `mode`, `setMode` | AC, CC | Mode: `auto`, `cool`, `dry`, `smart_dry`, `heat`, `fan_only` (CC: `fan`). Choosing a mode turns the appliance on |
+| `targetTemperature`, `setTargetTemperature` | AC, CC | Setpoint in °C, with the limits of the appliance and the step chosen in the equipment |
+| `indoorTemperature`, `outdoorTemperature` | AC, CC | Indoor and outdoor temperatures |
+| `fanSpeed`, `setFanSpeed` | AC, CC | Fan: `auto`, `silent`, `low`, `medium`, `high`, `max`, `custom` (CC: `l1` to `l7`, `auto`) |
+| `fanSpeedPercent`, `setFanSpeedPercent` | AC | Free speed from 1 to 100 %, if the appliance supports it |
+| `swingMode`, `setSwingMode` | AC, CC | Swing: `off`, `vertical`, `horizontal`, `both` |
+| `horizontalSwingAngle`, `verticalSwingAngle` + `set…` | AC, CC | Louver position: `off`/`close`, `pos_1` to `pos_5`, `auto` |
+| `preset`, `setPreset` | AC, CC | Exclusive preset: `none`, `sleep`, `freeze_protection`, `eco`, `ieco`, `turbo` (CC: `none`, `eco`, `silent`, `sleep`) |
+| `breezeMode`, `setBreezeMode` | AC | Breeze mode: `off`, `breeze_away`, `breeze_mild`, `breezeless` |
+| `indoorHumidity`, `targetHumidity`, `setTargetHumidity` | AC, CC | Indoor humidity and humidity setpoint (%) |
+| `displayOn`, `toggleDisplay` | AC | Display state and toggle |
+| `purifier`, `purifierOn`, `purifierOff` / `purifierMode`, `setPurifierMode` | AC / CC | Purifier (AC: on/off; CC: `off`, `on`, `auto`) |
+| `flash`, `outSilent`, `cascadeMode`, `freshAirFanSpeed`, `rateSelect`, `auxMode` + actions | AC (CC : `auxMode`) | Advanced features, depending on the model |
+| `selfCleanActive`, `startSelfClean`, `filterAlert`, `defrostActive`, `errorCode` | AC | Self-cleaning, filter alert, defrost, error code |
+| `realTimePower`, `currentEnergy`, `totalEnergy` | AC | Power (W) and consumptions (kWh), if the *Power consumption* option is checked |
+| `online`, `refresh` | AC, CC | Appliance reachable (0/1) and immediate refresh |
 
 ## Troubleshooting
 

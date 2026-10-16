@@ -96,6 +96,9 @@ Il pulsante **Aggiungi** permette di creare un dispositivo manualmente, ad esemp
   - **Recupera token/key dal cloud**: richiede di nuovo al cloud le chiavi di questo apparecchio e le verifica, ad esempio dopo un reset del modulo Wi-Fi. Salva il dispositivo prima di usarlo.
 - **Opzioni**
   - **Intervallo di interrogazione**: lascia vuoto per usare il valore della configurazione del plugin.
+  - **Bip di conferma**: l'apparecchio emette un bip a ogni comando ricevuto.
+  - **Passo del setpoint**: 1 °C o 0,5 °C.
+  - **Consumo elettrico** (climatizzatori): crea i comandi di potenza e consumo. Se i valori sono incoerenti, cambia il **formato** (BCD o binario) o il **fattore di scala**.
 - **Informazioni**
   - Numero di serie e modello dell'apparecchio, in sola lettura.
 
@@ -105,7 +108,31 @@ Il pulsante **Aggiungi** permette di creare un dispositivo manualmente, ad esemp
 
 ## Comandi
 
-I comandi vengono creati automaticamente in base alle funzionalità comunicate da ciascun apparecchio. Il loro elenco dettagliato sarà aggiunto qui non appena saranno disponibili.
+I comandi vengono creati automaticamente **in base alle funzionalità comunicate da ciascun apparecchio**, non appena risponde per la prima volta. Se l'apparecchio non restituisce le sue funzionalità, vengono usate quelle predefinite e la richiesta viene ripetuta ogni 10 minuti.
+
+I comandi info di tipo testo contengono un **codice stabile**, indipendente dalla lingua (ad esempio `cool`): usa questi codici negli scenari. I comandi action associati propongono etichette tradotte. Le info già mostrate da un'azione collegata sono nascoste per impostazione predefinita.
+
+Il pulsante **Aggiorna i comandi** della scheda *Comandi* aggiunge i comandi mancanti, rimuove quelli delle funzioni che l'apparecchio non dichiara più, poi rilegge le sue funzionalità. I nomi e le impostazioni dei comandi esistenti vengono mantenuti.
+
+| Identificativo logico | Apparecchi | Contenuto |
+|---|---|---|
+| `power`, `on`, `off` | AC, CC | Stato (0/1), accendi, spegni |
+| `mode`, `setMode` | AC, CC | Modalità: `auto`, `cool`, `dry`, `smart_dry`, `heat`, `fan_only` (CC: `fan`). Scegliere una modalità accende l'apparecchio |
+| `targetTemperature`, `setTargetTemperature` | AC, CC | Setpoint in °C, con i limiti dell'apparecchio e il passo scelto nel dispositivo |
+| `indoorTemperature`, `outdoorTemperature` | AC, CC | Temperature interna ed esterna |
+| `fanSpeed`, `setFanSpeed` | AC, CC | Ventilazione: `auto`, `silent`, `low`, `medium`, `high`, `max`, `custom` (CC: da `l1` a `l7`, `auto`) |
+| `fanSpeedPercent`, `setFanSpeedPercent` | AC | Velocità libera da 1 a 100 %, se l'apparecchio la supporta |
+| `swingMode`, `setSwingMode` | AC, CC | Oscillazione: `off`, `vertical`, `horizontal`, `both` |
+| `horizontalSwingAngle`, `verticalSwingAngle` + `set…` | AC, CC | Posizione dei deflettori: `off`/`close`, da `pos_1` a `pos_5`, `auto` |
+| `preset`, `setPreset` | AC, CC | Preimpostazione esclusiva: `none`, `sleep`, `freeze_protection`, `eco`, `ieco`, `turbo` (CC: `none`, `eco`, `silent`, `sleep`) |
+| `breezeMode`, `setBreezeMode` | AC | Modalità Breeze: `off`, `breeze_away`, `breeze_mild`, `breezeless` |
+| `indoorHumidity`, `targetHumidity`, `setTargetHumidity` | AC, CC | Umidità interna e setpoint di umidità (%) |
+| `displayOn`, `toggleDisplay` | AC | Stato del display e commutazione |
+| `purifier`, `purifierOn`, `purifierOff` / `purifierMode`, `setPurifierMode` | AC / CC | Purificatore (AC: acceso/spento; CC: `off`, `on`, `auto`) |
+| `flash`, `outSilent`, `cascadeMode`, `freshAirFanSpeed`, `rateSelect`, `auxMode` + actions | AC (CC : `auxMode`) | Funzioni avanzate, a seconda del modello |
+| `selfCleanActive`, `startSelfClean`, `filterAlert`, `defrostActive`, `errorCode` | AC | Autopulizia, avviso filtro, sbrinamento, codice errore |
+| `realTimePower`, `currentEnergy`, `totalEnergy` | AC | Potenza (W) e consumi (kWh), se l'opzione *Consumo elettrico* è selezionata |
+| `online`, `refresh` | AC, CC | Apparecchio raggiungibile (0/1) e aggiornamento immediato |
 
 ## Risoluzione dei problemi
 

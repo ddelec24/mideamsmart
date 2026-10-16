@@ -96,6 +96,9 @@ Le bouton **Ajouter** permet de créer un équipement à la main, par exemple po
   - **Récupérer token/key depuis le cloud** : redemande les clés de cet appareil au cloud et les vérifie, par exemple après une réinitialisation du module Wi-Fi. Sauvegardez l'équipement avant de l'utiliser.
 - **Options**
   - **Intervalle d'interrogation** : laissez vide pour utiliser la valeur de la configuration du plugin.
+  - **Bip de confirmation** : l'appareil émet un bip à chaque commande reçue.
+  - **Pas de la consigne** : 1 °C ou 0,5 °C.
+  - **Consommation électrique** (climatiseurs) : crée les commandes de puissance et de consommation. Si les valeurs sont incohérentes, changez le **format** (BCD ou binaire) ou le **facteur d'échelle**.
 - **Informations**
   - Numéro de série et modèle de l'appareil, en lecture seule.
 
@@ -105,7 +108,31 @@ Le bouton **Ajouter** permet de créer un équipement à la main, par exemple po
 
 ## Commandes
 
-Les commandes sont créées automatiquement selon les capacités remontées par chaque appareil. Leur liste détaillée sera ajoutée ici dès qu'elles seront disponibles.
+Les commandes sont créées automatiquement **selon les capacités remontées par chaque appareil**, dès qu'il répond pour la première fois. Si l'appareil ne renvoie pas ses capacités, des capacités par défaut sont utilisées et la demande est renouvelée toutes les 10 minutes.
+
+Les commandes info de type texte contiennent un **code stable**, indépendant de la langue (par exemple `cool`) : utilisez ces codes dans vos scénarios. Les commandes action associées proposent des libellés traduits. Les infos déjà affichées par une action liée sont masquées par défaut.
+
+Le bouton **Mettre à jour les commandes** de l'onglet *Commandes* ajoute les commandes manquantes, supprime celles des fonctions que l'appareil ne déclare plus, puis relit ses capacités. Les noms et réglages de vos commandes existantes sont conservés.
+
+| Identifiant logique | Appareils | Contenu |
+|---|---|---|
+| `power`, `on`, `off` | AC, CC | Etat (0/1), allumer, éteindre |
+| `mode`, `setMode` | AC, CC | Mode : `auto`, `cool`, `dry`, `smart_dry`, `heat`, `fan_only` (CC : `fan`). Choisir un mode allume l'appareil |
+| `targetTemperature`, `setTargetTemperature` | AC, CC | Consigne en °C, avec les limites de l'appareil et le pas choisi dans l'équipement |
+| `indoorTemperature`, `outdoorTemperature` | AC, CC | Températures intérieure et extérieure |
+| `fanSpeed`, `setFanSpeed` | AC, CC | Ventilation : `auto`, `silent`, `low`, `medium`, `high`, `max`, `custom` (CC : `l1` à `l7`, `auto`) |
+| `fanSpeedPercent`, `setFanSpeedPercent` | AC | Vitesse libre de 1 à 100 %, si l'appareil la gère |
+| `swingMode`, `setSwingMode` | AC, CC | Oscillation : `off`, `vertical`, `horizontal`, `both` |
+| `horizontalSwingAngle`, `verticalSwingAngle` + `set…` | AC, CC | Position des volets : `off`/`close`, `pos_1` à `pos_5`, `auto` |
+| `preset`, `setPreset` | AC, CC | Préréglage exclusif : `none`, `sleep`, `freeze_protection`, `eco`, `ieco`, `turbo` (CC : `none`, `eco`, `silent`, `sleep`) |
+| `breezeMode`, `setBreezeMode` | AC | Mode Breeze : `off`, `breeze_away`, `breeze_mild`, `breezeless` |
+| `indoorHumidity`, `targetHumidity`, `setTargetHumidity` | AC, CC | Humidité intérieure et consigne d'humidité (%) |
+| `displayOn`, `toggleDisplay` | AC | Etat de l'affichage et bascule |
+| `purifier`, `purifierOn`, `purifierOff` / `purifierMode`, `setPurifierMode` | AC / CC | Purificateur (AC : marche/arrêt ; CC : `off`, `on`, `auto`) |
+| `flash`, `outSilent`, `cascadeMode`, `freshAirFanSpeed`, `rateSelect`, `auxMode` + actions | AC (CC : `auxMode`) | Fonctions avancées, selon le modèle |
+| `selfCleanActive`, `startSelfClean`, `filterAlert`, `defrostActive`, `errorCode` | AC | Autonettoyage, alerte filtre, dégivrage, code erreur |
+| `realTimePower`, `currentEnergy`, `totalEnergy` | AC | Puissance (W) et consommations (kWh), si l'option *Consommation électrique* est cochée |
+| `online`, `refresh` | AC, CC | Appareil joignable (0/1) et rafraîchissement immédiat |
 
 ## Dépannage
 

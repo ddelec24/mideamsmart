@@ -201,6 +201,52 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									<input type="number" min="<?php echo mideamsmart::MIN_POLLING_INTERVAL; ?>" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="pollingInterval">
 								</div>
 							</div>
+							<div class="form-group">
+								<label class="col-sm-4 control-label">{{Bip de confirmation}}
+									<sup><i class="fas fa-question-circle tooltips" title="{{L'appareil émet un bip à chaque commande reçue}}"></i></sup>
+								</label>
+								<div class="col-sm-6">
+									<input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="beep" checked>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-4 control-label">{{Pas de la consigne}}</label>
+								<div class="col-sm-6">
+									<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="temperatureStep">
+										<option value="1">1 °C</option>
+										<option value="0.5">0,5 °C</option>
+									</select>
+								</div>
+							</div>
+							<div class="mideamsmartDeviceType" data-device-types="AC">
+								<div class="form-group">
+									<label class="col-sm-4 control-label">{{Consommation électrique}}
+										<sup><i class="fas fa-question-circle tooltips" title="{{Crée les commandes de puissance et de consommation, si l'appareil les mesure}}"></i></sup>
+									</label>
+									<div class="col-sm-6">
+										<input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="energy">
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label">{{Format des données de consommation}}
+										<sup><i class="fas fa-question-circle tooltips" title="{{Changez de format si les valeurs remontées sont incohérentes}}"></i></sup>
+									</label>
+									<div class="col-sm-6">
+										<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="energyFormat">
+											<option value="bcd">BCD</option>
+											<option value="binary">{{Binaire}}</option>
+										</select>
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-sm-4 control-label">{{Facteur d'échelle de la consommation}}
+										<sup><i class="fas fa-question-circle tooltips" title="{{Multiplie les valeurs remontées, par exemple 0.1 si elles sont 10 fois trop grandes}}"></i></sup>
+									</label>
+									<div class="col-sm-6">
+										<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="energyScale" placeholder="1">
+									</div>
+								</div>
+							</div>
 						</div>
 
 						<div class="col-lg-6">
@@ -235,7 +281,8 @@ $eqLogics = eqLogic::byType($plugin->getId());
 
 			<!-- Onglet des commandes de l'équipement -->
 			<div role="tabpanel" class="tab-pane" id="commandtab">
-				<br>
+				<a class="btn btn-default btn-sm pull-right" id="bt_mideamsmartUpdateCommands" style="margin-top:5px;"><i class="fas fa-sync"></i> {{Mettre à jour les commandes}}</a>
+				<br><br>
 				<div class="table-responsive">
 					<table id="table_cmd" class="table table-bordered table-condensed">
 						<thead>

@@ -13,3 +13,6 @@
 - Abruf von Token und Key mit Prüfung am Gerät sowie Schaltfläche zum erneuten Abruf
 - Schutz vor der Sperrung des Midea-Kontos (Codes 7610 und 65027)
 - Standardmäßig automatische Broadcast-Adresse (alle Netzwerkschnittstellen)
+- Lokale Steuerung von Klimaanlagen (AC) und gewerblichen Klimaanlagen (CC) mit msmart-ng: Zustand, regelmäßige Abfrage, Gerät offline
+- Befehle werden entsprechend den Funktionen jedes Geräts angelegt, mit stabilen Codes für Szenarien und Aktualisierungsschaltfläche
+- Geräteoptionen: Signalton, Sollwert-Schrittweite, Stromverbrauch

@@ -13,3 +13,6 @@
 - Recupero del token e della key, verificati con l'apparecchio, e pulsante per richiederli di nuovo
 - Protezione contro il blocco dell'account Midea (codici 7610 e 65027)
 - Indirizzo di broadcast automatico per impostazione predefinita (tutte le interfacce di rete)
+- Controllo locale dei climatizzatori (AC) e climatizzatori commerciali (CC) con msmart-ng: stato, interrogazione periodica, apparecchio offline
+- Comandi creati in base alle funzionalità di ogni apparecchio, con codici stabili per gli scenari e pulsante di aggiornamento
+- Opzioni del dispositivo: bip, passo del setpoint, consumo elettrico

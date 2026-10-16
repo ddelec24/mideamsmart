@@ -96,6 +96,9 @@ Mit der Schaltfläche **Hinzufügen** können Sie ein Gerät manuell anlegen, zu
   - **Token/Key aus der Cloud abrufen**: fragt die Schlüssel dieses Geräts erneut in der Cloud ab und prüft sie, zum Beispiel nach einem Reset des WLAN-Moduls. Speichern Sie das Gerät vorher.
 - **Optionen**
   - **Abfrageintervall**: leer lassen, um den Wert aus der Plugin-Konfiguration zu verwenden.
+  - **Bestätigungston**: Das Gerät piept bei jedem empfangenen Befehl.
+  - **Sollwert-Schrittweite**: 1 °C oder 0,5 °C.
+  - **Stromverbrauch** (Klimaanlagen): legt die Leistungs- und Verbrauchsbefehle an. Sind die Werte unplausibel, ändern Sie das **Format** (BCD oder binär) oder den **Skalierungsfaktor**.
 - **Informationen**
   - Seriennummer und Modell des Geräts, schreibgeschützt.
 
@@ -105,7 +108,31 @@ Mit der Schaltfläche **Hinzufügen** können Sie ein Gerät manuell anlegen, zu
 
 ## Befehle
 
-Die Befehle werden automatisch entsprechend den von jedem Gerät gemeldeten Funktionen angelegt. Ihre detaillierte Liste wird hier ergänzt, sobald sie verfügbar sind.
+Die Befehle werden automatisch **entsprechend den von jedem Gerät gemeldeten Funktionen** angelegt, sobald es zum ersten Mal antwortet. Meldet das Gerät seine Funktionen nicht, werden Standardfunktionen verwendet und die Abfrage alle 10 Minuten wiederholt.
+
+Text-Infobefehle enthalten einen **stabilen, sprachunabhängigen Code** (zum Beispiel `cool`): Verwenden Sie diese Codes in Ihren Szenarien. Die zugehörigen Aktionsbefehle bieten übersetzte Bezeichnungen. Infos, die bereits von einer verknüpften Aktion angezeigt werden, sind standardmäßig ausgeblendet.
+
+Die Schaltfläche **Befehle aktualisieren** im Reiter *Befehle* legt fehlende Befehle an, entfernt die Befehle von Funktionen, die das Gerät nicht mehr meldet, und liest anschließend seine Funktionen neu ein. Namen und Einstellungen Ihrer vorhandenen Befehle bleiben erhalten.
+
+| Logische ID | Geräte | Inhalt |
+|---|---|---|
+| `power`, `on`, `off` | AC, CC | Zustand (0/1), einschalten, ausschalten |
+| `mode`, `setMode` | AC, CC | Modus: `auto`, `cool`, `dry`, `smart_dry`, `heat`, `fan_only` (CC: `fan`). Die Wahl eines Modus schaltet das Gerät ein |
+| `targetTemperature`, `setTargetTemperature` | AC, CC | Sollwert in °C, mit den Grenzen des Geräts und der im Gerät gewählten Schrittweite |
+| `indoorTemperature`, `outdoorTemperature` | AC, CC | Raum- und Außentemperatur |
+| `fanSpeed`, `setFanSpeed` | AC, CC | Lüfter: `auto`, `silent`, `low`, `medium`, `high`, `max`, `custom` (CC: `l1` bis `l7`, `auto`) |
+| `fanSpeedPercent`, `setFanSpeedPercent` | AC | Freie Geschwindigkeit von 1 bis 100 %, wenn das Gerät sie unterstützt |
+| `swingMode`, `setSwingMode` | AC, CC | Schwenkung: `off`, `vertical`, `horizontal`, `both` |
+| `horizontalSwingAngle`, `verticalSwingAngle` + `set…` | AC, CC | Lamellenposition: `off`/`close`, `pos_1` bis `pos_5`, `auto` |
+| `preset`, `setPreset` | AC, CC | Exklusive Voreinstellung: `none`, `sleep`, `freeze_protection`, `eco`, `ieco`, `turbo` (CC: `none`, `eco`, `silent`, `sleep`) |
+| `breezeMode`, `setBreezeMode` | AC | Breeze-Modus: `off`, `breeze_away`, `breeze_mild`, `breezeless` |
+| `indoorHumidity`, `targetHumidity`, `setTargetHumidity` | AC, CC | Raumfeuchte und Feuchte-Sollwert (%) |
+| `displayOn`, `toggleDisplay` | AC | Anzeigezustand und Umschalten |
+| `purifier`, `purifierOn`, `purifierOff` / `purifierMode`, `setPurifierMode` | AC / CC | Luftreiniger (AC: ein/aus; CC: `off`, `on`, `auto`) |
+| `flash`, `outSilent`, `cascadeMode`, `freshAirFanSpeed`, `rateSelect`, `auxMode` + actions | AC (CC : `auxMode`) | Erweiterte Funktionen, je nach Modell |
+| `selfCleanActive`, `startSelfClean`, `filterAlert`, `defrostActive`, `errorCode` | AC | Selbstreinigung, Filterhinweis, Abtauen, Fehlercode |
+| `realTimePower`, `currentEnergy`, `totalEnergy` | AC | Leistung (W) und Verbrauch (kWh), wenn die Option *Stromverbrauch* aktiviert ist |
+| `online`, `refresh` | AC, CC | Gerät erreichbar (0/1) und sofortige Aktualisierung |
 
 ## Fehlerbehebung
 

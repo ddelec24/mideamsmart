@@ -21,8 +21,10 @@ from pathlib import Path
 PLUGIN_DIR = Path(__file__).resolve().parent.parent
 PLUGIN_ID = PLUGIN_DIR.name
 LANGUAGES = ('en_US', 'es_ES', 'it_IT', 'ru_RU', 'pt_PT', 'de_DE')
-EXTENSIONS = ('.php', '.js', '.html')
-EXCLUDED_DIRS = ('tools', 'docs', 'resources/python_venv', '3rdparty', '.git')
+EXTENSIONS = ('.php', '.js', '.html', '.json')
+EXCLUDED_DIRS = ('tools', 'docs', 'resources', 'core/i18n', 'plugin_info', '3rdparty', '.git')
+# plugin_info/configuration.php is the only translated file of plugin_info
+INCLUDED_FILES = ('plugin_info/configuration.php',)
 
 TEMPLATE_RE = re.compile(r'{{(.*?)}}', re.S)
 PHP_SINGLE_RE = re.compile(r"__\(\s*'((?:[^'\\]|\\.)*)'\s*,\s*__FILE__\s*\)")
@@ -32,7 +34,7 @@ PHP_DOUBLE_RE = re.compile(r'__\(\s*"((?:[^"\\]|\\.)*)"\s*,\s*__FILE__\s*\)')
 def source_files():
     for path in sorted(PLUGIN_DIR.rglob('*')):
         relative = path.relative_to(PLUGIN_DIR).as_posix()
-        if path.suffix not in EXTENSIONS or any(relative.startswith(d + '/') for d in EXCLUDED_DIRS):
+        if relative not in INCLUDED_FILES and (path.suffix not in EXTENSIONS or any(relative.startswith(d + '/') for d in EXCLUDED_DIRS)):
             continue
         yield path, relative
 

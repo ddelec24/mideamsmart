@@ -13,3 +13,6 @@
 - Obtención del token y la key, verificados con el aparato, y botón para volver a pedirlos
 - Protección contra el bloqueo de la cuenta Midea (códigos 7610 y 65027)
 - Dirección de difusión automática por defecto (todas las interfaces de red)
+- Control local de los aires acondicionados (AC) y aires acondicionados comerciales (CC) con msmart-ng: estado, consulta periódica, aparato fuera de línea
+- Comandos creados según las capacidades de cada aparato, con códigos estables para los escenarios y botón de actualización
+- Opciones del equipo: pitido, paso de la consigna, consumo eléctrico

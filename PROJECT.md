@@ -1,7 +1,7 @@
 # mideamsmart — Récapitulatif projet
 
 > Document de référence du plugin, à relire avant chaque étape et à mettre à jour à chaque décision.
-> Dernière mise à jour : 2026-10-16 (étapes 1 à 4 terminées)
+> Dernière mise à jour : 2026-10-16 (étapes 1 à 5 terminées)
 
 ## 1. Contexte
 
@@ -216,37 +216,57 @@ mideamsmart/
 
 ## 7. Commandes
 
-Les commandes sont créées **selon les capacités** remontées par l'appareil (`get_capabilities` / `supports_*`) et recréables à la demande. Les valeurs suivent `/dev/fr_FR/cmd_value` et les types génériques du core 4.5+.
+### Principe — implémenté à l'étape 5 (AC/CC)
 
-### Communes
-| logicalId | Type | Générique |
-|---|---|---|
-| `online` | info binary | — |
-| `refresh` | action other | — |
+- **Définitions** : `core/config/commands.json`.
+  - `enums` donne les libellés traduits (`{{…}}`) par famille de valeurs.
+  - `commands` liste les commandes, avec les champs `logicalId, name, type, subType, types[AC|CC|A1], feature?, genericType?, unit?, isVisible?, isHistorized?, value? (logicalId de l'info liée), listEnum?, minValue/maxValue?, minFrom/maxFrom/stepFrom? (clés des capacités), step?, icon?, template?`.
+  - Le fichier est chargé via `translate::exec(…, 'plugins/mideamsmart/core/config/commands.json')`. **Pas de guillemets doubles** dans les traductions, puisqu'elles sont injectées dans du JSON.
+- **Capacités** : le démon envoie `deviceCapabilities {eqLogicId, deviceType, capabilities: {complete, minTargetTemperature, maxTargetTemperature, temperatureStep, features[], enums{famille: [codes supportés]}}}` à la première réponse de l'appareil, puis à chaque changement.
+  - PHP `applyCapabilities()` les stocke dans la configuration `capabilities`, avec un `save(true)` direct (pas de `postSave`), puis appelle `createCommands(false)`.
+  - `createCommands($removeObsolete)` traite d'abord les infos, puis les actions, pour pouvoir les lier. Il crée les manquantes et met à jour `listValue`, min, max, `step` et la liaison `value`. Il ne modifie **jamais** le nom, la visibilité ni l'historique des commandes existantes.
+  - Le core retire les apostrophes ASCII des noms (`cleanComponanteName`) : on les remplace par `’` à la création.
+  - Après une création, PHP envoie `resendValues`, car le démon ne pousse que les valeurs qui changent.
+  - Le bouton « Mettre à jour les commandes » appelle l'ajax `updateCommands`, qui fait `createCommands(true)` puis envoie `refreshCapabilities` au démon.
+- **Valeurs** :
+  - les infos texte portent un **code stable** (`cool`, `fan_only`, `eco`…, c'est-à-dire le nom d'enum msmart en minuscules) ;
+  - les actions `select` affichent les libellés traduits ;
+  - les booléens valent 0 ou 1 ;
+  - les infos doublées par une action liée sont masquées par défaut.
+- **Exécution** : `mideamsmartCmd::execute` envoie `executeCommand {eqLogicId, command: logicalId, value}`, avec la valeur `slider` ou `select`.
+  - Le driver valide la valeur contre l'enum et les valeurs supportées, applique la commande, puis relit l'état.
+  - En cas d'erreur, il renvoie `commandError {reason: unknownCommand|invalidValue|unsupportedValue|deviceOffline|communicationError|deviceNotRunning}`, que PHP écrit en warning traduit.
+- **Préréglages** : une **liste exclusive** `preset`/`setPreset`, comme dans midea-ac-py, à la place d'interrupteurs séparés.
+  - AC : `none, sleep, freeze_protection, eco, ieco, turbo` ;
+  - CC : `none, eco, silent, sleep`.
+- **Options d'équipement** : `beep` (1 par défaut), `temperatureStep` (1 ou 0,5), `energy` (0), `energyFormat` (`bcd` ou `binary`), `energyScale` (1). Elles sont envoyées dans `getDaemonConfig`. `preSave` force des valeurs explicites pour que les cases à cocher de la page restent justes.
 
-### AC (0xAC) et CC (0xCC) — msmart-ng
-| Info | Action(s) | Générique | Condition |
-|---|---|---|---|
-| `power` (binary) | `on`, `off` | ENERGY_STATE / ENERGY_ON / ENERGY_OFF | toujours |
-| `mode` (string : auto, cool, dry, heat, fan_only, smart_dry) | `setMode` (select) | THERMOSTAT_MODE / THERMOSTAT_SET_MODE | `supported_operation_modes` |
-| `targetTemperature` (°C) | `setTargetTemperature` (slider min/max) | THERMOSTAT_SETPOINT / THERMOSTAT_SET_SETPOINT | toujours |
-| `indoorTemperature` | — | THERMOSTAT_TEMPERATURE | toujours |
-| `outdoorTemperature` | — | THERMOSTAT_TEMPERATURE_OUTDOOR | si valeur remontée |
-| `fanSpeed` | `setFanSpeed` (select ou slider si vitesse custom) | FAN_SPEED_STATE / FAN_SPEED | `supported_fan_speeds` |
-| `swingMode` | `setSwingMode` (select) | — | `supported_swing_modes` |
-| `horizontalSwingAngle`, `verticalSwingAngle` | `setHorizontalSwingAngle`, `setVerticalSwingAngle` | — | `supports_*_swing_angle` |
-| `indoorHumidity` | — | THERMOSTAT_HUMIDITY | `supports_humidity` |
-| `targetHumidity` | `setTargetHumidity` | HUMIDITY_SETPOINT / HUMIDITY_SET_SETPOINT | `supports_target_humidity` |
-| `eco`, `ieco`, `turbo`, `flash`, `sleep`, `followMe`, `freezeProtection`, `purifier`, `outSilent` | `xxxOn` / `xxxOff` | — | `supports_*` |
-| `breezeMode` (off, breeze_away, breeze_mild, breezeless) | `setBreezeMode` | — | `supports_breeze*` |
-| `displayOn` | `toggleDisplay` | — | `supports_display_control` |
-| `auxMode`, `rateSelect`, `cascadeMode`, `freshAirFanSpeed` | `setAuxMode`, `setRateSelect`, `setCascadeMode`, `setFreshAirFanSpeed` | — | listes supportées |
-| `selfCleanActive` | `startSelfClean` | — | `supports_self_clean` |
-| `filterAlert`, `defrostActive`, `errorCode` | — | — | toujours / si remonté |
-| `realTimePower` (W), `totalEnergy` (kWh), `currentEnergy` (kWh) | — | POWER / CONSUMPTION | option énergie activée |
-| diagnostics : `compressorFrequency`, `compressorCurrent`, `outdoorFanSpeed`, `indoorCoilTemperature`… | — | — | option diagnostic |
+### Démon — drivers (`mideamsmart_daemon/drivers/`)
 
-Sur le CC, les noms sont alignés sur ceux de l'AC quand l'équivalent existe : `silent`, `purifier` (select), `display`.
+- **`BaseDriver`** :
+  - boucle de polling par appareil, avec un `asyncio.Lock` partagé avec les commandes ;
+  - `online` publié à chaque transition ;
+  - **backoff** quand l'appareil ne répond pas : l'intervalle double jusqu'à 300 s ;
+  - publication des seules valeurs changées, plus un renvoi complet toutes les 10 min ;
+  - `request_refresh`, `resend_values`, `resend_capabilities`.
+- **`MsmartDriver`** :
+  - instancie `AirConditioner` ou `CommercialAirConditioner` ;
+  - fait `authenticate(token, key)` en V3 ;
+  - appelle `get_capabilities()`. Comme msmart ne renvoie aucun résultat, le succès est détecté en enveloppant `_update_capabilities`. Sans réponse, les capacités par défaut sont utilisées (`complete: false`) et la demande est refaite toutes les 10 min.
+  - Avant chaque commande : `fahrenheit=False` ; `sound` n'est écrit que si `supports_sound`. Sinon, on écrit `_sound` directement, car le setter `sound` provoque **toujours** une commande SetProperties SOUND, que les appareils sans cette capacité n'acquittent pas (6 s de timeout constatées avec le faux appareil).
+  - `execute` lève `deviceOffline` si l'appareil ne répond plus après la commande, car msmart ne lève pas d'erreur dans ce cas.
+- **`AcDriver` / `CcDriver`** : `read_capabilities()` (features + enums), `read_values()`, `command_handlers()`.
+  - Choisir un mode met l'appareil en marche.
+  - La consigne est bornée aux limites de l'appareil et arrondie à 0,5.
+- `DeviceManager` démarre ou arrête le driver de chaque équipement (registre `DRIVERS = {AC, CC}`). A1 vient à l'étape 6.
+
+### Tests de l'étape 5
+
+- `tests/test_drivers.py` : faux appareils qui héritent des **vraies** classes msmart-ng (seuls les appels réseau sont remplacés, capacités via `override_capabilities`).
+- **`tools/fake_ac.py`** : faux climatiseur LAN **V2** qui répond avec les trames réelles des tests msmart-ng (capacités 0xB5, état 0xC0) et applique alimentation, mode, consigne et ventilation des SetState.
+  - Dans l'instance de dev : `docker exec -d jeedom-dev sh -c 'cd /var/www/html/plugins/mideamsmart && exec resources/python_venv/bin/python3 tools/fake_ac.py > /tmp/fake_ac.log 2>&1'`, puis équipement « Clim test » en 127.0.0.1:6444, V2. Il faut le relancer après un redémarrage du conteneur.
+  - **Validé de bout en bout** : capacités lues via le vrai protocole, 19 commandes créées, valeurs remontées, `setMode`, `setTargetTemperature`, `on`, `off` et `setFanSpeed` appliqués, `ieco` refusé (`unsupportedValue`), widget du dashboard correct.
+- **Non testé** : appareils réels, protocole V3 (handshake), appareils CC réels, consommation électrique.
 
 ### A1 déshumidificateur — midea-local
 | Info | Action(s) | Générique |
@@ -278,7 +298,8 @@ Les autres types listés par le cloud (FD, FA, B6…) sont affichés comme **« 
 - [ ] Captures d'écran à fournir dans `docs/images/` : `plugin_config.png` (configuration du plugin), `plugin_devices.png` (page du plugin), `device_config.png` (onglet Équipement). À compléter plus tard : commandes AC, commandes A1, modal diagnostic.
 - [ ] Tester l'installation des dépendances sur Raspberry Pi arm64 et armhf.
 - [x] Tester le cycle de vie du démon dans une vraie instance Jeedom (instance Docker de dev `../dev-env`, voir son README).
-- [ ] Valider la synchronisation avec un vrai compte MSmartHome et de vrais appareils V2/V3 (testeurs du forum).
+- [ ] Valider la synchronisation et le pilotage avec un vrai compte MSmartHome et de vrais appareils V2/V3, AC et CC (testeurs du forum).
+- [ ] Options avancées non exposées (étape 7 ou plus tard) : données de diagnostic groupes 1/2/7/11, follow me, surcharge des capacités (`override_capabilities`).
 - [ ] Dev en Docker bridge : la découverte LAN ne voit que le réseau du conteneur. Prévoir `network_mode: host` pour tester avec de vrais appareils.
 - [ ] Vérifier, sur une vraie réponse cloud, l'appariement entre l'`appliance_id` du cloud et le `device_id` de la découverte LAN.
 - [ ] Plan de tests sans matériel : tests unitaires des drivers avec appareils simulés et trames issues des tests des libs.
@@ -289,7 +310,7 @@ Les autres types listés par le cloud (FD, FA, B6…) sont affichés comme **« 
 2. ✅ Dépendances : install via uv, venv, `dependancy_info` (testé amd64 Debian 12/13).
 3. ✅ Démon : socket, callback, cycle de vie (services cloud et découverte déplacés à l'étape 4).
 4. ✅ Synchronisation : services cloud (MSmartHome) et découverte LAN, création des équipements, récupération de token/key.
-5. Driver AC/CC et création des commandes selon les capacités.
+5. ✅ Driver AC/CC et création des commandes selon les capacités.
 6. Driver A1.
 7. Modal diagnostic, robustesse (hors ligne, backoff, anti-ban).
 8. Traductions dans les 6 langues, documentation et changelog.

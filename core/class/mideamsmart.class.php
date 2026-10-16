@@ -273,6 +273,17 @@ class mideamsmart extends eqLogic {
 			case 'syncResult':
 				self::applySyncResult($_message);
 				break;
+			case 'deviceCapabilities':
+				$eqLogic = isset($_message['eqLogicId']) ? eqLogic::byId($_message['eqLogicId']) : null;
+				if (is_object($eqLogic) && $eqLogic->getEqType_name() == __CLASS__ && isset($_message['capabilities']) && is_array($_message['capabilities'])) {
+					$eqLogic->applyCapabilities($_message['capabilities']);
+				}
+				break;
+			case 'commandError':
+				$eqLogic = isset($_message['eqLogicId']) ? eqLogic::byId($_message['eqLogicId']) : null;
+				$name = is_object($eqLogic) ? $eqLogic->getHumanName() : (isset($_message['eqLogicId']) ? $_message['eqLogicId'] : '');
+				log::add(__CLASS__, 'warning', __('Commande non exécutée', __FILE__) . ' ' . $name . ' (' . (isset($_message['command']) ? $_message['command'] : '') . ') : ' . self::getCommandErrorMessage(isset($_message['reason']) ? $_message['reason'] : ''));
+				break;
 			case 'deviceValues':
 				if (isset($_message['devices']) && is_array($_message['devices'])) {
 					foreach ($_message['devices'] as $eqLogicId => $values) {
@@ -286,6 +297,186 @@ class mideamsmart extends eqLogic {
 				break;
 			default:
 				log::add(__CLASS__, 'debug', __('Message du démon non traité', __FILE__) . ' : ' . json_encode($_message));
+		}
+	}
+
+	/*     * *************************Commandes*************************** */
+
+	private static function getCommandErrorMessage($_reason) {
+		switch ($_reason) {
+			case 'deviceNotRunning':
+				return __('équipement inactif ou type non géré par le démon', __FILE__);
+			case 'unsupportedValue':
+				return __('valeur non supportée par l\'appareil', __FILE__);
+			case 'invalidValue':
+				return __('valeur invalide', __FILE__);
+			case 'unknownCommand':
+				return __('commande inconnue', __FILE__);
+			case 'deviceOffline':
+				return __('l\'appareil ne répond pas', __FILE__);
+			case 'communicationError':
+				return __('erreur de communication avec l\'appareil', __FILE__);
+		}
+		return $_reason;
+	}
+
+	/**
+	 * Command definitions (core/config/commands.json), translated.
+	 * @return array
+	 */
+	public static function getCommandDefinitions() {
+		static $definitions = null;
+		if ($definitions === null) {
+			$path = __DIR__ . '/../config/commands.json';
+			$definitions = json_decode(translate::exec(file_get_contents($path), 'plugins/' . __CLASS__ . '/core/config/commands.json'), true);
+			if (!is_array($definitions)) {
+				throw new Exception(__('Fichier de définition des commandes invalide', __FILE__) . ' : ' . json_last_error_msg());
+			}
+		}
+		return $definitions;
+	}
+
+	/**
+	 * Stores the capabilities reported by the daemon and creates the matching commands.
+	 * @param array $_capabilities
+	 */
+	public function applyCapabilities($_capabilities) {
+		$this->setConfiguration('capabilities', $_capabilities);
+		// Direct save: the daemon configuration does not change
+		$this->save(true);
+		$this->createCommands(false);
+	}
+
+	/**
+	 * Creates the missing commands and updates their lists and limits from the capabilities.
+	 * Names, visibility and history settings of the existing commands are kept.
+	 * @param bool $_removeObsolete Also removes the commands of the features the appliance no longer reports
+	 * @return int Number of created commands
+	 */
+	public function createCommands($_removeObsolete = false) {
+		$capabilities = $this->getConfiguration('capabilities', array());
+		if (!is_array($capabilities) || !isset($capabilities['features'])) {
+			return 0;
+		}
+		$deviceType = $this->getConfiguration('deviceType', '');
+		$features = is_array($capabilities['features']) ? $capabilities['features'] : array();
+		$definitions = self::getCommandDefinitions();
+		$created = 0;
+		$order = 0;
+		// Infos first, so that the actions can be linked to them
+		foreach (array('info', 'action') as $type) {
+			foreach ($definitions['commands'] as $definition) {
+				if ($definition['type'] != $type || !in_array($deviceType, $definition['types'])) {
+					continue;
+				}
+				$order++;
+				$cmd = $this->getCmd(null, $definition['logicalId']);
+				if (isset($definition['feature']) && !in_array($definition['feature'], $features)) {
+					if (is_object($cmd) && $_removeObsolete) {
+						$cmd->remove();
+					}
+					continue;
+				}
+				if (!is_object($cmd)) {
+					$cmd = new mideamsmartCmd();
+					$cmd->setEqLogic_id($this->getId());
+					$cmd->setLogicalId($definition['logicalId']);
+					// The core removes ASCII apostrophes from names (cleanComponanteName): keep a typographic one
+					$cmd->setName(str_replace("'", '’', $definition['name']));
+					$cmd->setType($definition['type']);
+					$cmd->setSubType($definition['subType']);
+					$cmd->setOrder($order);
+					$cmd->setIsVisible(isset($definition['isVisible']) ? $definition['isVisible'] : 1);
+					$cmd->setIsHistorized(isset($definition['isHistorized']) ? $definition['isHistorized'] : 0);
+					if (isset($definition['genericType'])) {
+						$cmd->setGeneric_type($definition['genericType']);
+					}
+					if (isset($definition['unit'])) {
+						$cmd->setUnite($definition['unit']);
+					}
+					if (isset($definition['icon'])) {
+						$cmd->setDisplay('icon', $definition['icon']);
+					}
+					if (isset($definition['template'])) {
+						$cmd->setTemplate('dashboard', $definition['template']);
+						$cmd->setTemplate('mobile', $definition['template']);
+					}
+					$created++;
+				}
+				$this->updateCommandFromCapabilities($cmd, $definition, $capabilities, $definitions['enums']);
+				$cmd->save();
+			}
+		}
+		if ($created > 0) {
+			log::add(__CLASS__, 'info', $this->getHumanName() . ' : ' . $created . ' ' . __('commande(s) créée(s)', __FILE__));
+			// The daemon only sends the values that change: ask it for all of them for the new commands
+			$deamon_info = self::deamon_info();
+			if ($deamon_info['state'] == 'ok') {
+				try {
+					self::sendToDaemon(array('action' => 'resendValues', 'eqLogicId' => intval($this->getId())));
+				} catch (Exception $e) {
+					log::add(__CLASS__, 'warning', $e->getMessage());
+				}
+			}
+		}
+		return $created;
+	}
+
+	/**
+	 * Recreates the commands from the known capabilities (button of the commands tab) and asks
+	 * the daemon to read them again from the appliance.
+	 * @return int Number of created commands
+	 */
+	public function updateCommands() {
+		$capabilities = $this->getConfiguration('capabilities', array());
+		if (!is_array($capabilities) || !isset($capabilities['features'])) {
+			throw new Exception(__('Capacités de l\'appareil inconnues : il doit d\'abord avoir été joint par le démon', __FILE__));
+		}
+		$created = $this->createCommands(true);
+		$deamon_info = self::deamon_info();
+		if ($deamon_info['state'] == 'ok') {
+			self::sendToDaemon(array('action' => 'refreshCapabilities', 'eqLogicId' => intval($this->getId())));
+		}
+		return $created;
+	}
+
+	private function updateCommandFromCapabilities($_cmd, $_definition, $_capabilities, $_enums) {
+		$minValue = isset($_definition['minValue']) ? $_definition['minValue'] : null;
+		$maxValue = isset($_definition['maxValue']) ? $_definition['maxValue'] : null;
+		if (isset($_definition['minFrom']) && isset($_capabilities[$_definition['minFrom']])) {
+			$minValue = $_capabilities[$_definition['minFrom']];
+		}
+		if (isset($_definition['maxFrom']) && isset($_capabilities[$_definition['maxFrom']])) {
+			$maxValue = $_capabilities[$_definition['maxFrom']];
+		}
+		if ($minValue !== null) {
+			$_cmd->setConfiguration('minValue', $minValue);
+		}
+		if ($maxValue !== null) {
+			$_cmd->setConfiguration('maxValue', $maxValue);
+		}
+		$step = isset($_definition['step']) ? $_definition['step'] : null;
+		if (isset($_definition['stepFrom']) && isset($_capabilities[$_definition['stepFrom']])) {
+			$step = $_capabilities[$_definition['stepFrom']];
+		}
+		if ($step !== null) {
+			$_cmd->setDisplay('parameters', array_merge((array) $_cmd->getDisplay('parameters', array()), array('step' => $step)));
+		}
+		if (isset($_definition['listEnum'])) {
+			$enum = $_definition['listEnum'];
+			$codes = (isset($_capabilities['enums'][$enum]) && is_array($_capabilities['enums'][$enum])) ? $_capabilities['enums'][$enum] : array();
+			$values = array();
+			foreach ($codes as $code) {
+				$label = isset($_enums[$enum][$code]) ? $_enums[$enum][$code] : $code;
+				$values[] = $code . '|' . $label;
+			}
+			$_cmd->setConfiguration('listValue', implode(';', $values));
+		}
+		if (isset($_definition['value'])) {
+			$info = $this->getCmd('info', $_definition['value']);
+			if (is_object($info)) {
+				$_cmd->setValue($info->getId());
+			}
 		}
 	}
 
@@ -524,9 +715,24 @@ class mideamsmart extends eqLogic {
 		if ($pollingInterval !== '') {
 			$this->setConfiguration('pollingInterval', self::checkPollingInterval($pollingInterval));
 		}
+
+		// Explicit defaults: an absent value would leave the checkboxes of the page in their previous state
+		foreach (array('beep' => 1, 'energy' => 0, 'energyFormat' => 'bcd') as $key => $default) {
+			if ($this->getConfiguration($key, '') === '') {
+				$this->setConfiguration($key, $default);
+			}
+		}
+		$this->setConfiguration('temperatureStep', (floatval($this->getConfiguration('temperatureStep', 1)) == 0.5) ? 0.5 : 1);
+		$energyScale = str_replace(',', '.', trim($this->getConfiguration('energyScale', '')));
+		if ($energyScale !== '' && (!is_numeric($energyScale) || floatval($energyScale) <= 0)) {
+			throw new Exception(__('Facteur d\'échelle de consommation invalide', __FILE__) . ' : ' . $energyScale);
+		}
+		$this->setConfiguration('energyScale', ($energyScale === '') ? 1 : floatval($energyScale));
 	}
 
 	public function postSave() {
+		// Options such as the temperature step change the commands display
+		$this->createCommands(false);
 		$deamon_info = self::deamon_info();
 		if ($deamon_info['state'] != 'ok') {
 			return;
@@ -570,6 +776,11 @@ class mideamsmart extends eqLogic {
 			'token' => $this->getConfiguration('token', ''),
 			'key' => $this->getConfiguration('key', ''),
 			'pollingInterval' => $this->getPollingInterval(),
+			'beep' => intval($this->getConfiguration('beep', 1)),
+			'temperatureStep' => floatval($this->getConfiguration('temperatureStep', 1)),
+			'energy' => intval($this->getConfiguration('energy', 0)),
+			'energyFormat' => $this->getConfiguration('energyFormat', 'bcd'),
+			'energyScale' => floatval($this->getConfiguration('energyScale', 1)),
 		);
 	}
 
@@ -623,6 +834,28 @@ class mideamsmartCmd extends cmd {
 	/*     * *********************Methode d'instance************************* */
 
 	public function execute($_options = array()) {
+		if ($this->getType() != 'action') {
+			return;
+		}
+		$eqLogic = $this->getEqLogic();
+		$value = null;
+		switch ($this->getSubType()) {
+			case 'slider':
+				$value = isset($_options['slider']) ? $_options['slider'] : null;
+				break;
+			case 'select':
+				$value = isset($_options['select']) ? $_options['select'] : null;
+				break;
+		}
+		if ($this->getSubType() != 'other' && ($value === null || $value === '')) {
+			throw new Exception(__('Aucune valeur fournie pour la commande', __FILE__) . ' ' . $this->getHumanName());
+		}
+		mideamsmart::sendToDaemon(array(
+			'action' => 'executeCommand',
+			'eqLogicId' => intval($eqLogic->getId()),
+			'command' => $this->getLogicalId(),
+			'value' => $value,
+		));
 	}
 
 	/*     * **********************Getteur Setteur*************************** */

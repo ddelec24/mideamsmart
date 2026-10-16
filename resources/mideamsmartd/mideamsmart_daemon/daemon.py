@@ -8,6 +8,7 @@ from typing import Any
 
 from .cloud import CloudGuard
 from .devices import DeviceManager
+from .drivers import CommandError
 from .jeedom import JeedomCallback, JeedomSocketServer
 from .sync import SyncRequest, SyncService
 
@@ -21,7 +22,7 @@ class Daemon:
         self._pid_file = pid_file
         self._callback = JeedomCallback(callback_url, apikey, cycle)
         self._socket_server = JeedomSocketServer(socket_host, socket_port, apikey, self.handle_message)
-        self._device_manager = DeviceManager()
+        self._device_manager = DeviceManager(self._callback.add_values, self._callback.send)
         self._sync_service = SyncService(CloudGuard())
         self._sync_lock = asyncio.Lock()
         self._stop_event = asyncio.Event()
@@ -30,6 +31,9 @@ class Daemon:
             'updateDevice': self._on_update_device,
             'removeDevice': self._on_remove_device,
             'syncDevices': self._on_sync_devices,
+            'executeCommand': self._on_execute_command,
+            'refreshCapabilities': self._on_refresh_capabilities,
+            'resendValues': self._on_resend_values,
             'stop': self._on_stop,
         }
 
@@ -73,16 +77,47 @@ class Daemon:
         await handler(message)
 
     async def _on_set_devices(self, message: dict[str, Any]) -> None:
-        self._device_manager.set_devices(message.get('devices') or [])
+        await self._device_manager.set_devices(message.get('devices') or [])
 
     async def _on_update_device(self, message: dict[str, Any]) -> None:
         device = message.get('device')
         if isinstance(device, dict):
-            self._device_manager.update_device(device)
+            await self._device_manager.update_device(device)
 
     async def _on_remove_device(self, message: dict[str, Any]) -> None:
         if 'eqLogicId' in message:
-            self._device_manager.remove_device(message['eqLogicId'])
+            await self._device_manager.remove_device(message['eqLogicId'])
+
+    async def _on_execute_command(self, message: dict[str, Any]) -> None:
+        eq_logic_id = message.get('eqLogicId')
+        command = str(message.get('command') or '')
+        driver = self._device_manager.get_driver(eq_logic_id) if eq_logic_id is not None else None
+        reason = None
+        if driver is None:
+            reason = 'deviceNotRunning'
+        else:
+            _LOGGER.info('[%s] Command %s %s', driver.config.label, command, message.get('value', ''))
+            try:
+                await driver.execute(command, message.get('value'))
+            except CommandError as error:
+                reason = error.reason
+            except Exception as error:
+                _LOGGER.warning('[%s] Command %s failed: %s', driver.config.label, command, error)
+                _LOGGER.debug('Error details', exc_info=True)
+                reason = 'communicationError'
+        if reason is not None:
+            _LOGGER.warning('Command %s refused for the equipment %s: %s', command, eq_logic_id, reason)
+            await self._callback.send({'action': 'commandError', 'eqLogicId': eq_logic_id, 'command': command, 'reason': reason})
+
+    async def _on_resend_values(self, message: dict[str, Any]) -> None:
+        driver = self._device_manager.get_driver(message.get('eqLogicId', 0))
+        if driver is not None:
+            driver.resend_values()
+
+    async def _on_refresh_capabilities(self, message: dict[str, Any]) -> None:
+        driver = self._device_manager.get_driver(message.get('eqLogicId', 0))
+        if driver is not None:
+            driver.resend_capabilities()
 
     async def _on_sync_devices(self, message: dict[str, Any]) -> None:
         request = SyncRequest.from_jeedom(message)
@@ -111,7 +146,7 @@ class Daemon:
 
     async def _shutdown(self) -> None:
         _LOGGER.info('Stopping the daemon')
-        for step in (self._socket_server.close, self._callback.close):
+        for step in (self._socket_server.close, self._device_manager.close, self._callback.close):
             try:
                 await step()
             except Exception:

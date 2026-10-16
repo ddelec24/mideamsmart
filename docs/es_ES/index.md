@@ -96,6 +96,9 @@ El botón **Añadir** permite crear un equipo manualmente, por ejemplo para un a
   - **Obtener token/key desde la nube**: vuelve a pedir a la nube las claves de este aparato y las verifica, por ejemplo tras reiniciar el módulo Wi-Fi. Guarde el equipo antes de usarlo.
 - **Opciones**
   - **Intervalo de consulta**: déjelo vacío para usar el valor de la configuración del plugin.
+  - **Pitido de confirmación**: el aparato emite un pitido con cada comando recibido.
+  - **Paso de la consigna**: 1 °C o 0,5 °C.
+  - **Consumo eléctrico** (aires acondicionados): crea los comandos de potencia y consumo. Si los valores son incoherentes, cambie el **formato** (BCD o binario) o el **factor de escala**.
 - **Información**
   - Número de serie y modelo del aparato, en solo lectura.
 
@@ -105,7 +108,31 @@ El botón **Añadir** permite crear un equipo manualmente, por ejemplo para un a
 
 ## Comandos
 
-Los comandos se crean automáticamente según las capacidades que comunica cada aparato. Su lista detallada se añadirá aquí en cuanto estén disponibles.
+Los comandos se crean automáticamente **según las capacidades que comunica cada aparato**, en cuanto responde por primera vez. Si el aparato no devuelve sus capacidades, se usan capacidades por defecto y la petición se repite cada 10 minutos.
+
+Los comandos info de tipo texto contienen un **código estable**, independiente del idioma (por ejemplo `cool`): use estos códigos en sus escenarios. Los comandos action asociados ofrecen etiquetas traducidas. Las infos ya mostradas por una acción vinculada se ocultan por defecto.
+
+El botón **Actualizar los comandos** de la pestaña *Comandos* añade los comandos que faltan, elimina los de las funciones que el aparato ya no declara y vuelve a leer sus capacidades. Se conservan los nombres y ajustes de sus comandos existentes.
+
+| Identificador lógico | Aparatos | Contenido |
+|---|---|---|
+| `power`, `on`, `off` | AC, CC | Estado (0/1), encender, apagar |
+| `mode`, `setMode` | AC, CC | Modo: `auto`, `cool`, `dry`, `smart_dry`, `heat`, `fan_only` (CC: `fan`). Elegir un modo enciende el aparato |
+| `targetTemperature`, `setTargetTemperature` | AC, CC | Consigna en °C, con los límites del aparato y el paso elegido en el equipo |
+| `indoorTemperature`, `outdoorTemperature` | AC, CC | Temperaturas interior y exterior |
+| `fanSpeed`, `setFanSpeed` | AC, CC | Ventilación: `auto`, `silent`, `low`, `medium`, `high`, `max`, `custom` (CC: `l1` a `l7`, `auto`) |
+| `fanSpeedPercent`, `setFanSpeedPercent` | AC | Velocidad libre de 1 a 100 %, si el aparato la admite |
+| `swingMode`, `setSwingMode` | AC, CC | Oscilación: `off`, `vertical`, `horizontal`, `both` |
+| `horizontalSwingAngle`, `verticalSwingAngle` + `set…` | AC, CC | Posición de las lamas: `off`/`close`, `pos_1` a `pos_5`, `auto` |
+| `preset`, `setPreset` | AC, CC | Preajuste exclusivo: `none`, `sleep`, `freeze_protection`, `eco`, `ieco`, `turbo` (CC: `none`, `eco`, `silent`, `sleep`) |
+| `breezeMode`, `setBreezeMode` | AC | Modo Breeze: `off`, `breeze_away`, `breeze_mild`, `breezeless` |
+| `indoorHumidity`, `targetHumidity`, `setTargetHumidity` | AC, CC | Humedad interior y consigna de humedad (%) |
+| `displayOn`, `toggleDisplay` | AC | Estado de la pantalla y conmutación |
+| `purifier`, `purifierOn`, `purifierOff` / `purifierMode`, `setPurifierMode` | AC / CC | Purificador (AC: encendido/apagado; CC: `off`, `on`, `auto`) |
+| `flash`, `outSilent`, `cascadeMode`, `freshAirFanSpeed`, `rateSelect`, `auxMode` + actions | AC (CC : `auxMode`) | Funciones avanzadas, según el modelo |
+| `selfCleanActive`, `startSelfClean`, `filterAlert`, `defrostActive`, `errorCode` | AC | Autolimpieza, alerta de filtro, desescarche, código de error |
+| `realTimePower`, `currentEnergy`, `totalEnergy` | AC | Potencia (W) y consumos (kWh), si la opción *Consumo eléctrico* está marcada |
+| `online`, `refresh` | AC, CC | Aparato accesible (0/1) y actualización inmediata |
 
 ## Solución de problemas
 

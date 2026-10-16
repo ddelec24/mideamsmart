@@ -46,20 +46,20 @@ class DeviceConfigTest(unittest.TestCase):
         self.assertNotIn('aaaa', repr(DeviceConfig.from_jeedom(JEEDOM_DEVICE)))
 
 
-class DeviceManagerTest(unittest.TestCase):
+class DeviceManagerTest(unittest.IsolatedAsyncioTestCase):
 
-    def test_set_update_remove(self):
+    async def test_set_update_remove(self):
         manager = DeviceManager()
-        manager.set_devices([JEEDOM_DEVICE, dict(JEEDOM_DEVICE, eqLogicId=13), {'invalid': True}])
+        await manager.set_devices([JEEDOM_DEVICE, dict(JEEDOM_DEVICE, eqLogicId=13), {'invalid': True}])
         self.assertEqual(sorted(manager.devices), [12, 13])
 
-        manager.update_device(dict(JEEDOM_DEVICE, ipAddress='192.168.1.21'))
+        await manager.update_device(dict(JEEDOM_DEVICE, ipAddress='192.168.1.21'))
         self.assertEqual(manager.devices[12].ip_address, '192.168.1.21')
 
-        manager.remove_device('13')
+        await manager.remove_device('13')
         self.assertEqual(sorted(manager.devices), [12])
 
-        manager.set_devices([dict(JEEDOM_DEVICE, eqLogicId=14)])
+        await manager.set_devices([dict(JEEDOM_DEVICE, eqLogicId=14)])
         self.assertEqual(sorted(manager.devices), [14])
 
 

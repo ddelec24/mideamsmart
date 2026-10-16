@@ -27,6 +27,14 @@ try {
 		ajax::success();
 	}
 
+	if (init('action') == 'updateCommands') {
+		$eqLogic = mideamsmart::byId(init('id'));
+		if (!is_object($eqLogic) || $eqLogic->getEqType_name() != 'mideamsmart') {
+			throw new Exception(__('Équipement introuvable', __FILE__) . ' : ' . init('id'));
+		}
+		ajax::success($eqLogic->updateCommands());
+	}
+
 	throw new Exception(__('Aucune méthode correspondante à', __FILE__) . ' : ' . init('action'));
 } catch (Exception $e) {
 	ajax::error(displayException($e), $e->getCode());

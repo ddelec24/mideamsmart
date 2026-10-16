@@ -125,7 +125,8 @@ class DaemonTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(pid_file.read(), str(os.getpid()))
 
         # Jeedom answers daemonStarted with the list of equipments
-        devices = [{'eqLogicId': 12, 'deviceId': '1', 'deviceType': 'AC'}, {'eqLogicId': 13, 'deviceId': '2', 'deviceType': 'A1'}]
+        # Types without driver: this test is about the daemon life cycle, not the appliances
+        devices = [{'eqLogicId': 12, 'deviceId': '1', 'deviceType': 'FD'}, {'eqLogicId': 13, 'deviceId': '2', 'deviceType': 'FD'}]
         await send_to_daemon(self.socket_port, {'apikey': APIKEY, 'action': 'setDevices', 'devices': devices})
         await wait_until(lambda: sorted(daemon.device_manager.devices) == [12, 13])
 

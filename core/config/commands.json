@@ -1,0 +1,163 @@
+{
+	"enums": {
+		"mode": {
+			"auto": "{{Automatique}}",
+			"cool": "{{Froid}}",
+			"dry": "{{Déshumidification}}",
+			"smart_dry": "{{Déshumidification intelligente}}",
+			"heat": "{{Chauffage}}",
+			"fan_only": "{{Ventilation}}",
+			"fan": "{{Ventilation}}"
+		},
+		"fanSpeed": {
+			"auto": "{{Automatique}}",
+			"silent": "{{Silencieux}}",
+			"low": "{{Faible}}",
+			"medium": "{{Moyenne}}",
+			"high": "{{Forte}}",
+			"max": "{{Maximale}}",
+			"custom": "{{Personnalisée}}",
+			"l1": "{{Niveau 1}}",
+			"l2": "{{Niveau 2}}",
+			"l3": "{{Niveau 3}}",
+			"l4": "{{Niveau 4}}",
+			"l5": "{{Niveau 5}}",
+			"l6": "{{Niveau 6}}",
+			"l7": "{{Niveau 7}}"
+		},
+		"swingMode": {
+			"off": "{{Arrêt}}",
+			"vertical": "{{Vertical}}",
+			"horizontal": "{{Horizontal}}",
+			"both": "{{Vertical et horizontal}}"
+		},
+		"horizontalSwingAngle": {
+			"off": "{{Arrêt}}",
+			"close": "{{Fermé}}",
+			"pos_1": "{{Position 1}}",
+			"pos_2": "{{Position 2}}",
+			"pos_3": "{{Position 3}}",
+			"pos_4": "{{Position 4}}",
+			"pos_5": "{{Position 5}}",
+			"auto": "{{Automatique}}"
+		},
+		"verticalSwingAngle": {
+			"off": "{{Arrêt}}",
+			"close": "{{Fermé}}",
+			"pos_1": "{{Position 1}}",
+			"pos_2": "{{Position 2}}",
+			"pos_3": "{{Position 3}}",
+			"pos_4": "{{Position 4}}",
+			"pos_5": "{{Position 5}}",
+			"auto": "{{Automatique}}"
+		},
+		"preset": {
+			"none": "{{Aucun}}",
+			"sleep": "{{Nuit}}",
+			"freeze_protection": "{{Hors-gel}}",
+			"eco": "{{Eco}}",
+			"ieco": "{{iEco}}",
+			"turbo": "{{Turbo}}",
+			"silent": "{{Silencieux}}"
+		},
+		"breezeMode": {
+			"off": "{{Arrêt}}",
+			"breeze_away": "{{Breeze Away}}",
+			"breeze_mild": "{{Breeze Mild}}",
+			"breezeless": "{{Breezeless}}"
+		},
+		"cascadeMode": {
+			"off": "{{Arrêt}}",
+			"up": "{{Vers le haut}}",
+			"down": "{{Vers le bas}}"
+		},
+		"freshAirFanSpeed": {
+			"off": "{{Arrêt}}",
+			"low": "{{Faible}}",
+			"medium": "{{Moyenne}}",
+			"high": "{{Forte}}",
+			"boost": "{{Boost}}"
+		},
+		"rateSelect": {
+			"off": "{{Arrêt}}",
+			"gear_50": "50 %",
+			"gear_75": "75 %",
+			"level_1": "{{Niveau 1}}",
+			"level_2": "{{Niveau 2}}",
+			"level_3": "{{Niveau 3}}",
+			"level_4": "{{Niveau 4}}",
+			"level_5": "{{Niveau 5}}"
+		},
+		"auxMode": {
+			"off": "{{Arrêt}}",
+			"on": "{{Marche}}",
+			"auto": "{{Automatique}}",
+			"aux_heat": "{{Appoint}}",
+			"aux_only": "{{Appoint seul}}"
+		},
+		"purifierMode": {
+			"off": "{{Arrêt}}",
+			"on": "{{Marche}}",
+			"auto": "{{Automatique}}"
+		}
+	},
+	"commands": [
+		{ "logicalId": "refresh", "name": "{{Rafraîchir}}", "type": "action", "subType": "other", "types": ["AC", "CC"] },
+		{ "logicalId": "online", "name": "{{En ligne}}", "type": "info", "subType": "binary", "types": ["AC", "CC"], "isVisible": 0 },
+		{ "logicalId": "power", "name": "{{Etat}}", "type": "info", "subType": "binary", "types": ["AC", "CC"], "genericType": "ENERGY_STATE", "isVisible": 0, "isHistorized": 1 },
+		{ "logicalId": "on", "name": "{{Allumer}}", "type": "action", "subType": "other", "types": ["AC", "CC"], "genericType": "ENERGY_ON", "value": "power", "icon": "<i class=\"fas fa-toggle-on\"></i>" },
+		{ "logicalId": "off", "name": "{{Eteindre}}", "type": "action", "subType": "other", "types": ["AC", "CC"], "genericType": "ENERGY_OFF", "value": "power", "icon": "<i class=\"fas fa-toggle-off\"></i>" },
+		{ "logicalId": "mode", "name": "{{Mode}}", "type": "info", "subType": "string", "types": ["AC", "CC"], "genericType": "THERMOSTAT_MODE", "isVisible": 0, "isHistorized": 1 },
+		{ "logicalId": "setMode", "name": "{{Choisir le mode}}", "type": "action", "subType": "select", "types": ["AC", "CC"], "genericType": "THERMOSTAT_SET_MODE", "value": "mode", "listEnum": "mode" },
+		{ "logicalId": "targetTemperature", "name": "{{Consigne}}", "type": "info", "subType": "numeric", "types": ["AC", "CC"], "genericType": "THERMOSTAT_SETPOINT", "unit": "°C", "isVisible": 0, "isHistorized": 1, "minFrom": "minTargetTemperature", "maxFrom": "maxTargetTemperature" },
+		{ "logicalId": "setTargetTemperature", "name": "{{Régler la consigne}}", "type": "action", "subType": "slider", "types": ["AC", "CC"], "genericType": "THERMOSTAT_SET_SETPOINT", "unit": "°C", "value": "targetTemperature", "minFrom": "minTargetTemperature", "maxFrom": "maxTargetTemperature", "stepFrom": "temperatureStep", "template": "core::button" },
+		{ "logicalId": "indoorTemperature", "name": "{{Température intérieure}}", "type": "info", "subType": "numeric", "types": ["AC", "CC"], "genericType": "THERMOSTAT_TEMPERATURE", "unit": "°C", "isHistorized": 1 },
+		{ "logicalId": "outdoorTemperature", "name": "{{Température extérieure}}", "type": "info", "subType": "numeric", "types": ["AC", "CC"], "genericType": "THERMOSTAT_TEMPERATURE_OUTDOOR", "unit": "°C", "isHistorized": 1 },
+		{ "logicalId": "fanSpeed", "name": "{{Ventilation}}", "type": "info", "subType": "string", "types": ["AC", "CC"], "isVisible": 0, "isHistorized": 1 },
+		{ "logicalId": "setFanSpeed", "name": "{{Choisir la ventilation}}", "type": "action", "subType": "select", "types": ["AC", "CC"], "value": "fanSpeed", "listEnum": "fanSpeed" },
+		{ "logicalId": "fanSpeedPercent", "name": "{{Vitesse de ventilation}}", "type": "info", "subType": "numeric", "types": ["AC"], "feature": "customFanSpeed", "genericType": "FAN_SPEED_STATE", "unit": "%", "isVisible": 0, "minValue": 1, "maxValue": 100 },
+		{ "logicalId": "setFanSpeedPercent", "name": "{{Régler la vitesse de ventilation}}", "type": "action", "subType": "slider", "types": ["AC"], "feature": "customFanSpeed", "genericType": "FAN_SPEED", "unit": "%", "value": "fanSpeedPercent", "minValue": 1, "maxValue": 100, "isVisible": 0 },
+		{ "logicalId": "swingMode", "name": "{{Oscillation}}", "type": "info", "subType": "string", "types": ["AC", "CC"], "feature": "swingMode", "isVisible": 0 },
+		{ "logicalId": "setSwingMode", "name": "{{Choisir l'oscillation}}", "type": "action", "subType": "select", "types": ["AC", "CC"], "feature": "swingMode", "value": "swingMode", "listEnum": "swingMode" },
+		{ "logicalId": "horizontalSwingAngle", "name": "{{Position du volet horizontal}}", "type": "info", "subType": "string", "types": ["AC", "CC"], "feature": "horizontalSwingAngle", "isVisible": 0 },
+		{ "logicalId": "setHorizontalSwingAngle", "name": "{{Choisir la position du volet horizontal}}", "type": "action", "subType": "select", "types": ["AC", "CC"], "feature": "horizontalSwingAngle", "value": "horizontalSwingAngle", "listEnum": "horizontalSwingAngle" },
+		{ "logicalId": "verticalSwingAngle", "name": "{{Position du volet vertical}}", "type": "info", "subType": "string", "types": ["AC", "CC"], "feature": "verticalSwingAngle", "isVisible": 0 },
+		{ "logicalId": "setVerticalSwingAngle", "name": "{{Choisir la position du volet vertical}}", "type": "action", "subType": "select", "types": ["AC", "CC"], "feature": "verticalSwingAngle", "value": "verticalSwingAngle", "listEnum": "verticalSwingAngle" },
+		{ "logicalId": "preset", "name": "{{Préréglage}}", "type": "info", "subType": "string", "types": ["AC", "CC"], "feature": "preset", "isVisible": 0, "isHistorized": 1 },
+		{ "logicalId": "setPreset", "name": "{{Choisir le préréglage}}", "type": "action", "subType": "select", "types": ["AC", "CC"], "feature": "preset", "value": "preset", "listEnum": "preset" },
+		{ "logicalId": "breezeMode", "name": "{{Mode Breeze}}", "type": "info", "subType": "string", "types": ["AC"], "feature": "breezeMode", "isVisible": 0 },
+		{ "logicalId": "setBreezeMode", "name": "{{Choisir le mode Breeze}}", "type": "action", "subType": "select", "types": ["AC"], "feature": "breezeMode", "value": "breezeMode", "listEnum": "breezeMode" },
+		{ "logicalId": "indoorHumidity", "name": "{{Humidité intérieure}}", "type": "info", "subType": "numeric", "types": ["AC", "CC"], "feature": "humidity", "genericType": "THERMOSTAT_HUMIDITY", "unit": "%", "isHistorized": 1, "minValue": 0, "maxValue": 100 },
+		{ "logicalId": "targetHumidity", "name": "{{Consigne d'humidité}}", "type": "info", "subType": "numeric", "types": ["AC", "CC"], "feature": "targetHumidity", "genericType": "HUMIDITY_SETPOINT", "unit": "%", "isVisible": 0, "minValue": 0, "maxValue": 100 },
+		{ "logicalId": "setTargetHumidity", "name": "{{Régler la consigne d'humidité}}", "type": "action", "subType": "slider", "types": ["AC", "CC"], "feature": "targetHumidity", "genericType": "HUMIDITY_SET_SETPOINT", "unit": "%", "value": "targetHumidity", "minValue": 30, "maxValue": 80, "step": 5 },
+		{ "logicalId": "displayOn", "name": "{{Affichage}}", "type": "info", "subType": "binary", "types": ["AC"], "feature": "display", "isVisible": 0 },
+		{ "logicalId": "toggleDisplay", "name": "{{Basculer l'affichage}}", "type": "action", "subType": "other", "types": ["AC"], "feature": "display", "value": "displayOn", "icon": "<i class=\"fas fa-lightbulb\"></i>" },
+		{ "logicalId": "purifier", "name": "{{Purificateur}}", "type": "info", "subType": "binary", "types": ["AC"], "feature": "purifier", "isVisible": 0 },
+		{ "logicalId": "purifierOn", "name": "{{Purificateur marche}}", "type": "action", "subType": "other", "types": ["AC"], "feature": "purifier", "value": "purifier" },
+		{ "logicalId": "purifierOff", "name": "{{Purificateur arrêt}}", "type": "action", "subType": "other", "types": ["AC"], "feature": "purifier", "value": "purifier" },
+		{ "logicalId": "purifierMode", "name": "{{Purificateur}}", "type": "info", "subType": "string", "types": ["CC"], "feature": "purifierMode", "isVisible": 0 },
+		{ "logicalId": "setPurifierMode", "name": "{{Choisir le mode du purificateur}}", "type": "action", "subType": "select", "types": ["CC"], "feature": "purifierMode", "value": "purifierMode", "listEnum": "purifierMode" },
+		{ "logicalId": "flash", "name": "{{Flash}}", "type": "info", "subType": "binary", "types": ["AC"], "feature": "flash", "isVisible": 0 },
+		{ "logicalId": "flashOn", "name": "{{Flash marche}}", "type": "action", "subType": "other", "types": ["AC"], "feature": "flash", "value": "flash" },
+		{ "logicalId": "flashOff", "name": "{{Flash arrêt}}", "type": "action", "subType": "other", "types": ["AC"], "feature": "flash", "value": "flash" },
+		{ "logicalId": "outSilent", "name": "{{Silence unité extérieure}}", "type": "info", "subType": "binary", "types": ["AC"], "feature": "outSilent", "isVisible": 0 },
+		{ "logicalId": "outSilentOn", "name": "{{Silence unité extérieure marche}}", "type": "action", "subType": "other", "types": ["AC"], "feature": "outSilent", "value": "outSilent" },
+		{ "logicalId": "outSilentOff", "name": "{{Silence unité extérieure arrêt}}", "type": "action", "subType": "other", "types": ["AC"], "feature": "outSilent", "value": "outSilent" },
+		{ "logicalId": "cascadeMode", "name": "{{Mode cascade}}", "type": "info", "subType": "string", "types": ["AC"], "feature": "cascade", "isVisible": 0 },
+		{ "logicalId": "setCascadeMode", "name": "{{Choisir le mode cascade}}", "type": "action", "subType": "select", "types": ["AC"], "feature": "cascade", "value": "cascadeMode", "listEnum": "cascadeMode" },
+		{ "logicalId": "freshAirFanSpeed", "name": "{{Air frais}}", "type": "info", "subType": "string", "types": ["AC"], "feature": "freshAir", "isVisible": 0 },
+		{ "logicalId": "setFreshAirFanSpeed", "name": "{{Choisir l'air frais}}", "type": "action", "subType": "select", "types": ["AC"], "feature": "freshAir", "value": "freshAirFanSpeed", "listEnum": "freshAirFanSpeed" },
+		{ "logicalId": "rateSelect", "name": "{{Limitation de puissance}}", "type": "info", "subType": "string", "types": ["AC"], "feature": "rateSelect", "isVisible": 0 },
+		{ "logicalId": "setRateSelect", "name": "{{Choisir la limitation de puissance}}", "type": "action", "subType": "select", "types": ["AC"], "feature": "rateSelect", "value": "rateSelect", "listEnum": "rateSelect" },
+		{ "logicalId": "auxMode", "name": "{{Chauffage d'appoint}}", "type": "info", "subType": "string", "types": ["AC", "CC"], "feature": "auxMode", "isVisible": 0 },
+		{ "logicalId": "setAuxMode", "name": "{{Choisir le chauffage d'appoint}}", "type": "action", "subType": "select", "types": ["AC", "CC"], "feature": "auxMode", "value": "auxMode", "listEnum": "auxMode" },
+		{ "logicalId": "selfCleanActive", "name": "{{Autonettoyage en cours}}", "type": "info", "subType": "binary", "types": ["AC"], "feature": "selfClean", "isVisible": 0 },
+		{ "logicalId": "startSelfClean", "name": "{{Lancer l'autonettoyage}}", "type": "action", "subType": "other", "types": ["AC"], "feature": "selfClean", "isVisible": 0 },
+		{ "logicalId": "filterAlert", "name": "{{Filtre à nettoyer}}", "type": "info", "subType": "binary", "types": ["AC"], "feature": "filterReminder" },
+		{ "logicalId": "defrostActive", "name": "{{Dégivrage en cours}}", "type": "info", "subType": "binary", "types": ["AC"], "isVisible": 0 },
+		{ "logicalId": "errorCode", "name": "{{Code erreur}}", "type": "info", "subType": "numeric", "types": ["AC"], "isVisible": 0 },
+		{ "logicalId": "realTimePower", "name": "{{Puissance}}", "type": "info", "subType": "numeric", "types": ["AC"], "feature": "energy", "genericType": "POWER", "unit": "W", "isHistorized": 1 },
+		{ "logicalId": "currentEnergy", "name": "{{Consommation en cours}}", "type": "info", "subType": "numeric", "types": ["AC"], "feature": "energy", "unit": "kWh", "isVisible": 0, "isHistorized": 1 },
+		{ "logicalId": "totalEnergy", "name": "{{Consommation totale}}", "type": "info", "subType": "numeric", "types": ["AC"], "feature": "energy", "genericType": "CONSUMPTION", "unit": "kWh", "isHistorized": 1 }
+	]
+}

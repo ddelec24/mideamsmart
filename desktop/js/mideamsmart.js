@@ -83,6 +83,37 @@ document.getElementById('bt_mideamsmartSyncDevices')?.addEventListener('click', 
   jeeFrontEnd.mideamsmart.syncDevices()
 })
 
+document.getElementById('bt_mideamsmartUpdateCommands')?.addEventListener('click', function() {
+  const eqLogicId = document.querySelector('.eqLogicAttr[data-l1key="id"]').jeeValue()
+  domUtils.ajax({
+    type: 'POST',
+    url: 'plugins/mideamsmart/core/ajax/mideamsmart.ajax.php',
+    data: { action: 'updateCommands', id: eqLogicId },
+    dataType: 'json',
+    error: function(error) {
+      jeedomUtils.showAlert({ message: error.message, level: 'danger' })
+    },
+    success: function(data) {
+      if (data.state != 'ok') {
+        jeedomUtils.showAlert({ message: data.result, level: 'danger' })
+        return
+      }
+      jeedomUtils.showAlert({ message: '{{Commandes mises à jour}}', level: 'success' })
+      jeeFrontEnd.pluginTemplate.displayEqlogic(null, eqLogicId)
+    }
+  })
+})
+
+/* Options that only apply to some appliance types */
+function mideamsmartUpdateTypeFields() {
+  const deviceType = document.querySelector('.eqLogicAttr[data-l1key="configuration"][data-l2key="deviceType"]')?.jeeValue() || ''
+  document.querySelectorAll('.mideamsmartDeviceType').forEach(function(element) {
+    element.style.display = element.getAttribute('data-device-types').split(',').includes(deviceType) ? '' : 'none'
+  })
+}
+
+document.querySelector('.eqLogicAttr[data-l1key="configuration"][data-l2key="deviceType"]')?.addEventListener('change', mideamsmartUpdateTypeFields)
+
 document.getElementById('bt_mideamsmartFetchKeys')?.addEventListener('click', function() {
   jeeFrontEnd.mideamsmart.fetchDeviceKeys()
 })
@@ -97,6 +128,7 @@ function printEqLogic(_eqLogic) {
     this.src = jeeFrontEnd.mideamsmart.defaultImage
   }
   img.src = (deviceType != '') ? 'plugins/mideamsmart/desktop/img/' + deviceType + '.png' : jeeFrontEnd.mideamsmart.defaultImage
+  mideamsmartUpdateTypeFields()
 }
 
 /* Commands are created by the plugin: type, sub-type and logical ID are read-only */

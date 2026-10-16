@@ -13,3 +13,6 @@
 - Retrieval of the token and key, checked with the appliance, and button to request them again
 - Protection against the Midea account lock (codes 7610 and 65027)
 - Automatic broadcast address by default (every network interface)
+- Local control of air conditioners (AC) and commercial air conditioners (CC) with msmart-ng: state, periodic polling, offline appliance
+- Commands created according to the capabilities of each appliance, with stable codes for scenarios and an update button
+- Equipment options: beep, setpoint step, power consumption
