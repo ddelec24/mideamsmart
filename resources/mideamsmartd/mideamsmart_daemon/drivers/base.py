@@ -174,17 +174,19 @@ class BaseDriver:
             await self._send_event({'action': 'deviceCapabilities', 'eqLogicId': self.config.eq_logic_id,
                                     'deviceType': self.config.device_type, 'capabilities': capabilities})
         force = time.monotonic() - self._last_full_publish > FULL_REFRESH_INTERVAL
-        self._publish(self.read_values(), force=force)
+        # online is sent at each successful poll, even without any change: Jeedom keeps the
+        # last communication date of the equipment up to date
+        self._publish({'online': 1, **self.read_values()}, force=force, always=('online',))
         if force:
             self._last_full_publish = time.monotonic()
 
-    def _publish(self, values: dict[str, Any], force: bool = False) -> None:
+    def _publish(self, values: dict[str, Any], force: bool = False, always: tuple[str, ...] = ()) -> None:
         changed = {}
         for logical_id, value in values.items():
             value = normalize(value)
             if value is None:
                 continue
-            if force or self._last_values.get(logical_id) != value:
+            if force or logical_id in always or self._last_values.get(logical_id) != value:
                 changed[logical_id] = value
                 self._last_values[logical_id] = value
         if changed:

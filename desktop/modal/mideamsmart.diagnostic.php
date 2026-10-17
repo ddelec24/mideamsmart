@@ -30,6 +30,7 @@ $jeedomInfo = array(
 		'hasKey' => $eqLogic->getConfiguration('key', '') !== '',
 		'model' => $eqLogic->getConfiguration('model', ''),
 		'pollingInterval' => $eqLogic->getPollingInterval(),
+		'connectionLifetime' => $eqLogic->getConnectionLifetime(),
 		'lastCommunication' => $eqLogic->getStatus('lastCommunication', ''),
 		'timeout' => intval($eqLogic->getStatus('timeout', 0)),
 		'commands' => count($eqLogic->getCmd()),

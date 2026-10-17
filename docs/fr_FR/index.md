@@ -115,7 +115,7 @@ Le bouton **Ajouter** permet de créer un équipement à la main, par exemple po
 
 ![Onglet Commandes](../images/device_commands.png)
 
-Les commandes sont créées automatiquement **selon les capacités remontées par chaque appareil**, dès qu'il répond pour la première fois. Si l'appareil ne renvoie pas ses capacités, des capacités par défaut sont utilisées et la demande est renouvelée toutes les 10 minutes.
+Les commandes sont créées automatiquement **selon les capacités remontées par chaque appareil**, dès qu'il répond pour la première fois. Si l'appareil ne renvoie pas ses capacités, des capacités par défaut sont utilisées et la demande est renouvelée après 30 secondes, puis à intervalles croissants jusqu'à 10 minutes. À leur réception, les commandes sont ajustées automatiquement.
 
 Les commandes info de type texte contiennent un **code stable**, indépendant de la langue (par exemple `cool`) : utilisez ces codes dans vos scénarios. Les commandes action associées proposent des libellés traduits. Les infos déjà affichées par une action liée sont masquées par défaut.
 
@@ -137,7 +137,7 @@ Le bouton **Mettre à jour les commandes** de l'onglet *Commandes* ajoute les co
 | `displayOn`, `toggleDisplay` | AC | Etat de l'affichage et bascule |
 | `purifier`, `purifierOn`, `purifierOff` / `purifierMode`, `setPurifierMode` | AC / CC | Purificateur (AC : marche/arrêt ; CC : `off`, `on`, `auto`) |
 | `flash`, `outSilent`, `cascadeMode`, `freshAirFanSpeed`, `rateSelect`, `auxMode` + actions | AC (CC : `auxMode`) | Fonctions avancées, selon le modèle |
-| `selfCleanActive`, `startSelfClean`, `filterAlert`, `defrostActive`, `errorCode` | AC | Autonettoyage, alerte filtre, dégivrage, code erreur |
+| `selfCleanActive`, `startSelfClean`, `filterAlert`, `defrostActive`, `errorCode` | AC | Autonettoyage, alerte filtre, dégivrage (seulement si l'appareil le remonte), code erreur |
 | `realTimePower`, `currentEnergy`, `totalEnergy` | AC | Puissance (W) et consommations (kWh), si l'option *Consommation électrique* est cochée |
 | `mode`, `setMode` | A1 | Mode : `manual`, `continuous`, `auto`, `clothes_dry`, `shoes_dry`, `silent`. Choisir un mode allume l'appareil |
 | `fanSpeed`, `setFanSpeed` | A1 | Ventilation : `lowest`, `low`, `medium`, `high`, `auto` |

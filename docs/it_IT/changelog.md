@@ -6,7 +6,11 @@
 
 # 17/10/2026
 
-- Versione beta 0.9.2: correzione del pulsante **Copia per il forum** della diagnostica quando Jeedom è aperto in HTTP sulla rete locale. Se il browser rifiuta la copia, il testo viene mostrato, selezionato, per copiarlo a mano
+- Versione beta 0.9.2
+- Correzione del pulsante **Copia per il forum** della diagnostica quando Jeedom è aperto in HTTP sulla rete locale. Se il browser rifiuta la copia, il testo viene mostrato, selezionato, per copiarlo a mano
+- Data dell'ultima comunicazione del dispositivo aggiornata a ogni interrogazione riuscita, anche quando nessun valore cambia: il *ritardo massimo tra due comunicazioni* di Jeedom non segnala più il dispositivo per errore
+- Comando *Sbrinamento in corso* creato solo se l'apparecchio comunica questa informazione. Per rimuovere quello già creato, clicca su **Aggiorna i comandi**
+- Diagnostica completata: durata delle connessioni e stato della richiesta delle funzionalità
 - Versione beta 0.9.1
 - Crediti: autori del plugin specificati (ddelec24, direttore d'orchestra; Claude, coautore) nella documentazione, nella licenza e nella scheda del plugin
 - Nuova opzione **Durata delle connessioni** (90 s per impostazione predefinita), rimedio per gli apparecchi che chiudono da soli la connessione (errori *Transport is closing or closed* e *failed CRC and checksum*)

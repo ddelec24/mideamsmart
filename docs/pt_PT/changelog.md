@@ -6,7 +6,11 @@
 
 # 17/10/2026
 
-- Versão beta 0.9.2: correção do botão **Copiar para o fórum** do diagnóstico quando o Jeedom é aberto em HTTP na rede local. Se o navegador recusar a cópia, o texto é mostrado, selecionado, para ser copiado à mão
+- Versão beta 0.9.2
+- Correção do botão **Copiar para o fórum** do diagnóstico quando o Jeedom é aberto em HTTP na rede local. Se o navegador recusar a cópia, o texto é mostrado, selecionado, para ser copiado à mão
+- Data da última comunicação do equipamento atualizada em cada consulta bem-sucedida, mesmo quando nenhum valor muda: o *atraso máximo entre duas comunicações* do Jeedom deixa de assinalar o equipamento por engano
+- Comando *Descongelação em curso* criado só se o aparelho comunicar esta informação. Para remover o que já foi criado, clique em **Atualizar os comandos**
+- Diagnóstico completado: duração das ligações e estado do pedido de capacidades
 - Versão beta 0.9.1
 - Créditos: autores do plugin indicados (ddelec24, maestro; Claude, coautor) na documentação, na licença e na ficha do plugin
 - Nova opção **Duração das ligações** (90 s por predefinição), solução para os aparelhos que cortam eles próprios a ligação (erros *Transport is closing or closed* e *failed CRC and checksum*)

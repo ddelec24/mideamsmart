@@ -169,10 +169,31 @@ class AcDriverTest(DriverTestCase):
         published = []
         self.driver._publish_values = lambda eq_logic_id, values: published.append(values)
         await self.driver._after_refresh(True)
-        self.assertEqual(published, [])
+        # online is sent at each successful poll: Jeedom keeps the last communication date
+        self.assertEqual(published, [{'online': 1}])
         self.driver.device._indoor_temperature = 23.5
         await self.driver._after_refresh(True)
-        self.assertEqual(published, [{'indoorTemperature': 23.5}])
+        self.assertEqual(published[-1], {'online': 1, 'indoorTemperature': 23.5})
+
+    async def test_defrost_command_only_when_reported(self):
+        self.assertNotIn('defrost', self.events[-1]['capabilities']['features'])
+        self.assertNotIn('defrostActive', self.values)
+        self.driver.device._defrost_active = False
+        await self.driver._after_refresh(True)
+        self.assertIn('defrost', self.events[-1]['capabilities']['features'])
+        self.assertEqual(self.values['defrostActive'], 0)
+        # Kept when a later answer does not contain it
+        self.driver.device._defrost_active = None
+        await self.driver._after_refresh(True)
+        self.assertIn('defrost', self.events[-1]['capabilities']['features'])
+
+    async def test_diagnostic(self):
+        diagnostic = self.driver.diagnostic()
+        self.assertEqual(diagnostic['connectionLifetime'], 0)
+        self.assertTrue(diagnostic['capabilitiesReceived'])
+        self.assertEqual(diagnostic['capabilitiesAnswers'], 1)
+        self.assertNotIn('capabilitiesNextTry', diagnostic)
+        self.assertNotIn('token', diagnostic['deviceState'])
 
     async def test_single_failure_is_not_offline(self):
         await self.driver._after_refresh(False)
@@ -242,11 +263,14 @@ class CapabilitiesRetryTest(unittest.IsolatedAsyncioTestCase):
         async def send_event(event):
             events.append(event)
 
-        driver = Driver(make_config(), lambda eq_logic_id, values: None, send_event)
+        driver = Driver(make_config(connectionLifetime=90), lambda eq_logic_id, values: None, send_event)
         await driver.connect()
         self.assertTrue(await driver.refresh_state())
         await driver._after_refresh(True)
         self.assertFalse(events[-1]['capabilities']['complete'])
+        diagnostic = driver.diagnostic()
+        self.assertEqual((diagnostic['capabilitiesAnswers'], diagnostic['connectionLifetime']), (0, 90))
+        self.assertTrue(0 < diagnostic['capabilitiesNextTry'] <= 30)
         # The appliance answers now: the retry is due after 30 s
         driver.device.capabilities = AC_CAPABILITIES
         with mock.patch('mideamsmart_daemon.drivers.msmart_driver.time.monotonic', return_value=time.monotonic() + 31):

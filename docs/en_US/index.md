@@ -115,7 +115,7 @@ The **Add** button creates an equipment manually, for example for an appliance o
 
 ![Commands tab](../images/device_commands.png)
 
-Commands are created automatically **according to the capabilities reported by each appliance**, as soon as it answers for the first time. If the appliance does not return its capabilities, default ones are used and the request is repeated every 10 minutes.
+Commands are created automatically **according to the capabilities reported by each appliance**, as soon as it answers for the first time. If the appliance does not return its capabilities, default ones are used and the request is repeated after 30 seconds, then at growing intervals up to 10 minutes. When they are received, the commands are adjusted automatically.
 
 Text info commands hold a **stable code**, independent of the language (for example `cool`): use these codes in your scenarios. The related action commands offer translated labels. Infos already displayed by a linked action are hidden by default.
 
@@ -137,7 +137,7 @@ The **Update commands** button of the *Commands* tab adds the missing commands, 
 | `displayOn`, `toggleDisplay` | AC | Display state and toggle |
 | `purifier`, `purifierOn`, `purifierOff` / `purifierMode`, `setPurifierMode` | AC / CC | Purifier (AC: on/off; CC: `off`, `on`, `auto`) |
 | `flash`, `outSilent`, `cascadeMode`, `freshAirFanSpeed`, `rateSelect`, `auxMode` + actions | AC (CC : `auxMode`) | Advanced features, depending on the model |
-| `selfCleanActive`, `startSelfClean`, `filterAlert`, `defrostActive`, `errorCode` | AC | Self-cleaning, filter alert, defrost, error code |
+| `selfCleanActive`, `startSelfClean`, `filterAlert`, `defrostActive`, `errorCode` | AC | Self-cleaning, filter alert, defrost (only if the appliance reports it), error code |
 | `realTimePower`, `currentEnergy`, `totalEnergy` | AC | Power (W) and consumptions (kWh), if the *Power consumption* option is checked |
 | `mode`, `setMode` | A1 | Mode: `manual`, `continuous`, `auto`, `clothes_dry`, `shoes_dry`, `silent`. Choosing a mode turns the appliance on |
 | `fanSpeed`, `setFanSpeed` | A1 | Fan: `lowest`, `low`, `medium`, `high`, `auto` |

@@ -115,7 +115,7 @@ Il pulsante **Aggiungi** permette di creare un dispositivo manualmente, ad esemp
 
 ![Scheda Comandi](../images/device_commands.png)
 
-I comandi vengono creati automaticamente **in base alle funzionalità comunicate da ciascun apparecchio**, non appena risponde per la prima volta. Se l'apparecchio non restituisce le sue funzionalità, vengono usate quelle predefinite e la richiesta viene ripetuta ogni 10 minuti.
+I comandi vengono creati automaticamente **in base alle funzionalità comunicate da ciascun apparecchio**, non appena risponde per la prima volta. Se l'apparecchio non restituisce le sue funzionalità, vengono usate quelle predefinite e la richiesta viene ripetuta dopo 30 secondi, poi a intervalli crescenti fino a 10 minuti. Alla loro ricezione, i comandi vengono adeguati automaticamente.
 
 I comandi info di tipo testo contengono un **codice stabile**, indipendente dalla lingua (ad esempio `cool`): usa questi codici negli scenari. I comandi action associati propongono etichette tradotte. Le info già mostrate da un'azione collegata sono nascoste per impostazione predefinita.
 
@@ -137,7 +137,7 @@ Il pulsante **Aggiorna i comandi** della scheda *Comandi* aggiunge i comandi man
 | `displayOn`, `toggleDisplay` | AC | Stato del display e commutazione |
 | `purifier`, `purifierOn`, `purifierOff` / `purifierMode`, `setPurifierMode` | AC / CC | Purificatore (AC: acceso/spento; CC: `off`, `on`, `auto`) |
 | `flash`, `outSilent`, `cascadeMode`, `freshAirFanSpeed`, `rateSelect`, `auxMode` + actions | AC (CC : `auxMode`) | Funzioni avanzate, a seconda del modello |
-| `selfCleanActive`, `startSelfClean`, `filterAlert`, `defrostActive`, `errorCode` | AC | Autopulizia, avviso filtro, sbrinamento, codice errore |
+| `selfCleanActive`, `startSelfClean`, `filterAlert`, `defrostActive`, `errorCode` | AC | Autopulizia, avviso filtro, sbrinamento (solo se l'apparecchio lo comunica), codice errore |
 | `realTimePower`, `currentEnergy`, `totalEnergy` | AC | Potenza (W) e consumi (kWh), se l'opzione *Consumo elettrico* è selezionata |
 | `mode`, `setMode` | A1 | Modalità: `manual`, `continuous`, `auto`, `clothes_dry`, `shoes_dry`, `silent`. Scegliere una modalità accende l'apparecchio |
 | `fanSpeed`, `setFanSpeed` | A1 | Ventilazione: `lowest`, `low`, `medium`, `high`, `auto` |

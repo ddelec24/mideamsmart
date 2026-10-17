@@ -115,7 +115,7 @@ O botão **Adicionar** permite criar um equipamento manualmente, por exemplo par
 
 ![Separador Comandos](../images/device_commands.png)
 
-Os comandos são criados automaticamente **de acordo com as capacidades comunicadas por cada aparelho**, assim que responde pela primeira vez. Se o aparelho não devolver as suas capacidades, são usadas capacidades predefinidas e o pedido é repetido a cada 10 minutos.
+Os comandos são criados automaticamente **de acordo com as capacidades comunicadas por cada aparelho**, assim que responde pela primeira vez. Se o aparelho não devolver as suas capacidades, são usadas capacidades predefinidas e o pedido é repetido após 30 segundos e depois em intervalos crescentes até 10 minutos. Quando são recebidas, os comandos são ajustados automaticamente.
 
 Os comandos info de tipo texto contêm um **código estável**, independente do idioma (por exemplo `cool`): use estes códigos nos seus cenários. Os comandos action associados propõem etiquetas traduzidas. As infos já apresentadas por uma ação ligada ficam ocultas por predefinição.
 
@@ -137,7 +137,7 @@ O botão **Atualizar os comandos** do separador *Comandos* adiciona os comandos 
 | `displayOn`, `toggleDisplay` | AC | Estado do ecrã e alternância |
 | `purifier`, `purifierOn`, `purifierOff` / `purifierMode`, `setPurifierMode` | AC / CC | Purificador (AC: ligado/desligado; CC: `off`, `on`, `auto`) |
 | `flash`, `outSilent`, `cascadeMode`, `freshAirFanSpeed`, `rateSelect`, `auxMode` + actions | AC (CC : `auxMode`) | Funções avançadas, consoante o modelo |
-| `selfCleanActive`, `startSelfClean`, `filterAlert`, `defrostActive`, `errorCode` | AC | Autolimpeza, alerta de filtro, descongelação, código de erro |
+| `selfCleanActive`, `startSelfClean`, `filterAlert`, `defrostActive`, `errorCode` | AC | Autolimpeza, alerta de filtro, descongelação (só se o aparelho a comunicar), código de erro |
 | `realTimePower`, `currentEnergy`, `totalEnergy` | AC | Potência (W) e consumos (kWh), se a opção *Consumo elétrico* estiver selecionada |
 | `mode`, `setMode` | A1 | Modo: `manual`, `continuous`, `auto`, `clothes_dry`, `shoes_dry`, `silent`. Escolher um modo liga o aparelho |
 | `fanSpeed`, `setFanSpeed` | A1 | Ventilação: `lowest`, `low`, `medium`, `high`, `auto` |

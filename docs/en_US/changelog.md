@@ -6,7 +6,11 @@
 
 # 17/10/2026
 
-- Beta version 0.9.2: fixed the diagnostic **Copy for the forum** button when Jeedom is opened over HTTP on the local network. If the browser refuses to copy, the text is shown, selected, so that it can be copied by hand
+- Beta version 0.9.2
+- Fixed the diagnostic **Copy for the forum** button when Jeedom is opened over HTTP on the local network. If the browser refuses to copy, the text is shown, selected, so that it can be copied by hand
+- Last communication date of the equipment updated at each successful poll, even when no value changes: the equipment is no longer wrongly reported by the Jeedom *maximum delay between two communications*
+- *Defrosting* command created only if the appliance reports this information. To remove the one already created, click **Update commands**
+- More information in the diagnostic: connection lifetime and state of the capabilities request
 - Beta version 0.9.1
 - Credits: plugin authors specified (ddelec24, conductor; Claude, co-author) in the documentation, the license and the plugin information
 - New **Connection lifetime** option (90 s by default), remedy for the appliances that close the connection themselves (*Transport is closing or closed* and *failed CRC and checksum* errors)

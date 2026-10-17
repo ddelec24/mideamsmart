@@ -115,7 +115,7 @@ El botón **Añadir** permite crear un equipo manualmente, por ejemplo para un a
 
 ![Pestaña Comandos](../images/device_commands.png)
 
-Los comandos se crean automáticamente **según las capacidades que comunica cada aparato**, en cuanto responde por primera vez. Si el aparato no devuelve sus capacidades, se usan capacidades por defecto y la petición se repite cada 10 minutos.
+Los comandos se crean automáticamente **según las capacidades que comunica cada aparato**, en cuanto responde por primera vez. Si el aparato no devuelve sus capacidades, se usan capacidades por defecto y la petición se repite a los 30 segundos y luego a intervalos crecientes hasta 10 minutos. Al recibirlas, los comandos se ajustan automáticamente.
 
 Los comandos info de tipo texto contienen un **código estable**, independiente del idioma (por ejemplo `cool`): use estos códigos en sus escenarios. Los comandos action asociados ofrecen etiquetas traducidas. Las infos ya mostradas por una acción vinculada se ocultan por defecto.
 
@@ -137,7 +137,7 @@ El botón **Actualizar los comandos** de la pestaña *Comandos* añade los coman
 | `displayOn`, `toggleDisplay` | AC | Estado de la pantalla y conmutación |
 | `purifier`, `purifierOn`, `purifierOff` / `purifierMode`, `setPurifierMode` | AC / CC | Purificador (AC: encendido/apagado; CC: `off`, `on`, `auto`) |
 | `flash`, `outSilent`, `cascadeMode`, `freshAirFanSpeed`, `rateSelect`, `auxMode` + actions | AC (CC : `auxMode`) | Funciones avanzadas, según el modelo |
-| `selfCleanActive`, `startSelfClean`, `filterAlert`, `defrostActive`, `errorCode` | AC | Autolimpieza, alerta de filtro, desescarche, código de error |
+| `selfCleanActive`, `startSelfClean`, `filterAlert`, `defrostActive`, `errorCode` | AC | Autolimpieza, alerta de filtro, desescarche (solo si el aparato lo comunica), código de error |
 | `realTimePower`, `currentEnergy`, `totalEnergy` | AC | Potencia (W) y consumos (kWh), si la opción *Consumo eléctrico* está marcada |
 | `mode`, `setMode` | A1 | Modo: `manual`, `continuous`, `auto`, `clothes_dry`, `shoes_dry`, `silent`. Elegir un modo enciende el aparato |
 | `fanSpeed`, `setFanSpeed` | A1 | Ventilación: `lowest`, `low`, `medium`, `high`, `auto` |

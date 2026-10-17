@@ -26,6 +26,7 @@ class AcDriver(MsmartDriver):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._energy_enabled = False
+        self._defrost_reported = False
 
     async def refresh_state(self) -> bool:
         if self.config.energy != self._energy_enabled:
@@ -54,6 +55,10 @@ class AcDriver(MsmartDriver):
 
     def read_capabilities(self) -> dict[str, Any]:
         device = self.device
+        # msmart-ng only gets the defrost state with the group 5 data, on some appliances:
+        # the command is created once a value was received, and kept afterwards
+        if device.defrost_active is not None:
+            self._defrost_reported = True
         enums = {
             'mode': enum_codes(device.supported_operation_modes),
             'fanSpeed': enum_codes(device.supported_fan_speeds),
@@ -86,6 +91,7 @@ class AcDriver(MsmartDriver):
             ('auxMode', len(device.supported_aux_modes) > 1),
             ('selfClean', device.supports_self_clean),
             ('filterReminder', device.supports_filter_reminder),
+            ('defrost', self._defrost_reported),
             ('energy', self.config.energy),
         ) if supported]
         return {**self.common_capabilities(), 'features': features, 'enums': enums}

@@ -115,7 +115,7 @@ Mit der Schaltfläche **Hinzufügen** können Sie ein Gerät manuell anlegen, zu
 
 ![Reiter Befehle](../images/device_commands.png)
 
-Die Befehle werden automatisch **entsprechend den von jedem Gerät gemeldeten Funktionen** angelegt, sobald es zum ersten Mal antwortet. Meldet das Gerät seine Funktionen nicht, werden Standardfunktionen verwendet und die Abfrage alle 10 Minuten wiederholt.
+Die Befehle werden automatisch **entsprechend den von jedem Gerät gemeldeten Funktionen** angelegt, sobald es zum ersten Mal antwortet. Meldet das Gerät seine Funktionen nicht, werden Standardfunktionen verwendet und die Abfrage nach 30 Sekunden und dann in wachsenden Abständen bis 10 Minuten wiederholt. Sobald sie eintreffen, werden die Befehle automatisch angepasst.
 
 Text-Infobefehle enthalten einen **stabilen, sprachunabhängigen Code** (zum Beispiel `cool`): Verwenden Sie diese Codes in Ihren Szenarien. Die zugehörigen Aktionsbefehle bieten übersetzte Bezeichnungen. Infos, die bereits von einer verknüpften Aktion angezeigt werden, sind standardmäßig ausgeblendet.
 
@@ -137,7 +137,7 @@ Die Schaltfläche **Befehle aktualisieren** im Reiter *Befehle* legt fehlende Be
 | `displayOn`, `toggleDisplay` | AC | Anzeigezustand und Umschalten |
 | `purifier`, `purifierOn`, `purifierOff` / `purifierMode`, `setPurifierMode` | AC / CC | Luftreiniger (AC: ein/aus; CC: `off`, `on`, `auto`) |
 | `flash`, `outSilent`, `cascadeMode`, `freshAirFanSpeed`, `rateSelect`, `auxMode` + actions | AC (CC : `auxMode`) | Erweiterte Funktionen, je nach Modell |
-| `selfCleanActive`, `startSelfClean`, `filterAlert`, `defrostActive`, `errorCode` | AC | Selbstreinigung, Filterhinweis, Abtauen, Fehlercode |
+| `selfCleanActive`, `startSelfClean`, `filterAlert`, `defrostActive`, `errorCode` | AC | Selbstreinigung, Filterhinweis, Abtauen (nur wenn das Gerät es meldet), Fehlercode |
 | `realTimePower`, `currentEnergy`, `totalEnergy` | AC | Leistung (W) und Verbrauch (kWh), wenn die Option *Stromverbrauch* aktiviert ist |
 | `mode`, `setMode` | A1 | Modus: `manual`, `continuous`, `auto`, `clothes_dry`, `shoes_dry`, `silent`. Die Wahl eines Modus schaltet das Gerät ein |
 | `fanSpeed`, `setFanSpeed` | A1 | Lüfter: `lowest`, `low`, `medium`, `high`, `auto` |

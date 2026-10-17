@@ -459,7 +459,22 @@ mideamsmart/
 - IP du conteneur en HTTP (non sécurisé, `navigator.clipboard` absent, comme chez le testeur) : copie par `execCommand` ;
 - copie refusée (`execCommand` forcé à `false`) : texte affiché et sélectionné.
 
-**Améliorations proposées, non appliquées (en attente de décision)** :
-- ajouter au diagnostic la durée de vie de connexion et l'état des nouvelles tentatives de capacités ;
-- envoyer `online` à chaque interrogation réussie pour tenir `lastCommunication` à jour ;
-- ne créer `defrostActive` que si l'appareil renvoie une valeur.
+**Améliorations demandées par Damien, ajoutées à la 0.9.2-beta** :
+- Diagnostic enrichi :
+  - Jeedom : `connectionLifetime` de l'équipement ;
+  - démon : `connectionLifetime`, `capabilitiesAnswers`, et `capabilitiesNextTry` (secondes) tant que les capacités n'ont pas été reçues.
+- `lastCommunication` à jour :
+  - `BaseDriver._after_refresh` publie `online: 1` à chaque interrogation réussie (`_publish(..., always=('online',))`), même sans changement ;
+  - `updateValues` met alors `lastCommunication` à la date du jour et `timeout` à 0. Sinon, le contrôle du core « délai maximum entre deux communications » signalait à tort un appareil dont les valeurs ne bougent pas.
+- `defrostActive` :
+  - fonctionnalité `defrost`, attribuée dès qu'une valeur a été reçue, puis conservée ;
+  - msmart-ng ne lit le dégivrage que dans les données « group 5 », demandées seulement si `supports_humidity` (`_request_group5_data` vaut False par défaut) ;
+  - la commande existante est retirée par **Mettre à jour les commandes** (pas de suppression automatique, pour ne pas casser un scénario).
+- Doc : la nouvelle tentative de capacités (30 s puis jusqu'à 10 min) était encore décrite comme « toutes les 10 minutes » ; corrigé dans les 7 langues.
+
+**Validé** :
+- 41 tests ;
+- Jeedom de dev :
+  - `lastCommunication` avance à chaque interrogation, avec des valeurs simulées fixes ;
+  - « Mettre à jour les commandes » passe de 19 à 18 commandes (`defrostActive` retirée) ;
+  - nouveaux champs visibles dans la fenêtre de diagnostic.

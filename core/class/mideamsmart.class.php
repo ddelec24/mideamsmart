@@ -997,9 +997,15 @@ class mideamsmart extends eqLogic {
 		foreach ($_values as $logicalId => $value) {
 			$this->checkAndUpdateCmd($logicalId, $value);
 		}
-		// The appliance status is shown at once in the Jeedom health and timeout views
+		// The appliance status is shown at once in the Jeedom health and timeout views.
+		// online is sent at each successful poll, even when no value changed: the last
+		// communication date stays up to date for the "max delay between 2 communications" check
 		if (isset($_values['online'])) {
-			$this->setStatus('timeout', ($_values['online'] == 1) ? 0 : 1);
+			if ($_values['online'] == 1) {
+				$this->setStatus(array('lastCommunication' => date('Y-m-d H:i:s'), 'timeout' => 0));
+			} else {
+				$this->setStatus('timeout', 1);
+			}
 		}
 	}
 

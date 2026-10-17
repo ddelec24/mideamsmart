@@ -166,7 +166,7 @@
 		{ "logicalId": "selfCleanActive", "name": "{{Autonettoyage en cours}}", "type": "info", "subType": "binary", "types": ["AC"], "feature": "selfClean", "isVisible": 0 },
 		{ "logicalId": "startSelfClean", "name": "{{Lancer l'autonettoyage}}", "type": "action", "subType": "other", "types": ["AC"], "feature": "selfClean", "isVisible": 0 },
 		{ "logicalId": "filterAlert", "name": "{{Filtre à nettoyer}}", "type": "info", "subType": "binary", "types": ["AC"], "feature": "filterReminder", "template": "core::tmplicon", "displayParameters": {"_icon_on_": "<i class='fas fa-filter icon_red'></i>", "_icon_off_": "<i class='fas fa-filter icon_green'></i>"} },
-		{ "logicalId": "defrostActive", "name": "{{Dégivrage en cours}}", "type": "info", "subType": "binary", "types": ["AC"], "isVisible": 0 },
+		{ "logicalId": "defrostActive", "name": "{{Dégivrage en cours}}", "type": "info", "subType": "binary", "types": ["AC"], "feature": "defrost", "isVisible": 0 },
 		{ "logicalId": "errorCode", "name": "{{Code erreur}}", "type": "info", "subType": "numeric", "types": ["AC"], "isVisible": 0 },
 		{ "logicalId": "realTimePower", "name": "{{Puissance}}", "type": "info", "subType": "numeric", "types": ["AC"], "feature": "energy", "genericType": "POWER", "unit": "W", "isHistorized": 1 },
 		{ "logicalId": "currentEnergy", "name": "{{Consommation en cours}}", "type": "info", "subType": "numeric", "types": ["AC"], "feature": "energy", "unit": "kWh", "isVisible": 0, "isHistorized": 1 },

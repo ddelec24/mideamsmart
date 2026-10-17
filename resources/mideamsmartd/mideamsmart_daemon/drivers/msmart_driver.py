@@ -157,6 +157,11 @@ class MsmartDriver(BaseDriver):
         result = super().diagnostic()
         result['library'] = f'msmart-ng {library_version("msmart-ng")}'
         result['capabilitiesReceived'] = self._capabilities_loaded
+        result['capabilitiesAnswers'] = self._capabilities_answers
+        if not self._capabilities_loaded:
+            next_try = self._capabilities_attempt + self._capabilities_retry_delay - time.monotonic()
+            result['capabilitiesNextTry'] = max(0, int(next_try))
+        result['connectionLifetime'] = self.config.connection_lifetime
         if self.device is not None:
             result['deviceCapabilities'] = self.device.serialize_capabilities()
             state = self.device.to_dict()
