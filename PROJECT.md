@@ -1,7 +1,7 @@
 # mideamsmart — Récapitulatif projet
 
 > Document de référence du plugin, à relire avant chaque étape et à mettre à jour à chaque décision.
-> Dernière mise à jour : 2026-10-16 (étapes 1 à 8 terminées ; 0.9.1-beta : corrections des premiers retours testeur, 2026-10-17)
+> Dernière mise à jour : 2026-10-16 (étapes 1 à 8 terminées ; 0.9.1-beta : corrections des premiers retours testeur ; 0.9.2-beta : copie du diagnostic en HTTP, 2026-10-17)
 
 ## 1. Contexte
 
@@ -443,3 +443,23 @@ mideamsmart/
 - le diagnostic (« Copier pour le forum ») de la clim qui avait `filterAlert` ;
 - la fréquence des warnings restants. S'ils restent nombreux, essayer une durée de vie de 60 s.
 
+### 0.9.2-beta (2026-10-17) — retour du testeur sur la 0.9.1
+
+**Résultat de la 0.9.1** : « Capacités : reçues de l'appareil » sur les 3 clims, et `filterAlert` supprimée sur celle qui l'avait. Le diagnostic est sain : 39 commandes, identiques aux fonctionnalités annoncées par l'appareil ; `defrost` vaut `null` sur ce modèle.
+
+**Bug** : « Copier pour le forum » → `Cannot read properties of undefined (reading 'writeText')`. `navigator.clipboard` n'existe que dans un contexte sécurisé (HTTPS ou localhost), alors que Jeedom est souvent ouvert en HTTP sur l'IP du réseau local. Le bug était invisible dans le Jeedom de dev, ouvert sur 127.0.0.1.
+
+**Correction** (`desktop/modal/mideamsmart.diagnostic.php`) :
+- API presse-papiers seulement si `navigator.clipboard && window.isSecureContext` ;
+- sinon, ou en cas d'échec, `textarea` temporaire dans la modale avec `document.execCommand('copy')` ;
+- si la copie est refusée, texte affiché et sélectionné dans `#ta_mideamsmartDiagnosticCopy`, avec l'alerte « Copie impossible, sélectionnez le texte à la main ».
+
+**Validé** avec Playwright sur le Jeedom de dev :
+- 127.0.0.1 (sécurisé) : copie par l'API ;
+- IP du conteneur en HTTP (non sécurisé, `navigator.clipboard` absent, comme chez le testeur) : copie par `execCommand` ;
+- copie refusée (`execCommand` forcé à `false`) : texte affiché et sélectionné.
+
+**Améliorations proposées, non appliquées (en attente de décision)** :
+- ajouter au diagnostic la durée de vie de connexion et l'état des nouvelles tentatives de capacités ;
+- envoyer `online` à chaque interrogation réussie pour tenir `lastCommunication` à jour ;
+- ne créer `defrostActive` que si l'appareil renvoie une valeur.

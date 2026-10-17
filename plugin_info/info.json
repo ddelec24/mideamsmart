@@ -1,7 +1,7 @@
 {
 	"id": "mideamsmart",
 	"name": "Midea MSmart",
-	"pluginVersion": "0.9.1-beta",
+	"pluginVersion": "0.9.2-beta",
 	"description": {
 		"fr_FR": "Pilotage local des climatiseurs et déshumidificateurs Midea (et marques associées : Comfee, Inventor, Qlima…) compatibles avec l'application MSmartHome.<br/>Le compte MSmartHome sert uniquement à lister les appareils et à récupérer leurs clés d'authentification, ensuite tout le contrôle se fait sur le réseau local, sans cloud.",
 		"en_US": "Local control of Midea air conditioners and dehumidifiers (and related brands: Comfee, Inventor, Qlima…) compatible with the MSmartHome app.<br/>The MSmartHome account is only used to list the appliances and retrieve their authentication keys, then all control happens on the local network, without the cloud.",

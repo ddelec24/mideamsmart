@@ -6,6 +6,7 @@
 
 # 17/10/2026
 
+- Versione beta 0.9.2: correzione del pulsante **Copia per il forum** della diagnostica quando Jeedom è aperto in HTTP sulla rete locale. Se il browser rifiuta la copia, il testo viene mostrato, selezionato, per copiarlo a mano
 - Versione beta 0.9.1
 - Crediti: autori del plugin specificati (ddelec24, direttore d'orchestra; Claude, coautore) nella documentazione, nella licenza e nella scheda del plugin
 - Nuova opzione **Durata delle connessioni** (90 s per impostazione predefinita), rimedio per gli apparecchi che chiudono da soli la connessione (errori *Transport is closing or closed* e *failed CRC and checksum*)

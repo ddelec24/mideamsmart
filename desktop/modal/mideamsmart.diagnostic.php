@@ -51,6 +51,7 @@ sendVarToJS('mideamsmartDiagnostic', array(
 	</div>
 	<legend><i class="fas fa-stethoscope"></i> <?php echo $eqLogic->getHumanName(true); ?></legend>
 	<div class="alert alert-info">{{Ce résumé ne contient ni mot de passe, ni token, ni key : il peut être joint à une demande d'aide sur le forum.}}</div>
+	<textarea id="ta_mideamsmartDiagnosticCopy" class="form-control" rows="8" readonly style="display:none;margin-bottom:10px;"></textarea>
 	<div class="row">
 		<div class="col-lg-6">
 			<legend><i class="fas fa-home"></i> {{Jeedom}}</legend>
@@ -68,6 +69,7 @@ sendVarToJS('mideamsmartDiagnostic', array(
   const diagnostic = mideamsmartDiagnostic
   const preJeedom = document.getElementById('pre_mideamsmartDiagnosticJeedom')
   const preDaemon = document.getElementById('pre_mideamsmartDiagnosticDaemon')
+  const textArea = document.getElementById('ta_mideamsmartDiagnosticCopy')
   let daemonData = null
   preJeedom.textContent = JSON.stringify(diagnostic.jeedom, null, 2)
 
@@ -120,12 +122,52 @@ sendVarToJS('mideamsmartDiagnostic', array(
   document.getElementById('bt_mideamsmartDiagnosticRefresh').addEventListener('click', load)
   document.getElementById('bt_mideamsmartDiagnosticCopy').addEventListener('click', function() {
     const text = '[details="mideamsmart - diagnostic"]\n```json\n' + JSON.stringify({ jeedom: diagnostic.jeedom, daemon: daemonData }, null, 2) + '\n```\n[/details]'
-    navigator.clipboard.writeText(text).then(function() {
+    copyText(text).then(function() {
+      textArea.style.display = 'none'
       jeedomUtils.showAlert({ message: '{{Diagnostic copié dans le presse-papiers}}', level: 'success' })
     }, function() {
+      // Leave the text visible and selected so that it can be copied by hand
+      textArea.value = text
+      textArea.style.display = ''
+      textArea.focus()
+      textArea.select()
       jeedomUtils.showAlert({ message: '{{Copie impossible, sélectionnez le texte à la main}}', level: 'warning' })
     })
   })
+
+  // navigator.clipboard only exists in a secure context (HTTPS or localhost):
+  // Jeedom is often reached over plain HTTP on the local network
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text).catch(function() {
+        return legacyCopy(text)
+      })
+    }
+    return legacyCopy(text)
+  }
+
+  function legacyCopy(text) {
+    return new Promise(function(resolve, reject) {
+      // The textarea stays inside the modal so that the dialog keeps the focus
+      const area = document.createElement('textarea')
+      area.value = text
+      area.setAttribute('readonly', '')
+      area.style.position = 'fixed'
+      area.style.top = '0'
+      area.style.left = '-9999px'
+      textArea.parentNode.insertBefore(area, textArea)
+      area.focus()
+      area.select()
+      let copied = false
+      try {
+        copied = document.execCommand('copy')
+      } catch (error) {
+        copied = false
+      }
+      area.remove()
+      copied ? resolve() : reject()
+    })
+  }
   load()
 })()
 </script>

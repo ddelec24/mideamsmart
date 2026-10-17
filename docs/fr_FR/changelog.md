@@ -6,6 +6,7 @@
 
 # 17/10/2026
 
+- Version bêta 0.9.2 : correction du bouton **Copier pour le forum** du diagnostic quand Jeedom est ouvert en HTTP sur le réseau local. Si le navigateur refuse la copie, le texte s'affiche, sélectionné, pour être copié à la main
 - Version bêta 0.9.1
 - Crédits : auteurs du plugin précisés (ddelec24, chef d'orchestre ; Claude, co-auteur) dans la documentation, la licence et la fiche du plugin
 - Nouvelle option **Durée de vie des connexions** (90 s par défaut), remède aux appareils qui coupent eux-mêmes la connexion (erreurs *Transport is closing or closed* et *failed CRC and checksum*)

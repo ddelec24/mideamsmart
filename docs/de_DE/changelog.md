@@ -6,6 +6,7 @@
 
 # 17/10/2026
 
+- Betaversion 0.9.2: Schaltfläche **Für das Forum kopieren** der Diagnose korrigiert, wenn Jeedom über HTTP im lokalen Netzwerk geöffnet wird. Verweigert der Browser das Kopieren, wird der Text markiert angezeigt, um ihn von Hand zu kopieren
 - Betaversion 0.9.1
 - Danksagung: Autoren des Plugins angegeben (ddelec24, Dirigent; Claude, Mitautor) in der Dokumentation, der Lizenz und der Plugin-Beschreibung
 - Neue Option **Verbindungsdauer** (standardmäßig 90 s), Abhilfe für Geräte, die die Verbindung selbst trennen (Fehler *Transport is closing or closed* und *failed CRC and checksum*)
