@@ -7,6 +7,7 @@
 # 17/10/2026
 
 - Betaversion 0.9.1
+- Danksagung: Autoren des Plugins angegeben (ddelec24, Dirigent; Claude, Mitautor) in der Dokumentation, der Lizenz und der Plugin-Beschreibung
 - Neue Option **Verbindungsdauer** (standardmäßig 90 s), Abhilfe für Geräte, die die Verbindung selbst trennen (Fehler *Transport is closing or closed* und *failed CRC and checksum*)
 - Anfrage oder Befehl wird einmal über eine neue Verbindung wiederholt, wenn das Gerät die Verbindung trennt; Gerät gilt erst nach zwei aufeinanderfolgenden Fehlern als offline
 - Diese Bibliotheksfehler werden als Warning protokolliert

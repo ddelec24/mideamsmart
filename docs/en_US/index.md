@@ -174,3 +174,5 @@ The **Update commands** button of the *Commands* tab adds the missing commands, 
 ## Credits
 
 The plugin relies on the open source libraries [msmart-ng](https://github.com/mill1000/midea-msmart) and [midea-local](https://github.com/midea-lan/midea-local).
+
+The plugin is designed and directed by **ddelec24** (project conductor) and developed with **Claude** (Anthropic), co-author of the code and the documentation.

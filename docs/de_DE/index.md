@@ -174,3 +174,5 @@ Die Schaltfläche **Befehle aktualisieren** im Reiter *Befehle* legt fehlende Be
 ## Danksagung
 
 Das Plugin basiert auf den Open-Source-Bibliotheken [msmart-ng](https://github.com/mill1000/midea-msmart) und [midea-local](https://github.com/midea-lan/midea-local).
+
+Das Plugin wird von **ddelec24** (Dirigent des Projekts) entworfen und geleitet und mit **Claude** (Anthropic), Mitautor des Codes und der Dokumentation, entwickelt.

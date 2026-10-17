@@ -174,3 +174,5 @@
 ## Благодарности
 
 Плагин основан на библиотеках с открытым исходным кодом [msmart-ng](https://github.com/mill1000/midea-msmart) и [midea-local](https://github.com/midea-lan/midea-local).
+
+Плагин задуман и направляется **ddelec24** (дирижёр проекта) и разработан совместно с **Claude** (Anthropic), соавтором кода и документации.

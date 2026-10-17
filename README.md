@@ -64,6 +64,11 @@ PROJECT.md       décisions et notes de conception
 
 Local control of Midea air conditioners (`0xAC`, `0xCC`) and dehumidifiers (`0xA1`) for Jeedom 4.5+. The MSmartHome account is only used to list the appliances and retrieve, once, the V3 keys, which are checked with the appliance. Then everything runs on the local network. Commands are created from the capabilities of each appliance. The documentation is available in 7 languages in [`docs/`](docs/en_US/index.md).
 
+## Auteurs
+
+- **ddelec24** : chef d'orchestre du projet (conception, décisions, tests).
+- **Claude** (Anthropic) : co-auteur du code et de la documentation.
+
 ## Licence
 
 [MIT](LICENSE). Le plugin s'appuie sur [msmart-ng](https://github.com/mill1000/midea-msmart) et [midea-local](https://github.com/midea-lan/midea-local), également sous licence MIT.

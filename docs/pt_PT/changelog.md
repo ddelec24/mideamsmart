@@ -7,6 +7,7 @@
 # 17/10/2026
 
 - Versão beta 0.9.1
+- Créditos: autores do plugin indicados (ddelec24, maestro; Claude, coautor) na documentação, na licença e na ficha do plugin
 - Nova opção **Duração das ligações** (90 s por predefinição), solução para os aparelhos que cortam eles próprios a ligação (erros *Transport is closing or closed* e *failed CRC and checksum*)
 - Pedido ou comando reenviado uma vez numa nova ligação quando o aparelho corta a ligação, e aparelho declarado offline apenas após duas falhas seguidas
 - Estes erros da biblioteca são registados como warning

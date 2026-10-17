@@ -12,7 +12,7 @@
 		"de_DE": "Lokale Steuerung von Midea-Klimaanlagen und -Luftentfeuchtern (und verbundenen Marken: Comfee, Inventor, Qlima…), die mit der MSmartHome-App kompatibel sind.<br/>Das MSmartHome-Konto dient nur dazu, die Geräte aufzulisten und ihre Authentifizierungsschlüssel abzurufen; danach erfolgt die gesamte Steuerung im lokalen Netzwerk, ohne Cloud."
 	},
 	"licence": "MIT",
-	"author": "Damien",
+	"author": "ddelec24 (chef d'orchestre) & Claude (co-auteur)",
 	"require": "4.5",
 	"os": {
 		"min": 12,
@@ -22,10 +22,10 @@
 	"hasDependency": true,
 	"hasOwnDeamon": true,
 	"maxDependancyInstallTime": 30,
-	"changelog_beta": "https://OWNER.github.io/mideamsmart/#language#/changelog",
-	"documentation_beta": "https://OWNER.github.io/mideamsmart/#language#/",
-	"changelog": "https://OWNER.github.io/mideamsmart/#language#/changelog",
-	"documentation": "https://OWNER.github.io/mideamsmart/#language#/",
+	"changelog_beta": "https://ddelec24.github.io/mideamsmart/#language#/changelog",
+	"documentation_beta": "https://ddelec24.github.io/mideamsmart/#language#/",
+	"changelog": "https://ddelec24.github.io/mideamsmart/#language#/changelog",
+	"documentation": "https://ddelec24.github.io/mideamsmart/#language#/",
 	"link": {
 		"forum": "https://community.jeedom.com/tag/plugin-mideamsmart"
 	},

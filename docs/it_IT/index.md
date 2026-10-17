@@ -174,3 +174,5 @@ Il pulsante **Aggiorna i comandi** della scheda *Comandi* aggiunge i comandi man
 ## Crediti
 
 Il plugin si basa sulle librerie open source [msmart-ng](https://github.com/mill1000/midea-msmart) e [midea-local](https://github.com/midea-lan/midea-local).
+
+Il plugin è ideato e diretto da **ddelec24** (direttore d'orchestra del progetto) e sviluppato con **Claude** (Anthropic), coautore del codice e della documentazione.

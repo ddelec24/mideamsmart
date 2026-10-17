@@ -7,6 +7,7 @@
 # 17/10/2026
 
 - Versione beta 0.9.1
+- Crediti: autori del plugin specificati (ddelec24, direttore d'orchestra; Claude, coautore) nella documentazione, nella licenza e nella scheda del plugin
 - Nuova opzione **Durata delle connessioni** (90 s per impostazione predefinita), rimedio per gli apparecchi che chiudono da soli la connessione (errori *Transport is closing or closed* e *failed CRC and checksum*)
 - Richiesta o comando inviato di nuovo una volta su una nuova connessione quando l'apparecchio chiude la connessione, e apparecchio dichiarato offline solo dopo due errori consecutivi
 - Questi errori della libreria sono registrati come warning

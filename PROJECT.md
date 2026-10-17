@@ -26,9 +26,9 @@
 | Compatibilité | `require` 4.5, Debian min 12 / max 13.99 |
 | Catégorie | `energy` |
 | Licence | Jeedom n'impose pas de licence aux plugins tiers, d'où **MIT**, cohérente avec msmart-ng et midea-local. À revérifier au moment de la publication sur le Market |
-| Auteur | `Damien` provisoire dans info.json, **à confirmer** (pseudo Market) |
+| Auteur | `ddelec24 (chef d'orchestre) & Claude (co-auteur)` dans info.json, LICENSE, README et docs |
 | Icône | Générée à partir de `template_icon.png` (PNG 309×348), avec une couleur distincte des plugins officiels |
-| Git | Dépôt local, un commit par étape, sans remote pour l'instant |
+| Git | Dépôt `ddelec24/mideamsmart` (SSH, clé dédiée), branches `beta` et `master`. Un commit par étape ; le changelog (7 langues, date + détails non techniques, bêta ou stable) est mis à jour à chaque fois |
 | Tests | Aucun appareil disponible : tests unitaires et simulateur, puis testeurs du forum. Les captures d'écran de la doc seront fournies par Damien ; je prépare les emplacements |
 
 ## 3. Bibliothèques (versions épinglées)
@@ -333,7 +333,7 @@ mideamsmart/
 ## 9. Points ouverts / à faire
 
 - [ ] Auteur (pseudo Market) dans `info.json` et `LICENSE`.
-- [ ] Compte GitHub : remplacer `OWNER` dans les 4 liens de `info.json` (`https://OWNER.github.io/mideamsmart/#language#/` et `…/changelog`).
+- [ ] Compte GitHub : remplacer `ddelec24` dans les 4 liens de `info.json` (`https://ddelec24.github.io/mideamsmart/#language#/` et `…/changelog`).
 - [x] Captures d'écran dans `docs/images/` : prises sur l'instance de dev par `tools/doc_screenshots.py` (Playwright), à refaire avec cet outil quand l'interface change. Elles sont en français pour les 7 langues.
 - [ ] Tester l'installation des dépendances sur Raspberry Pi arm64 et armhf.
 - [x] Tester le cycle de vie du démon dans une vraie instance Jeedom (instance Docker de dev `../dev-env`, voir son README).
@@ -373,8 +373,8 @@ mideamsmart/
 - par défaut, le niveau de log du plugin est « erreur » : aucun log info n'est écrit, c'est normal.
 
 **Check-list de publication** (actions de Damien, ou de Claude avec son accord explicite) :
-1. Créer le dépôt GitHub `mideamsmart` avec les branches `beta` et `master`, remplacer `OWNER` dans `info.json`, puis pousser.
-2. Activer GitHub Pages (source : branche `master`, dossier `/docs`), puis vérifier `https://OWNER.github.io/mideamsmart/fr_FR/`.
+1. Créer le dépôt GitHub `mideamsmart` avec les branches `beta` et `master`, remplacer `ddelec24` dans `info.json`, puis pousser.
+2. Activer GitHub Pages (source : branche `master`, dossier `/docs`), puis vérifier `https://ddelec24.github.io/mideamsmart/fr_FR/`.
 3. Compte développeur sur le Market : Market > Ajouter (ID `mideamsmart`, gratuit), source GitHub, branches Beta = `beta` et Stable = `master`, puis synchroniser.
 4. Présenter le plugin dans le Salon des développeurs du forum (catégorie « Présentation Plugin »), avec les étiquettes `dependance_intall`, `demon`, `python`, `beta`, `gratuit`. Brouillon ci-dessous.
 5. Appeler des testeurs bêta, notamment les participants du fil #151000 (splits V3 Breezeless), avec le bouton Diagnostic pour les retours.
@@ -392,7 +392,7 @@ mideamsmart/
 >   - fenêtre de diagnostic.
 > - Langages : PHP, JS (vanilla core 4.4+), Python 3.13 (msmart-ng, midea-local).
 > - Démon Python : oui. Dépendances : oui (Python autonome installé avec uv dans le plugin). Crons et listeners : non. Panel : non.
-> - Gratuit. Licence MIT. GitHub : `https://github.com/OWNER/mideamsmart`. Documentation : `https://OWNER.github.io/mideamsmart/fr_FR/`.
+> - Gratuit. Licence MIT. GitHub : `https://github.com/ddelec24/mideamsmart`. Documentation : `https://ddelec24.github.io/mideamsmart/fr_FR/`.
 
 ## 12. Retours testeurs
 

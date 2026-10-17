@@ -7,6 +7,7 @@
 # 17/10/2026
 
 - Beta version 0.9.1
+- Credits: plugin authors specified (ddelec24, conductor; Claude, co-author) in the documentation, the license and the plugin information
 - New **Connection lifetime** option (90 s by default), remedy for the appliances that close the connection themselves (*Transport is closing or closed* and *failed CRC and checksum* errors)
 - Request or command sent again once on a new connection when the appliance closes the connection, and appliance reported offline only after two failures in a row
 - These library errors are logged as warnings

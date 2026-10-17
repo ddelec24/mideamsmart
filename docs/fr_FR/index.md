@@ -174,3 +174,5 @@ Le bouton **Mettre à jour les commandes** de l'onglet *Commandes* ajoute les co
 ## Crédits
 
 Le plugin s'appuie sur les bibliothèques open source [msmart-ng](https://github.com/mill1000/midea-msmart) et [midea-local](https://github.com/midea-lan/midea-local).
+
+Le plugin est conçu et dirigé par **ddelec24** (chef d'orchestre du projet) et développé avec **Claude** (Anthropic), co-auteur du code et de la documentation.
