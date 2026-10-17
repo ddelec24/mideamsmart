@@ -57,7 +57,7 @@ with sync_playwright() as p:
     shot(page, 'plugin_devices.png', clip={'x': 0, 'y': 0, 'width': 1280, 'height': 470})
 
     # Equipment page
-    page.set_viewport_size({'width': 1280, 'height': 1080})
+    page.set_viewport_size({'width': 1280, 'height': 1180})
     page.goto(BASE + f'/index.php?v=d&m=mideamsmart&p=mideamsmart&id={AC_ID}')
     page.wait_for_load_state('load')
     page.wait_for_timeout(1500)

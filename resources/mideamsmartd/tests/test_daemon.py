@@ -89,6 +89,24 @@ class HelpersTest(unittest.TestCase):
         merge_dict(target, {'12': {'mode': 'heat'}, '13': {'power': 0}})
         self.assertEqual(target, {'12': {'power': 1, 'mode': 'heat'}, '13': {'power': 0}})
 
+    def test_benign_library_errors_downgraded(self):
+        import logging
+        from mideamsmart_daemon.jeedom import DowngradeBenignErrors
+
+        def record(name, level, message):
+            return logging.LogRecord(name, level, __file__, 1, message, None, None)
+
+        warning_filter = DowngradeBenignErrors(logging.WARNING)
+        network = record('msmart.base_device', logging.ERROR, 'Network error 192.168.1.82:6444: Transport is closing or closed.')
+        self.assertTrue(warning_filter.filter(network))
+        self.assertEqual(network.levelname, 'WARNING')
+        crc = record('msmart.device.AC.device', logging.ERROR, "Payload 'c001' failed CRC and checksum. Received: 0x0")
+        # At the Jeedom 'error' level, they are not written any more
+        self.assertFalse(DowngradeBenignErrors(logging.ERROR).filter(crc))
+        other = record('msmart.base_device', logging.ERROR, 'Something else')
+        self.assertTrue(DowngradeBenignErrors(logging.ERROR).filter(other))
+        self.assertEqual(other.levelno, logging.ERROR)
+
     def test_parse_message(self):
         server = JeedomSocketServer('127.0.0.1', 0, APIKEY, None)
         self.assertEqual(server.parse_message(b'{"apikey": "test-apikey", "action": "x"}\n'), {'action': 'x'})

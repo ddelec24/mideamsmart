@@ -51,6 +51,14 @@ if (!isConnect()) {
 				<input type="number" min="10" class="configKey form-control" data-l1key="defaultPollingInterval" placeholder="<?php echo mideamsmart::DEFAULT_POLLING_INTERVAL; ?>">
 			</div>
 		</div>
+		<div class="form-group">
+			<label class="col-md-4 control-label">{{Durée de vie des connexions (s)}}
+				<sup><i class="fas fa-question-circle tooltips" title="{{Les climatiseurs sont reconnectés après ce délai. Certains appareils coupent eux-mêmes la connexion, ce qui provoque des erreurs et des coupures : une valeur inférieure à leur délai les évite. 0 = connexion conservée indéfiniment}}"></i></sup>
+			</label>
+			<div class="col-md-4">
+				<input type="number" min="0" class="configKey form-control" data-l1key="connectionLifetime" placeholder="<?php echo mideamsmart::DEFAULT_CONNECTION_LIFETIME; ?>">
+			</div>
+		</div>
 
 		<legend><i class="fas fa-university"></i> {{Démon}}</legend>
 		<div class="form-group">

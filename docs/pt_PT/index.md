@@ -56,6 +56,7 @@ Após uma atualização do plugin que altere estas versões, as dependências vo
 - **Rede local**
   - **Endereço de difusão**: endereço(s) de broadcast usado(s) para descobrir os aparelhos, separados por vírgulas. Deixe vazio (predefinição) para difundir em todas as interfaces de rede do Jeedom. Se os aparelhos não forem encontrados, indique o endereço de broadcast da sua rede (por exemplo `192.168.1.255`).
   - **Intervalo de consulta predefinido**: tempo em segundos entre duas leituras do estado dos aparelhos (30 s por predefinição, 10 s no mínimo).
+  - **Duração das ligações**: os aparelhos de ar condicionado são religados após este tempo (90 s por predefinição). Alguns aparelhos cortam eles próprios a ligação ao fim de algum tempo, o que provoca erros e quebras: um valor inferior a esse tempo evita-os. 0 = ligação mantida indefinidamente.
 - **Daemon**
   - **Porta do daemon**: porta local usada pelo daemon (55114 por predefinição). Altere-a apenas em caso de conflito com outro plugin.
 
@@ -96,11 +97,13 @@ O botão **Adicionar** permite criar um equipamento manualmente, por exemplo par
   - **Obter token/key a partir da nuvem**: volta a pedir à nuvem as chaves deste aparelho e verifica-as, por exemplo após uma reposição do módulo Wi-Fi. Guarde o equipamento antes de o usar.
 - **Opções**
   - **Intervalo de consulta**: deixe vazio para usar o valor da configuração do plugin.
+  - **Duração da ligação** (ar condicionado): deixe vazio para usar o valor da configuração do plugin.
   - **Bip de confirmação**: o aparelho emite um bip a cada comando recebido.
   - **Passo da temperatura definida** (ar condicionado): 1 °C ou 0,5 °C.
   - **Consumo elétrico** (ar condicionado): cria os comandos de potência e consumo. Se os valores forem incoerentes, altere o **formato** (BCD ou binário) ou o **fator de escala**.
 - **Informações**
   - Número de série e modelo do aparelho, apenas de leitura.
+  - **Capacidades**: *Recebidas do aparelho*, ou *Predefinidas* se o aparelho ainda não as enviou. Nesse caso são pedidas de novo automaticamente, e os comandos são ajustados assim que são recebidas.
 
 > **Importante**
 >
@@ -158,6 +161,9 @@ O botão **Atualizar os comandos** do separador *Comandos* adiciona os comandos 
 
 | Mensagem | Solução |
 |---|---|
+| *Network error … Transport is closing or closed* (warning) | O aparelho cortou a ligação: o plugin volta a ligar-se e repete o pedido de imediato. Se esta mensagem for frequente, diminua a **duração das ligações** (por exemplo 60 s). |
+| *Payload … failed CRC and checksum* (warning) | Trama inválida ignorada pela biblioteca, muitas vezes ligada a quebras de ligação: mesma solução que acima. |
+| Comandos a mais, ou diferentes entre aparelhos idênticos | As capacidades não foram recebidas (indicador *Capacidades* do equipamento): são pedidas de novo automaticamente. Também pode clicar em **Atualizar os comandos**. |
 | *Utilizador ou palavra-passe MSmartHome incorretos* | Verifique a conta na configuração do plugin. O plugin não volta a tentar enquanto as credenciais não mudarem. |
 | *A nuvem da Midea bloqueou temporariamente a conta* | Demasiadas ligações (códigos `7610`, `65027`). Aguarde o tempo indicado sem iniciar outra sincronização. |
 | *aparelho não emparelhado diretamente com esta conta (partilhado?)* | Na aplicação MSmartHome, emparelhe o aparelho com esta conta, e não apenas através de uma partilha. |

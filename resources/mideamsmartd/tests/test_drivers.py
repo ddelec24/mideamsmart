@@ -1,7 +1,9 @@
 """Driver tests against the real msmart-ng device classes, only the network calls are replaced."""
 
 import asyncio
+import time
 import unittest
+from unittest import mock
 
 from msmart.device import AirConditioner as AC
 from msmart.device import CommercialAirConditioner as CC
@@ -172,6 +174,16 @@ class AcDriverTest(DriverTestCase):
         await self.driver._after_refresh(True)
         self.assertEqual(published, [{'indoorTemperature': 23.5}])
 
+    async def test_single_failure_is_not_offline(self):
+        await self.driver._after_refresh(False)
+        self.assertEqual(self.values['online'], 1)
+        await self.driver._after_refresh(True)
+        await self.driver._after_refresh(False)
+        self.assertEqual(self.values['online'], 1)
+        await self.driver._after_refresh(False)
+        self.assertEqual(self.values['online'], 0)
+        self.assertEqual(self.driver.consecutive_failures, 2)
+
     async def test_offline_and_missing_keys(self):
         self.driver.device.answers = False
         with self.assertRaises(CommandError) as context:
@@ -190,7 +202,8 @@ class AcDriverTest(DriverTestCase):
 
 class AcDriverLoopTest(unittest.IsolatedAsyncioTestCase):
 
-    async def test_polling_loop_backs_off_when_offline(self):
+    @mock.patch('mideamsmart_daemon.drivers.msmart_driver.REFRESH_RETRY_DELAY', 0)
+    async def test_polling_loop_offline_after_two_failed_polls(self):
         values = []
 
         class Driver(AcDriver):
@@ -203,11 +216,48 @@ class AcDriverLoopTest(unittest.IsolatedAsyncioTestCase):
         driver.device.answers = False
         driver.request_refresh()
         await asyncio.sleep(0.05)
+        self.assertNotIn({'online': 0}, values)
+        # Each failed poll was tried twice (new connection)
+        self.assertEqual(driver.device.calls.count('refresh'), 3)
+        driver.request_refresh()
+        await asyncio.sleep(0.05)
         self.assertIn({'online': 0}, values)
         await driver.stop()
 
     async def _event(self, event):
         pass
+
+
+class CapabilitiesRetryTest(unittest.IsolatedAsyncioTestCase):
+
+    async def test_capabilities_asked_again_after_a_lost_answer(self):
+        events = []
+
+        class SilentAC(FakeAC):
+            capabilities = None
+
+        class Driver(AcDriver):
+            device_class = SilentAC
+
+        async def send_event(event):
+            events.append(event)
+
+        driver = Driver(make_config(), lambda eq_logic_id, values: None, send_event)
+        await driver.connect()
+        self.assertTrue(await driver.refresh_state())
+        await driver._after_refresh(True)
+        self.assertFalse(events[-1]['capabilities']['complete'])
+        # The appliance answers now: the retry is due after 30 s
+        driver.device.capabilities = AC_CAPABILITIES
+        with mock.patch('mideamsmart_daemon.drivers.msmart_driver.time.monotonic', return_value=time.monotonic() + 31):
+            await driver.refresh_state()
+        await driver._after_refresh(True)
+        self.assertTrue(events[-1]['capabilities']['complete'])
+        self.assertEqual(driver.device.calls.count('get_capabilities'), 2)
+        # Forced reload (commands update): asked even when already received
+        driver.resend_capabilities()
+        await driver.refresh_state()
+        self.assertEqual(driver.device.calls.count('get_capabilities'), 3)
 
 
 class CcDriverTest(DriverTestCase):

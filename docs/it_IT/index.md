@@ -56,6 +56,7 @@ Dopo un aggiornamento del plugin che modifica queste versioni, le dipendenze tor
 - **Rete locale**
   - **Indirizzo di broadcast**: indirizzo/i di broadcast usato/i per individuare gli apparecchi, separati da virgole. Lascia vuoto (predefinito) per trasmettere su tutte le interfacce di rete di Jeedom. Se gli apparecchi non vengono trovati, indica l'indirizzo di broadcast della loro rete (ad esempio `192.168.1.255`).
   - **Intervallo di interrogazione predefinito**: tempo in secondi tra due letture dello stato degli apparecchi (30 s per impostazione predefinita, minimo 10 s).
+  - **Durata delle connessioni**: i climatizzatori vengono ricollegati dopo questo intervallo (90 s per impostazione predefinita). Alcuni apparecchi chiudono da soli la connessione dopo un po', causando errori e interruzioni: un valore inferiore a quell'intervallo li evita. 0 = connessione mantenuta indefinitamente.
 - **Demone**
   - **Porta del demone**: porta locale usata dal demone (55114 per impostazione predefinita). Modificala solo in caso di conflitto con un altro plugin.
 
@@ -96,11 +97,13 @@ Il pulsante **Aggiungi** permette di creare un dispositivo manualmente, ad esemp
   - **Recupera token/key dal cloud**: richiede di nuovo al cloud le chiavi di questo apparecchio e le verifica, ad esempio dopo un reset del modulo Wi-Fi. Salva il dispositivo prima di usarlo.
 - **Opzioni**
   - **Intervallo di interrogazione**: lascia vuoto per usare il valore della configurazione del plugin.
+  - **Durata della connessione** (climatizzatori): lascia vuoto per usare il valore della configurazione del plugin.
   - **Bip di conferma**: l'apparecchio emette un bip a ogni comando ricevuto.
   - **Passo del setpoint** (climatizzatori): 1 °C o 0,5 °C.
   - **Consumo elettrico** (climatizzatori): crea i comandi di potenza e consumo. Se i valori sono incoerenti, cambia il **formato** (BCD o binario) o il **fattore di scala**.
 - **Informazioni**
   - Numero di serie e modello dell'apparecchio, in sola lettura.
+  - **Funzionalità**: *Ricevute dall'apparecchio*, oppure *Predefinite* se l'apparecchio non le ha ancora inviate. In tal caso vengono richieste di nuovo automaticamente, e i comandi vengono adattati appena ricevute.
 
 > **Importante**
 >
@@ -158,6 +161,9 @@ Il pulsante **Aggiorna i comandi** della scheda *Comandi* aggiunge i comandi man
 
 | Messaggio | Soluzione |
 |---|---|
+| *Network error … Transport is closing or closed* (warning) | L'apparecchio ha chiuso la connessione: il plugin si ricollega e ripete subito la richiesta. Se il messaggio è frequente, riduci la **durata delle connessioni** (ad esempio 60 s). |
+| *Payload … failed CRC and checksum* (warning) | Frame non valido ignorato dalla libreria, spesso legato a interruzioni della connessione: stessa soluzione di sopra. |
+| Comandi in più, o diversi tra apparecchi identici | Le funzionalità non sono state ricevute (indicatore *Funzionalità* del dispositivo): vengono richieste di nuovo automaticamente. Puoi anche fare clic su **Aggiorna i comandi**. |
 | *Nome utente o password MSmartHome errati* | Verifica l'account nella configurazione del plugin. Il plugin non riprova finché le credenziali non cambiano. |
 | *Il cloud Midea ha bloccato temporaneamente l'account* | Troppe connessioni (codici `7610`, `65027`). Attendi il tempo indicato senza avviare un'altra sincronizzazione. |
 | *apparecchio non associato direttamente a questo account (condiviso?)* | Nell'app MSmartHome, associa l'apparecchio a questo account, non solo tramite condivisione. |

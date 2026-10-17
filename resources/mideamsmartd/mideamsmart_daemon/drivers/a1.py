@@ -44,6 +44,8 @@ VALUES = {
 
 
 class A1Driver(BaseDriver):
+    # midea-local only reports availability changes, after its own reconnection attempts
+    offline_threshold = 1
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -90,11 +92,14 @@ class A1Driver(BaseDriver):
         _LOGGER.info('[%s] Connecting to %s:%s', config.label, config.ip_address, config.port)
 
     async def stop(self) -> None:
-        if self.device is not None:
-            self.device.unregister_update(self._on_device_update)
-            # close() only stops the loop and the socket, the thread ends by itself
-            await asyncio.to_thread(self.device.close)
-            self.device = None
+        if self.device is None:
+            return
+        self.device.unregister_update(self._on_device_update)
+        # Wait for the update being handled: it still uses the device
+        async with self._update_lock:
+            device, self.device = self.device, None
+        # close() only stops the loop and the socket, the thread ends by itself
+        await asyncio.to_thread(device.close)
 
     def _on_device_update(self, status: dict[str, Any]) -> None:
         """Called from the midea-local thread."""

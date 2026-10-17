@@ -1,7 +1,7 @@
 # mideamsmart — Récapitulatif projet
 
 > Document de référence du plugin, à relire avant chaque étape et à mettre à jour à chaque décision.
-> Dernière mise à jour : 2026-10-16 (étapes 1 à 8 terminées : version 0.9.0-beta prête à publier)
+> Dernière mise à jour : 2026-10-16 (étapes 1 à 8 terminées ; 0.9.1-beta : corrections des premiers retours testeur, 2026-10-17)
 
 ## 1. Contexte
 
@@ -393,4 +393,53 @@ mideamsmart/
 > - Langages : PHP, JS (vanilla core 4.4+), Python 3.13 (msmart-ng, midea-local).
 > - Démon Python : oui. Dépendances : oui (Python autonome installé avec uv dans le plugin). Crons et listeners : non. Panel : non.
 > - Gratuit. Licence MIT. GitHub : `https://github.com/OWNER/mideamsmart`. Documentation : `https://OWNER.github.io/mideamsmart/fr_FR/`.
+
+## 12. Retours testeurs
+
+### 0.9.1-beta (2026-10-17) — premier testeur, 3 splits AC identiques
+
+**Symptômes rapportés**
+1. `ERROR Payload 'c00182147f7f…01580200000000' failed CRC and checksum. Received: 0x0, Expected: …`
+2. `ERROR Network error 192.168.1.82:6444: Transport is closing or closed.`, en grand nombre et sur les 3 clims.
+3. Commande `filterAlert` présente sur 1 clim sur 3.
+
+**Analyse**
+- Symptôme 2 :
+  - msmart-ng `_LanProtocol.write()` lève `ProtocolError` quand l'appareil a fermé la connexion (`transport.is_closing()`) ;
+  - `base_device._send_command` le logue en ERROR et renvoie `[]`, donc `online=False` pour ce cycle ;
+  - la doc de midea-ac-py (dépannage) indique que c'est « almost always » l'appareil qui coupe sa connexion, et recommande une **Maximum Connection Lifetime d'environ 90 s**.
+- Symptôme 1 :
+  - réponse d'état valide (données cohérentes) mais CRC à 0, rejetée par `Response.validate` puis ignorée ;
+  - même motif dans midea-ac-py #153 (`…04580200000000`), où le mainteneur relie le problème à la durée de vie de la connexion ;
+  - #415 (CRC vide sur les réponses C0/C1) a été fermé sans changement de msmart-ng.
+- Symptôme 3, **reproduit dans le Jeedom de dev** (`fake_device.py --drop-every 3`) :
+  - la réponse de capacités est perdue lors d'une coupure ;
+  - les capacités par défaut de msmart-ng (`Capability.DEFAULT` : `FILTER_REMINDER`, `PURIFIER`, `DISPLAY_CONTROL`, `CUSTOM_FAN_SPEED`…) sont alors utilisées, et des commandes en trop sont créées ;
+  - l'ancienne nouvelle tentative arrivait 10 min après, et `createCommands(false)` ne supprimait rien.
+
+**Corrections**
+- **Durée de vie des connexions** : configuration du plugin `connectionLifetime`, 90 s par défaut (0 = jamais, sinon 10 à 3600 s) ; surcharge par équipement AC/CC ; envoyée au démon (`DeviceConfig.connection_lifetime`), puis `device.set_max_connection_lifetime()`.
+- `MsmartDriver.refresh_state()` : sans réponse, nouvelle tentative après 2 s (`REFRESH_RETRY_DELAY`) sur une nouvelle connexion.
+- `MsmartDriver.apply()` : commande renvoyée une fois sans réponse. SetState transporte l'état complet, donc le renvoi est sans risque ; la bascule d'affichage n'est pas renvoyée.
+- `BaseDriver` : `online=0` publié seulement après `OFFLINE_THRESHOLD = 2` échecs consécutifs, et backoff seulement une fois l'appareil déclaré hors ligne. A1 : seuil 1, car midea-local gère déjà ses reconnexions.
+- `DowngradeBenignErrors` (filtre de handler) : les ERROR msmart-ng `Network error` et `failed CRC and checksum` deviennent des WARNING, filtrés selon le niveau Jeedom.
+- Capacités : nouvelle tentative après 30 s, puis 60 s, et ainsi de suite jusqu'à 600 s.
+  - « Mettre à jour les commandes » force une relecture (`resend_capabilities` → `_capabilities_reload`).
+  - Une relecture ratée conserve les capacités déjà reçues, puisque msmart les garde.
+  - Côté PHP, `applyCapabilities` lance `createCommands(true)` au passage incomplet → complet, et logue « capacités reçues de l'appareil, commandes ajustées ».
+- Indicateur « Capacités » (reçues / par défaut / inconnues) dans les informations de l'équipement.
+- Bug trouvé en route : `A1Driver.stop()` pouvait mettre `device` à `None` pendant une mise à jour en cours (`AttributeError`, vu dans les logs de dev). `stop()` attend maintenant `_update_lock`.
+
+**Validé** :
+- 39 tests en conteneur `python:3.13-slim`, dont les coupures simulées, le seuil hors ligne, le filtre de logs, la nouvelle tentative de capacités et l'arrêt A1 ;
+- instance de dev, avec `--drop-every 3` :
+  - aucun passage hors ligne malgré 7 coupures ;
+  - messages en WARNING ;
+  - capacités perdues au démarrage, puis reçues 30 s après, et commandes passées automatiquement de 27 à 19 (`filterAlert` supprimée).
+- Captures refaites (configuration et équipement).
+
+**À demander au testeur après la mise à jour** :
+- l'indicateur « Capacités » de chaque clim ;
+- le diagnostic (« Copier pour le forum ») de la clim qui avait `filterAlert` ;
+- la fréquence des warnings restants. S'ils restent nombreux, essayer une durée de vie de 60 s.
 

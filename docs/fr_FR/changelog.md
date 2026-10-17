@@ -4,6 +4,16 @@
 >
 >S'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 17/10/2026
+
+- Version bêta 0.9.1
+- Nouvelle option **Durée de vie des connexions** (90 s par défaut), remède aux appareils qui coupent eux-mêmes la connexion (erreurs *Transport is closing or closed* et *failed CRC and checksum*)
+- Demande ou commande renvoyée une fois sur une nouvelle connexion quand l'appareil coupe la connexion, et appareil déclaré hors ligne seulement après deux échecs consécutifs
+- Ces erreurs de la bibliothèque sont journalisées en warning
+- Capacités redemandées rapidement si l'appareil ne les a pas envoyées, avec ajustement automatique des commandes à leur réception (commandes en trop, comme *Filtre à nettoyer*, sur un seul appareil)
+- Indicateur de l'état des capacités sur la page de l'équipement
+- Correction d'une erreur à l'arrêt d'un déshumidificateur
+
 # 16/10/2026
 
 - Première version bêta (0.9.0), à tester avec de vrais appareils : vos retours sont les bienvenus sur le forum

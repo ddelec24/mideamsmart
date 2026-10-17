@@ -140,6 +140,21 @@ function printEqLogic(_eqLogic) {
   }
   img.src = (deviceType != '') ? 'plugins/mideamsmart/desktop/img/' + deviceType + '.png' : jeeFrontEnd.mideamsmart.defaultImage
   mideamsmartUpdateTypeFields()
+  const capabilities = _eqLogic.configuration?.capabilities
+  const span = document.getElementById('span_mideamsmartCapabilities')
+  if (span != null) {
+    span.classList.remove('label-default', 'label-success', 'label-warning')
+    if (!capabilities || !capabilities.features) {
+      span.textContent = '{{Inconnues : appareil pas encore joint}}'
+      span.classList.add('label-default')
+    } else if (capabilities.complete) {
+      span.textContent = '{{Reçues de l\'appareil}}'
+      span.classList.add('label-success')
+    } else {
+      span.textContent = '{{Par défaut : l\'appareil ne les a pas envoyées, nouvel essai automatique}}'
+      span.classList.add('label-warning')
+    }
+  }
 }
 
 /* Commands are created by the plugin: type, sub-type and logical ID are read-only */

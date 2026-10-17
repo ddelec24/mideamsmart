@@ -35,6 +35,8 @@ class DeviceConfig:
     energy: bool = False
     energy_format: str = 'bcd'
     energy_scale: float = 1.0
+    # Reconnection after this delay (s), 0 = never: some appliances close the connection themselves
+    connection_lifetime: int = 0
 
     @classmethod
     def from_jeedom(cls, data: dict[str, Any]) -> 'DeviceConfig':
@@ -49,6 +51,7 @@ class DeviceConfig:
             polling_interval = max(MIN_POLLING_INTERVAL, int(data.get('pollingInterval') or DEFAULT_POLLING_INTERVAL))
             temperature_step = 0.5 if float(data.get('temperatureStep') or 1) == 0.5 else 1.0
             energy_scale = float(data.get('energyScale') or 1)
+            connection_lifetime = max(0, int(data.get('connectionLifetime') or 0))
         except (TypeError, ValueError) as error:
             raise DeviceConfigError(f'invalid numeric value for equipment {eq_logic_id}: {error}') from error
         return cls(
@@ -67,6 +70,7 @@ class DeviceConfig:
             energy=bool(int(data.get('energy', 0) or 0)),
             energy_format='binary' if data.get('energyFormat') == 'binary' else 'bcd',
             energy_scale=energy_scale,
+            connection_lifetime=connection_lifetime,
         )
 
     @property

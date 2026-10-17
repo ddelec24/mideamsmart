@@ -56,6 +56,7 @@ After a plugin update that changes these versions, the dependencies go back to t
 - **Local network**
   - **Broadcast address**: broadcast address(es) used to discover the appliances, separated by commas. Leave empty (default) to broadcast on every network interface of Jeedom. If the appliances are not found, enter the broadcast address of their network (for example `192.168.1.255`).
   - **Default polling interval**: delay in seconds between two readings of the appliance state (30 s by default, 10 s minimum).
+  - **Connection lifetime**: the air conditioners are reconnected after this delay (90 s by default). Some appliances close the connection themselves after a while, which causes errors and drops: a value below that delay avoids them. 0 = connection kept indefinitely.
 - **Daemon**
   - **Daemon port**: local port used by the daemon (55114 by default). Only change it in case of conflict with another plugin.
 
@@ -96,11 +97,13 @@ The **Add** button creates an equipment manually, for example for an appliance o
   - **Retrieve token/key from the cloud**: asks the cloud again for the keys of this appliance and checks them, for example after a reset of the Wi-Fi module. Save the equipment before using it.
 - **Options**
   - **Polling interval**: leave empty to use the value from the plugin configuration.
+  - **Connection lifetime** (air conditioners): leave empty to use the value from the plugin configuration.
   - **Confirmation beep**: the appliance beeps on each command received.
   - **Setpoint step** (air conditioners): 1 °C or 0.5 °C.
   - **Power consumption** (air conditioners): creates the power and consumption commands. If the values are inconsistent, change the **format** (BCD or binary) or the **scale factor**.
 - **Information**
   - Serial number and model of the appliance, read-only.
+  - **Capabilities**: *Received from the appliance*, or *Default ones* if the appliance has not sent them yet. In that case they are requested again automatically, and the commands are adjusted as soon as they are received.
 
 > **Important**
 >
@@ -158,6 +161,9 @@ The **Update commands** button of the *Commands* tab adds the missing commands, 
 
 | Message | Solution |
 |---|---|
+| *Network error … Transport is closing or closed* (warning) | The appliance closed the connection: the plugin reconnects and sends the request again at once. If this message is frequent, lower the **connection lifetime** (for example 60 s). |
+| *Payload … failed CRC and checksum* (warning) | Invalid frame ignored by the library, often linked to connection drops: same solution as above. |
+| Extra commands, or different commands between identical appliances | The capabilities were not received (*Capabilities* indicator of the equipment): they are requested again automatically. You can also click **Update commands**. |
 | *Wrong MSmartHome login or password* | Check the account in the plugin configuration. The plugin does not retry until the credentials change. |
 | *The Midea cloud temporarily locked the account* | Too many logins (codes `7610`, `65027`). Wait for the indicated delay without starting another synchronization. |
 | *appliance not paired directly with this account (shared?)* | In the MSmartHome app, pair the appliance with this account, not only through sharing. |

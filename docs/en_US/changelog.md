@@ -4,6 +4,16 @@
 >
 >If there is no information about the update, it means that it only concerns documentation, translation or text updates.
 
+# 17/10/2026
+
+- Beta version 0.9.1
+- New **Connection lifetime** option (90 s by default), remedy for the appliances that close the connection themselves (*Transport is closing or closed* and *failed CRC and checksum* errors)
+- Request or command sent again once on a new connection when the appliance closes the connection, and appliance reported offline only after two failures in a row
+- These library errors are logged as warnings
+- Capabilities requested again quickly if the appliance did not send them, with automatic adjustment of the commands when they are received (extra commands, such as *Filter to clean*, on a single appliance)
+- Capabilities state indicator on the equipment page
+- Fix of an error when stopping a dehumidifier
+
 # 16/10/2026
 
 - First beta version (0.9.0), to be tested with real appliances: your feedback is welcome on the forum

@@ -202,6 +202,14 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									<input type="number" min="<?php echo mideamsmart::MIN_POLLING_INTERVAL; ?>" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="pollingInterval">
 								</div>
 							</div>
+							<div class="form-group mideamsmartDeviceType" data-device-types="AC,CC">
+								<label class="col-sm-4 control-label">{{Durée de vie de la connexion (s)}}
+									<sup><i class="fas fa-question-circle tooltips" title="{{Laisser vide pour utiliser la valeur définie dans la configuration du plugin. 0 = connexion conservée indéfiniment}}"></i></sup>
+								</label>
+								<div class="col-sm-6">
+									<input type="number" min="0" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="connectionLifetime">
+								</div>
+							</div>
 							<div class="form-group">
 								<label class="col-sm-4 control-label">{{Bip de confirmation}}
 									<sup><i class="fas fa-question-circle tooltips" title="{{L'appareil émet un bip à chaque commande reçue}}"></i></sup>
@@ -262,6 +270,14 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								<label class="col-sm-4 control-label">{{Modèle}}</label>
 								<div class="col-sm-6">
 									<span class="eqLogicAttr label label-default" data-l1key="configuration" data-l2key="model"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-4 control-label">{{Capacités}}
+									<sup><i class="fas fa-question-circle tooltips" title="{{Fonctions déclarées par l'appareil, qui déterminent les commandes créées}}"></i></sup>
+								</label>
+								<div class="col-sm-6">
+									<span class="label label-default" id="span_mideamsmartCapabilities"></span>
 								</div>
 							</div>
 							<div class="form-group">

@@ -21,6 +21,7 @@ function mideamsmart_setDefaultConfig() {
 		'socketport' => mideamsmart::DEFAULT_SOCKET_PORT,
 		'broadcastAddress' => mideamsmart::DEFAULT_BROADCAST_ADDRESS,
 		'defaultPollingInterval' => mideamsmart::DEFAULT_POLLING_INTERVAL,
+		'connectionLifetime' => mideamsmart::DEFAULT_CONNECTION_LIFETIME,
 	);
 	foreach ($defaults as $key => $value) {
 		if (config::byKey($key, 'mideamsmart', '') === '') {

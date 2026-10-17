@@ -1,5 +1,6 @@
 """Base of the drivers using msmart-ng (AC and CC appliances)."""
 
+import asyncio
 import logging
 import time
 from enum import Enum
@@ -13,8 +14,12 @@ from .base import BaseDriver, CommandError, normalize
 
 _LOGGER = logging.getLogger(__name__)
 
-# Delay before asking the capabilities again when the appliance did not return them
-CAPABILITIES_RETRY_INTERVAL = 600
+# Delays before asking the capabilities again when the appliance did not return them: the
+# answer is often lost when the appliance closes its connection, so the first tries are close
+CAPABILITIES_RETRY_MIN = 30
+CAPABILITIES_RETRY_MAX = 600
+# Delay before trying again a refresh without answer (msmart-ng reconnects meanwhile)
+REFRESH_RETRY_DELAY = 2
 
 
 def library_version(package: str) -> str:
@@ -54,6 +59,9 @@ class MsmartDriver(BaseDriver):
         self.device = None
         self._capabilities_loaded = False
         self._capabilities_attempt = 0.0
+        self._capabilities_retry_delay = CAPABILITIES_RETRY_MIN
+        self._capabilities_reload = False
+        self._capabilities_answers = 0
 
     async def connect(self) -> None:
         config = self.config
@@ -66,9 +74,13 @@ class MsmartDriver(BaseDriver):
 
             def capabilities_received(response) -> None:
                 self._capabilities_loaded = True
+                self._capabilities_answers += 1
                 update_capabilities(response)
 
             self.device._update_capabilities = capabilities_received  # pylint: disable=protected-access
+            if config.connection_lifetime > 0:
+                # Remedy recommended by midea-ac-py for the appliances that close their connection
+                self.device.set_max_connection_lifetime(config.connection_lifetime)
         if config.protocol_version >= 3:
             if not config.token or not config.key:
                 raise RuntimeError('V3 appliance without token/key: synchronize it or enter them')
@@ -80,17 +92,32 @@ class MsmartDriver(BaseDriver):
 
     async def _load_capabilities(self) -> None:
         self._capabilities_attempt = time.monotonic()
+        answers = self._capabilities_answers
         await self.device.get_capabilities()
-        if self._capabilities_loaded:
+        if self._capabilities_answers > answers:
+            self._capabilities_retry_delay = CAPABILITIES_RETRY_MIN
             _LOGGER.info('[%s] Capabilities: %s', self.config.label, self.device.capabilities_dict())
+        elif self._capabilities_loaded:
+            # msmart-ng keeps the capabilities received before
+            _LOGGER.warning('[%s] Capabilities not returned again by the appliance, previous ones kept', self.config.label)
         else:
-            _LOGGER.warning('[%s] Capabilities not returned by the appliance, default ones used', self.config.label)
+            _LOGGER.warning('[%s] Capabilities not returned by the appliance, default ones used (new try in %s s)',
+                            self.config.label, self._capabilities_retry_delay)
 
     async def refresh_state(self) -> bool:
-        if not self._capabilities_loaded and time.monotonic() - self._capabilities_attempt > CAPABILITIES_RETRY_INTERVAL:
+        retry_due = time.monotonic() - self._capabilities_attempt > self._capabilities_retry_delay
+        if self._capabilities_reload or (not self._capabilities_loaded and retry_due):
+            if not self._capabilities_loaded and not self._capabilities_reload:
+                self._capabilities_retry_delay = min(self._capabilities_retry_delay * 2, CAPABILITIES_RETRY_MAX)
+            self._capabilities_reload = False
             await self._load_capabilities()
         self._prepare()
         await self.device.refresh()
+        if not self.device.online:
+            # Usually the appliance closed the connection: one more try on a new connection
+            _LOGGER.debug('[%s] No answer, new try in %s s', self.config.label, REFRESH_RETRY_DELAY)
+            await asyncio.sleep(REFRESH_RETRY_DELAY)
+            await self.device.refresh()
         return self.device.online
 
     def _prepare(self) -> None:
@@ -109,10 +136,22 @@ class MsmartDriver(BaseDriver):
     async def apply(self) -> None:
         self._prepare()
         await self.device.apply()
+        if not self.device.online:
+            # The appliance closed the connection before answering: the command may be lost.
+            # SetState carries the whole state, sending it again is harmless.
+            _LOGGER.debug('[%s] No answer to the command, sending it again in %s s', self.config.label, REFRESH_RETRY_DELAY)
+            await asyncio.sleep(REFRESH_RETRY_DELAY)
+            self._prepare()
+            await self.device.apply()
 
     async def close(self) -> None:
         if self.device is not None:
             self.device._lan._disconnect()  # pylint: disable=protected-access
+
+    def resend_capabilities(self) -> None:
+        """Reads the capabilities again from the appliance (commands update asked by the user)."""
+        self._capabilities_reload = True
+        super().resend_capabilities()
 
     def diagnostic(self) -> dict[str, Any]:
         result = super().diagnostic()

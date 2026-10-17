@@ -56,6 +56,7 @@ Après une mise à jour du plugin qui change ces versions, les dépendances repa
 - **Réseau local**
   - **Adresse de diffusion** : adresse(s) de broadcast utilisée(s) pour découvrir les appareils, séparées par des virgules. Laissez vide (par défaut) pour diffuser sur toutes les interfaces réseau de Jeedom. Si les appareils ne sont pas trouvés, indiquez l'adresse de broadcast de leur réseau (par exemple `192.168.1.255`).
   - **Intervalle d'interrogation par défaut** : délai en secondes entre deux lectures de l'état des appareils (30 s par défaut, 10 s minimum).
+  - **Durée de vie des connexions** : les climatiseurs sont reconnectés après ce délai (90 s par défaut). Certains appareils coupent eux-mêmes la connexion au bout d'un moment, ce qui provoque des erreurs et des coupures : une valeur inférieure à ce délai les évite. 0 = connexion conservée indéfiniment.
 - **Démon**
   - **Port du démon** : port local utilisé par le démon (55114 par défaut). Ne le modifiez qu'en cas de conflit avec un autre plugin.
 
@@ -96,11 +97,13 @@ Le bouton **Ajouter** permet de créer un équipement à la main, par exemple po
   - **Récupérer token/key depuis le cloud** : redemande les clés de cet appareil au cloud et les vérifie, par exemple après une réinitialisation du module Wi-Fi. Sauvegardez l'équipement avant de l'utiliser.
 - **Options**
   - **Intervalle d'interrogation** : laissez vide pour utiliser la valeur de la configuration du plugin.
+  - **Durée de vie de la connexion** (climatiseurs) : laissez vide pour utiliser la valeur de la configuration du plugin.
   - **Bip de confirmation** : l'appareil émet un bip à chaque commande reçue.
   - **Pas de la consigne** (climatiseurs) : 1 °C ou 0,5 °C.
   - **Consommation électrique** (climatiseurs) : crée les commandes de puissance et de consommation. Si les valeurs sont incohérentes, changez le **format** (BCD ou binaire) ou le **facteur d'échelle**.
 - **Informations**
   - Numéro de série et modèle de l'appareil, en lecture seule.
+  - **Capacités** : *Reçues de l'appareil*, ou *Par défaut* si l'appareil ne les a pas encore envoyées. Dans ce cas, elles sont redemandées automatiquement, et les commandes sont ajustées dès leur réception.
 
 > **Important**
 >
@@ -158,6 +161,9 @@ Le bouton **Mettre à jour les commandes** de l'onglet *Commandes* ajoute les co
 
 | Message | Solution |
 |---|---|
+| *Network error … Transport is closing or closed* (warning) | L'appareil a coupé la connexion : le plugin se reconnecte et refait la demande aussitôt. Si ce message revient souvent, diminuez la **durée de vie des connexions** (par exemple 60 s). |
+| *Payload … failed CRC and checksum* (warning) | Trame invalide ignorée par la bibliothèque, souvent liée à des coupures de connexion : même solution que ci-dessus. |
+| Commandes en trop, ou différentes entre des appareils identiques | Les capacités n'ont pas été reçues (indicateur *Capacités* de l'équipement) : elles sont redemandées automatiquement. Vous pouvez aussi cliquer sur **Mettre à jour les commandes**. |
 | *Identifiant ou mot de passe MSmartHome incorrect* | Vérifiez le compte dans la configuration du plugin. Le plugin ne retente pas tant que les identifiants ne changent pas. |
 | *Le cloud Midea a temporairement bloqué le compte* | Trop de connexions (codes `7610`, `65027`). Attendez le délai indiqué, sans relancer de synchronisation. |
 | *appareil non appairé directement sur ce compte (partagé ?)* | Dans l'application MSmartHome, appairez l'appareil avec ce compte, pas seulement via un partage. |

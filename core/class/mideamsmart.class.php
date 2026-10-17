@@ -13,6 +13,9 @@ class mideamsmart extends eqLogic {
 	const DEFAULT_BROADCAST_ADDRESS = '';
 	const DEFAULT_POLLING_INTERVAL = 30;
 	const MIN_POLLING_INTERVAL = 10;
+	// Reconnection delay recommended by midea-ac-py for the appliances that close their connection (0 = never)
+	const DEFAULT_CONNECTION_LIFETIME = 90;
+	const MIN_CONNECTION_LIFETIME = 10;
 	const DEFAULT_DEVICE_PORT = 6444;
 	const DAEMON_START_TIMEOUT = 30;
 	const DAEMON_STOP_TIMEOUT = 5;
@@ -66,6 +69,25 @@ class mideamsmart extends eqLogic {
 			return self::DEFAULT_POLLING_INTERVAL;
 		}
 		return self::checkPollingInterval($_value);
+	}
+
+	public static function preConfig_connectionLifetime($_value) {
+		if (trim($_value) === '') {
+			return self::DEFAULT_CONNECTION_LIFETIME;
+		}
+		return self::checkConnectionLifetime($_value);
+	}
+
+	public static function postConfig_connectionLifetime($_value) {
+		self::notifyDaemonOfDevices();
+	}
+
+	private static function checkConnectionLifetime($_value) {
+		$value = intval($_value);
+		if ($value != 0 && ($value < self::MIN_CONNECTION_LIFETIME || $value > 3600)) {
+			throw new Exception(__('La durée de vie des connexions doit être 0 ou comprise entre', __FILE__) . ' ' . self::MIN_CONNECTION_LIFETIME . ' ' . __('et', __FILE__) . ' 3600 s');
+		}
+		return $value;
 	}
 
 	public static function preConfig_broadcastAddress($_value) {
@@ -365,9 +387,18 @@ class mideamsmart extends eqLogic {
 	 * @param array $_capabilities
 	 */
 	public function applyCapabilities($_capabilities) {
+		$previous = $this->getConfiguration('capabilities', array());
 		$this->setConfiguration('capabilities', $_capabilities);
 		// Direct save: the daemon configuration does not change
 		$this->save(true);
+		// First real capabilities after default ones (the appliance did not answer at first):
+		// the commands created for the default capabilities may not apply to this appliance
+		$wasComplete = is_array($previous) && !empty($previous['complete']);
+		if (!empty($_capabilities['complete']) && !$wasComplete && is_array($previous) && isset($previous['features'])) {
+			log::add(__CLASS__, 'info', $this->getHumanName() . ' : ' . __('capacités reçues de l\'appareil, commandes ajustées', __FILE__));
+			$this->createCommands(true);
+			return;
+		}
 		$this->createCommands(false);
 	}
 
@@ -884,6 +915,10 @@ class mideamsmart extends eqLogic {
 		if ($pollingInterval !== '') {
 			$this->setConfiguration('pollingInterval', self::checkPollingInterval($pollingInterval));
 		}
+		$connectionLifetime = trim($this->getConfiguration('connectionLifetime', ''));
+		if ($connectionLifetime !== '') {
+			$this->setConfiguration('connectionLifetime', self::checkConnectionLifetime($connectionLifetime));
+		}
 
 		// Explicit defaults: an absent value would leave the checkboxes of the page in their previous state
 		foreach (array('beep' => 1, 'energy' => 0, 'energyFormat' => 'bcd') as $key => $default) {
@@ -950,6 +985,7 @@ class mideamsmart extends eqLogic {
 			'energy' => intval($this->getConfiguration('energy', 0)),
 			'energyFormat' => $this->getConfiguration('energyFormat', 'bcd'),
 			'energyScale' => floatval($this->getConfiguration('energyScale', 1)),
+			'connectionLifetime' => $this->getConnectionLifetime(),
 		);
 	}
 
@@ -988,6 +1024,14 @@ class mideamsmart extends eqLogic {
 			return $image;
 		}
 		return parent::getImage();
+	}
+
+	public function getConnectionLifetime() {
+		$connectionLifetime = $this->getConfiguration('connectionLifetime', '');
+		if ($connectionLifetime === '') {
+			$connectionLifetime = config::byKey('connectionLifetime', __CLASS__, self::DEFAULT_CONNECTION_LIFETIME);
+		}
+		return intval($connectionLifetime);
 	}
 
 	public function getPollingInterval() {

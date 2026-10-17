@@ -16,6 +16,9 @@ OFFLINE_BACKOFF_FACTOR = 2
 MAX_OFFLINE_INTERVAL = 300
 # All values are sent again periodically, even unchanged, so that Jeedom stays in sync
 FULL_REFRESH_INTERVAL = 600
+# Failed refreshes in a row before the appliance is reported offline: appliances close their
+# connection from time to time, a single failure is not meaningful
+OFFLINE_THRESHOLD = 2
 
 ValuesCallback = Callable[[int, dict[str, Any]], None]
 EventCallback = Callable[[dict[str, Any]], Awaitable[None]]
@@ -44,6 +47,8 @@ class BaseDriver:
     Subclasses implement connect(), refresh_state(), read_values(), read_capabilities() and
     the per-command coroutines returned by command_handlers().
     """
+
+    offline_threshold = OFFLINE_THRESHOLD
 
     def __init__(self, config: DeviceConfig, publish_values: ValuesCallback, send_event: EventCallback) -> None:
         self.config = config
@@ -125,10 +130,11 @@ class BaseDriver:
                 connected = False
                 online = False
                 await self._after_refresh(False)
-            if online:
-                interval = self.config.polling_interval
-            else:
+            if self._online is False:
+                # Reported offline: the polling is spaced out
                 interval = min(max(interval, self.config.polling_interval) * OFFLINE_BACKOFF_FACTOR, MAX_OFFLINE_INTERVAL)
+            else:
+                interval = self.config.polling_interval
             self._wake_up.clear()
             try:
                 await asyncio.wait_for(self._wake_up.wait(), interval)
@@ -148,6 +154,10 @@ class BaseDriver:
             self.consecutive_failures += 1
             if self.offline_since is None:
                 self.offline_since = time.monotonic()
+            if self._online is not False and self.consecutive_failures < self.offline_threshold:
+                _LOGGER.debug('[%s] No answer (%s/%s), still considered online', self.config.label,
+                              self.consecutive_failures, self.offline_threshold)
+                return
         if online != self._online:
             if online:
                 _LOGGER.info('[%s] Appliance online (%s:%s)', self.config.label, self.config.ip_address, self.config.port)

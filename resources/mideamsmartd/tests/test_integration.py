@@ -32,7 +32,8 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
         self.values = {}
         self.events = []
         config = DeviceConfig.from_jeedom({'eqLogicId': 3, 'deviceId': '151732605161920', 'deviceType': self.device_type,
-                                           'ipAddress': '127.0.0.1', 'port': self.port, 'protocolVersion': 2, 'pollingInterval': 10})
+                                           'ipAddress': '127.0.0.1', 'port': self.port, 'protocolVersion': 2, 'pollingInterval': 10,
+                                           'connectionLifetime': 90})
         self.driver = DRIVERS[self.device_type](config, self.publish, self.send_event)
         self.driver.start()
         await self.wait_for(lambda: self.values.get('online') == 1 and 'mode' in self.values)
@@ -81,6 +82,20 @@ class AirConditionerIntegrationTest(IntegrationTestCase):
         self.assertIn('ECO', diagnostic['deviceCapabilities']['additional_capabilities'])
 
 
+    async def test_appliance_closing_its_connection(self):
+        # Remedy of midea-ac-py: reconnection after the configured lifetime
+        self.assertEqual(self.driver.device._lan.max_connection_lifetime, 90)
+        # The appliance closes the connection without answering one request out of two
+        self.fake.drop_every = 2
+        for _ in range(4):
+            async with self.driver._lock:
+                self.assertTrue(await self.driver.refresh_state())
+            await self.driver._after_refresh(True)
+        self.assertEqual(self.values['online'], 1)
+        await self.driver.execute('setMode', 'heat')
+        self.assertEqual(self.values['mode'], 'heat')
+
+
 class DehumidifierIntegrationTest(IntegrationTestCase):
     fake_class = FakeDehumidifier
     device_type = 'A1'
@@ -111,6 +126,26 @@ class DehumidifierIntegrationTest(IntegrationTestCase):
         self.assertEqual((diagnostic['driver'], diagnostic['online']), ('A1Driver', True))
         self.assertTrue(diagnostic['library'].startswith('midea-local '))
         self.assertEqual(diagnostic['deviceState']['mode'], 'continuous')
+
+    async def test_stop_while_handling_an_update(self):
+        # An update waiting for Jeedom (capabilities sending) while the driver stops
+        release = asyncio.Event()
+        sent = asyncio.Event()
+
+        async def slow_send(event):
+            sent.set()
+            await release.wait()
+
+        self.driver._capabilities_sent = None
+        self.driver._send_event = slow_send
+        update = asyncio.ensure_future(self.driver._handle_update({'power': True}))
+        await asyncio.wait_for(sent.wait(), 5)
+        stop = asyncio.ensure_future(self.driver.stop())
+        await asyncio.sleep(0.1)
+        self.assertFalse(stop.done())
+        release.set()
+        await asyncio.wait_for(asyncio.gather(update, stop), 10)
+        self.assertIsNone(self.driver.device)
 
     async def test_offline(self):
         # Stop the driver first: wait_closed() waits for the open connections

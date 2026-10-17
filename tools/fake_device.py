@@ -1,7 +1,7 @@
 """Fake Midea appliances (LAN protocol V2), to test the plugin without an appliance.
 
 Usage (with the plugin venv, which contains msmart-ng):
-  resources/python_venv/bin/python3 tools/fake_device.py --type ac|a1 [--host 127.0.0.1] [--port 6444]
+  resources/python_venv/bin/python3 tools/fake_device.py --type ac|a1 [--host 127.0.0.1] [--port 6444] [--drop-every N]
 
 Then set an equipment of the same type to this IP and port, protocol V2. The received
 commands are printed.
@@ -46,6 +46,11 @@ def crc8(data: bytes) -> int:
 class FakeDevice:
     """LAN server: decodes the packets and sends the frame returned by answer()."""
 
+    # Closes the connection without answering one request out of drop_every (0 = never), like
+    # the appliances that close their connection by themselves
+    drop_every = 0
+    _requests = 0
+
     def answer(self, frame: bytes) -> bytes | None:
         raise NotImplementedError
 
@@ -65,6 +70,10 @@ class FakeDevice:
                 if not frame or frame[0] != 0xAA:
                     continue
                 print(f'Received message type 0x{frame[9]:02X} body 0x{frame[10]:02X}: {frame.hex()}', flush=True)
+                self._requests += 1
+                if self.drop_every and self._requests % self.drop_every == 0:
+                    print(f'Closing the connection of {peer} without answering', flush=True)
+                    break
                 response = self.answer(frame)
                 if response is not None:
                     writer.write(_Packet.encode(device_id, response))
@@ -166,8 +175,10 @@ async def main() -> None:
     parser.add_argument('--type', choices=sorted(DEVICES), default='ac')
     parser.add_argument('--host', default='127.0.0.1')
     parser.add_argument('--port', type=int, default=6444)
+    parser.add_argument('--drop-every', type=int, default=0, help='close the connection without answering one request out of N')
     args = parser.parse_args()
     device = DEVICES[args.type]()
+    device.drop_every = args.drop_every
     server = await asyncio.start_server(device.handle, args.host, args.port)
     print(f'Fake {args.type} listening on {args.host}:{args.port}', flush=True)
     async with server:

@@ -37,9 +37,32 @@ MAX_MESSAGE_SIZE = 1024 * 1024
 READ_TIMEOUT = 10
 
 
+# msmart-ng logs as errors some events it recovers from: the connection closed by the appliance
+# and the frames it ignores. The driver retries and reports the offline state itself.
+BENIGN_LIBRARY_ERRORS = ('Network error', 'failed CRC and checksum')
+
+
+class DowngradeBenignErrors(logging.Filter):
+    """Handler filter: logs these msmart-ng errors as warnings, at the Jeedom log level."""
+
+    def __init__(self, level: int) -> None:
+        super().__init__()
+        self._level = level
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.levelno == logging.ERROR and record.name.startswith('msmart') \
+                and any(text in record.getMessage() for text in BENIGN_LIBRARY_ERRORS):
+            record.levelno = logging.WARNING
+            record.levelname = logging.getLevelName(logging.WARNING)
+            return record.levelno >= self._level
+        return True
+
+
 def setup_logging(level: str) -> None:
     python_level = LOG_LEVELS.get(level, logging.ERROR)
     logging.basicConfig(level=python_level, format=LOG_FORMAT, datefmt=LOG_DATE_FORMAT)
+    for handler in logging.getLogger().handlers:
+        handler.addFilter(DowngradeBenignErrors(python_level))
     # httpx logs the requested URLs, which contain the apikey: keep it quiet
     for library in ('httpx', 'httpcore'):
         logging.getLogger(library).setLevel(max(python_level, logging.WARNING))

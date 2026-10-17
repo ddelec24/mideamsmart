@@ -4,6 +4,16 @@
 >
 >Se non ci sono informazioni sull'aggiornamento, significa che riguarda solo l'aggiornamento della documentazione, della traduzione o del testo.
 
+# 17/10/2026
+
+- Versione beta 0.9.1
+- Nuova opzione **Durata delle connessioni** (90 s per impostazione predefinita), rimedio per gli apparecchi che chiudono da soli la connessione (errori *Transport is closing or closed* e *failed CRC and checksum*)
+- Richiesta o comando inviato di nuovo una volta su una nuova connessione quando l'apparecchio chiude la connessione, e apparecchio dichiarato offline solo dopo due errori consecutivi
+- Questi errori della libreria sono registrati come warning
+- Funzionalità richieste di nuovo rapidamente se l'apparecchio non le ha inviate, con adattamento automatico dei comandi alla loro ricezione (comandi in più, come *Filtro da pulire*, su un solo apparecchio)
+- Indicatore dello stato delle funzionalità nella pagina del dispositivo
+- Correzione di un errore all'arresto di un deumidificatore
+
 # 16/10/2026
 
 - Prima versione beta (0.9.0), da provare con apparecchi reali: i tuoi riscontri sono benvenuti sul forum

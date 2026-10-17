@@ -4,6 +4,16 @@
 >
 >Wenn keine Informationen zum Update vorliegen, betrifft es nur Aktualisierungen der Dokumentation, der Übersetzung oder des Textes.
 
+# 17/10/2026
+
+- Betaversion 0.9.1
+- Neue Option **Verbindungsdauer** (standardmäßig 90 s), Abhilfe für Geräte, die die Verbindung selbst trennen (Fehler *Transport is closing or closed* und *failed CRC and checksum*)
+- Anfrage oder Befehl wird einmal über eine neue Verbindung wiederholt, wenn das Gerät die Verbindung trennt; Gerät gilt erst nach zwei aufeinanderfolgenden Fehlern als offline
+- Diese Bibliotheksfehler werden als Warning protokolliert
+- Funktionen werden schnell erneut angefragt, wenn das Gerät sie nicht gesendet hat, mit automatischer Anpassung der Befehle beim Empfang (überzählige Befehle wie *Filter reinigen* bei einem einzelnen Gerät)
+- Anzeige des Funktionsstatus auf der Geräteseite
+- Fehler beim Stoppen eines Luftentfeuchters behoben
+
 # 16/10/2026
 
 - Erste Betaversion (0.9.0), zum Testen mit echten Geräten: Ihr Feedback ist im Forum willkommen

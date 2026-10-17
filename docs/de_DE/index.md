@@ -56,6 +56,7 @@ Nach einem Plugin-Update, das diese Versionen ändert, wechseln die Abhängigkei
 - **Lokales Netzwerk**
   - **Broadcast-Adresse**: Broadcast-Adresse(n) zur Erkennung der Geräte, durch Kommas getrennt. Leer lassen (Standard), um auf allen Netzwerkschnittstellen von Jeedom zu senden. Werden die Geräte nicht gefunden, geben Sie die Broadcast-Adresse ihres Netzwerks an (zum Beispiel `192.168.1.255`).
   - **Standard-Abfrageintervall**: Zeit in Sekunden zwischen zwei Abfragen des Gerätezustands (standardmäßig 30 s, mindestens 10 s).
+  - **Verbindungsdauer**: Die Klimaanlagen werden nach dieser Zeit neu verbunden (standardmäßig 90 s). Manche Geräte trennen die Verbindung nach einer Weile selbst, was Fehler und Abbrüche verursacht: Ein Wert unterhalb dieser Zeitspanne vermeidet dies. 0 = Verbindung bleibt dauerhaft bestehen.
 - **Dämon**
   - **Dämon-Port**: lokaler Port des Dämons (standardmäßig 55114). Ändern Sie ihn nur bei einem Konflikt mit einem anderen Plugin.
 
@@ -96,11 +97,13 @@ Mit der Schaltfläche **Hinzufügen** können Sie ein Gerät manuell anlegen, zu
   - **Token/Key aus der Cloud abrufen**: fragt die Schlüssel dieses Geräts erneut in der Cloud ab und prüft sie, zum Beispiel nach einem Reset des WLAN-Moduls. Speichern Sie das Gerät vorher.
 - **Optionen**
   - **Abfrageintervall**: leer lassen, um den Wert aus der Plugin-Konfiguration zu verwenden.
+  - **Verbindungsdauer** (Klimaanlagen): leer lassen, um den Wert aus der Plugin-Konfiguration zu verwenden.
   - **Bestätigungston**: Das Gerät piept bei jedem empfangenen Befehl.
   - **Sollwert-Schrittweite** (Klimaanlagen): 1 °C oder 0,5 °C.
   - **Stromverbrauch** (Klimaanlagen): legt die Leistungs- und Verbrauchsbefehle an. Sind die Werte unplausibel, ändern Sie das **Format** (BCD oder binär) oder den **Skalierungsfaktor**.
 - **Informationen**
   - Seriennummer und Modell des Geräts, schreibgeschützt.
+  - **Funktionen**: *Vom Gerät empfangen* oder *Standard*, wenn das Gerät sie noch nicht gesendet hat. In diesem Fall werden sie automatisch erneut angefragt, und die Befehle werden angepasst, sobald sie empfangen wurden.
 
 > **Wichtig**
 >
@@ -158,6 +161,9 @@ Die Schaltfläche **Befehle aktualisieren** im Reiter *Befehle* legt fehlende Be
 
 | Meldung | Lösung |
 |---|---|
+| *Network error … Transport is closing or closed* (warning) | Das Gerät hat die Verbindung getrennt: Das Plugin verbindet sich neu und wiederholt die Anfrage sofort. Erscheint die Meldung häufig, verringern Sie die **Verbindungsdauer** (zum Beispiel 60 s). |
+| *Payload … failed CRC and checksum* (warning) | Ungültiger Frame, von der Bibliothek ignoriert, oft im Zusammenhang mit Verbindungsabbrüchen: gleiche Lösung wie oben. |
+| Überzählige Befehle oder unterschiedliche Befehle bei identischen Geräten | Die Funktionen wurden nicht empfangen (Anzeige *Funktionen* des Geräts): Sie werden automatisch erneut angefragt. Sie können auch auf **Befehle aktualisieren** klicken. |
 | *Falscher MSmartHome-Benutzername oder falsches Passwort* | Prüfen Sie das Konto in der Plugin-Konfiguration. Das Plugin versucht es erst wieder, wenn sich die Zugangsdaten ändern. |
 | *Die Midea-Cloud hat das Konto vorübergehend gesperrt* | Zu viele Anmeldungen (Codes `7610`, `65027`). Warten Sie die angegebene Zeit ab, ohne eine weitere Synchronisierung zu starten. |
 | *Gerät nicht direkt mit diesem Konto gekoppelt (freigegeben?)* | Koppeln Sie das Gerät in der MSmartHome-App mit diesem Konto, nicht nur über eine Freigabe. |

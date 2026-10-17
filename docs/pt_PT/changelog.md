@@ -4,6 +4,16 @@
 >
 >Se não houver informação sobre a atualização, significa que esta diz respeito apenas à atualização da documentação, da tradução ou do texto.
 
+# 17/10/2026
+
+- Versão beta 0.9.1
+- Nova opção **Duração das ligações** (90 s por predefinição), solução para os aparelhos que cortam eles próprios a ligação (erros *Transport is closing or closed* e *failed CRC and checksum*)
+- Pedido ou comando reenviado uma vez numa nova ligação quando o aparelho corta a ligação, e aparelho declarado offline apenas após duas falhas seguidas
+- Estes erros da biblioteca são registados como warning
+- Capacidades pedidas de novo rapidamente se o aparelho não as enviou, com ajuste automático dos comandos ao recebê-las (comandos a mais, como *Filtro a limpar*, num só aparelho)
+- Indicador do estado das capacidades na página do equipamento
+- Correção de um erro ao parar um desumidificador
+
 # 16/10/2026
 
 - Primeira versão beta (0.9.0), a testar com aparelhos reais: os seus comentários são bem-vindos no fórum
