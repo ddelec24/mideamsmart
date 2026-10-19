@@ -13,6 +13,8 @@ The MSmartHome account is only used to:
 
 After that, all commands and state readings go directly through the local network, without the Midea cloud.
 
+A schedule is built into the plugin, with profiles shared by all the appliances (for example *Normal* and *Holidays*).
+
 Supported appliances:
 
 | Type | Appliance |
@@ -146,6 +148,57 @@ The **Update commands** button of the *Commands* tab adds the missing commands, 
 | `swing`, `childLock`, `anion`, `pump` + `…On`, `…Off` | A1 | Swing, child lock, ionizer, pump (if the appliance has one) |
 | `filterCleaningReminder`, `resetFilter` | A1 | Filter cleaning reminder and its reset |
 | `online`, `refresh` | AC, CC, A1 | Appliance reachable (0/1) and immediate refresh |
+| `scheduleEnabled`, `scheduleOn`, `scheduleOff` | AC, CC, A1 | Schedule followed (0/1), follow and suspend the schedule of the appliance |
+| `profile`, `setProfile` | Schedule | Name of the active profile and choice of the profile (identifier or name) |
+
+## Schedule
+
+The plugin can control your appliances on a timetable, for example with one program for school weeks and another for the holidays. Everything happens in Jeedom, locally. The programs of the MSmartHome app cannot be reached from the local network: disable them to avoid conflicts.
+
+### Shared profiles
+
+![Schedule profiles](../images/scheduler.png)
+
+The **Schedule** tile of the plugin page opens the *Schedule* equipment, created automatically. It holds the **profiles**, shared by all the appliances (*Normal* and *Holidays* by default):
+
+- add, rename or delete profiles, then save;
+- choose the **active profile** here, or with the *Choose the profile* action command (`setProfile`), for example in a scenario run at the start and at the end of the holidays. The command also accepts the profile name;
+- the *Profile* info command (`profile`) gives the name of the active profile;
+- disabling the *Schedule* equipment suspends the schedule of every appliance.
+
+### Slots of each appliance
+
+![Schedule tab](../images/device_schedule.png)
+
+The **Schedule** tab of each appliance holds its slots. A slot has:
+
+- a profile, days and a time;
+- an action: **Turn on** or **Turn off**;
+- for *Turn on*, optional settings: mode, setpoint, fan speed and preset (for example *Sleep*) for an air conditioner; mode, humidity and fan speed for a dehumidifier. An empty setting is not changed, and choosing a mode turns the appliance on.
+
+Only the slots of the active profile apply. The **Display** list filters the table by profile, and a new slot is added in the displayed profile.
+
+Options of the appliance:
+
+- **Follow the schedule**: the appliance applies its slots. The *Follow the schedule* (`scheduleOn`) and *Suspend the schedule* (`scheduleOff`) commands do the same from a scenario, and the *Schedule followed* info (`scheduleEnabled`) gives the state;
+- **Catch-up** (enabled by default): when the profile changes, when the schedule is resumed or when Jeedom restarts, the last past slot is applied at once instead of waiting for the next one. For example, switching to *Holidays* at 10 am puts the air conditioner in the state of the 8 am slot of the *Holidays* profile.
+
+Good to know:
+
+- the slots are checked every minute by the *cron* task of the plugin, which must stay enabled in the plugin configuration;
+- a manual setting (remote control, widget, scenario) stays until the next slot;
+- adding or changing a slot applies nothing at once: the next slot is applied at its time.
+
+Example for an air conditioner, during school weeks and holidays:
+
+| Profile | Days | Time | Action |
+|---|---|---|---|
+| Normal | Mo to Fr | 07:00 | Turn on, Heat, 21 °C |
+| Normal | Mo to Fr | 08:00 | Turn on, 18 °C |
+| Normal | Mo to Fr | 16:30 | Turn on, Heat, 21 °C |
+| Normal | Mo to Fr | 20:30 | Turn on, 19 °C, Sleep preset |
+| Holidays | Mo to Su | 08:00 | Turn on, Heat, 20 °C |
+| Holidays | Mo to Su | 21:00 | Turn off |
 
 ## Diagnostic and reliability
 

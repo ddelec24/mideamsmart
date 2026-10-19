@@ -4,7 +4,8 @@ if (!isConnect('admin')) {
 }
 $plugin = plugin::byId('mideamsmart');
 sendVarToJS('eqType', $plugin->getId());
-$eqLogics = eqLogic::byType($plugin->getId());
+// The schedule equipment has its own tile in the management area
+$eqLogics = mideamsmart::getDevices();
 ?>
 
 <div class="row row-overflow">
@@ -16,6 +17,11 @@ $eqLogics = eqLogic::byType($plugin->getId());
 				<i class="fas fa-sync-alt"></i>
 				<br>
 				<span>{{Synchroniser}}</span>
+			</div>
+			<div class="cursor logoSecondary" id="bt_mideamsmartScheduler">
+				<i class="far fa-calendar-alt"></i>
+				<br>
+				<span>{{Programmation}}</span>
 			</div>
 			<div class="cursor eqLogicAction logoSecondary" data-action="add">
 				<i class="fas fa-plus-circle"></i>
@@ -63,9 +69,9 @@ $eqLogics = eqLogic::byType($plugin->getId());
 		<div class="input-group pull-right" style="display:inline-flex;">
 			<span class="input-group-btn">
 				<!-- Les balises <a></a> sont volontairement fermées à la ligne suivante pour éviter les espaces entre les boutons. Ne pas modifier -->
-				<a class="btn btn-sm btn-default roundedLeft" id="bt_mideamsmartDiagnostic"><i class="fas fa-stethoscope"></i><span class="hidden-xs"> {{Diagnostic}}</span>
+				<a class="btn btn-sm btn-default roundedLeft mideamsmartDeviceOnly" id="bt_mideamsmartDiagnostic"><i class="fas fa-stethoscope"></i><span class="hidden-xs"> {{Diagnostic}}</span>
 				</a><a class="btn btn-sm btn-default eqLogicAction" data-action="configure"><i class="fas fa-cogs"></i><span class="hidden-xs"> {{Configuration avancée}}</span>
-				</a><a class="btn btn-sm btn-default eqLogicAction" data-action="copy"><i class="fas fa-copy"></i><span class="hidden-xs"> {{Dupliquer}}</span>
+				</a><a class="btn btn-sm btn-default eqLogicAction mideamsmartDeviceOnly" data-action="copy"><i class="fas fa-copy"></i><span class="hidden-xs"> {{Dupliquer}}</span>
 				</a><a class="btn btn-sm btn-success eqLogicAction" data-action="save"><i class="fas fa-check-circle"></i> {{Sauvegarder}}
 				</a><a class="btn btn-sm btn-danger eqLogicAction roundedRight" data-action="remove"><i class="fas fa-minus-circle"></i> {{Supprimer}}
 				</a>
@@ -75,6 +81,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 		<ul class="nav nav-tabs" role="tablist">
 			<li role="presentation"><a href="#" class="eqLogicAction" aria-controls="home" role="tab" data-toggle="tab" data-action="returnToThumbnailDisplay"><i class="fas fa-arrow-circle-left"></i></a></li>
 			<li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-tachometer-alt"></i> {{Equipement}}</a></li>
+			<li role="presentation" class="mideamsmartDeviceOnly"><a href="#scheduletab" aria-controls="home" role="tab" data-toggle="tab"><i class="far fa-calendar-alt"></i> {{Programmation}}</a></li>
 			<li role="presentation"><a href="#commandtab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-list"></i> {{Commandes}}</a></li>
 		</ul>
 		<div class="tab-content">
@@ -126,6 +133,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								</div>
 							</div>
 
+							<div class="mideamsmartDeviceOnly">
 							<legend><i class="fas fa-snowflake"></i> {{Appareil Midea}}</legend>
 							<div class="form-group">
 								<label class="col-sm-4 control-label">{{Type d'appareil}}</label>
@@ -256,9 +264,31 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									</div>
 								</div>
 							</div>
+							</div><!-- /.mideamsmartDeviceOnly -->
 						</div>
 
-						<div class="col-lg-6">
+						<div class="col-lg-6 mideamsmartSchedulerOnly">
+							<legend><i class="far fa-calendar-alt"></i> {{Profils de programmation}}</legend>
+							<div class="alert alert-info">{{Les profils sont communs à tous les appareils : chaque appareil a ses propres créneaux pour chaque profil, dans son onglet Programmation. Changer de profil, ici ou par la commande « Choisir le profil » dans un scénario, bascule tous les appareils d'un coup.}}</div>
+							<div class="form-group">
+								<label class="col-sm-4 control-label">{{Profil actif}}</label>
+								<div class="col-sm-6">
+									<select class="form-control" id="sel_mideamsmartActiveProfile"></select>
+								</div>
+							</div>
+							<table class="table table-bordered table-condensed" id="table_mideamsmartProfiles">
+								<thead>
+									<tr>
+										<th>{{Nom du profil}}</th>
+										<th style="width:60px;"></th>
+									</tr>
+								</thead>
+								<tbody></tbody>
+							</table>
+							<a class="btn btn-sm btn-default" id="bt_mideamsmartAddProfile"><i class="fas fa-plus-circle"></i> {{Ajouter un profil}}</a>
+						</div>
+
+						<div class="col-lg-6 mideamsmartDeviceOnly">
 							<legend><i class="fas fa-info"></i> {{Informations}}</legend>
 							<div class="form-group">
 								<label class="col-sm-4 control-label">{{Numéro de série}}</label>
@@ -296,9 +326,69 @@ $eqLogics = eqLogic::byType($plugin->getId());
 				</form>
 			</div><!-- /.tabpanel #eqlogictab-->
 
+			<!-- Onglet de programmation de l'appareil -->
+			<div role="tabpanel" class="tab-pane" id="scheduletab">
+				<form class="form-horizontal">
+					<fieldset>
+						<div class="col-lg-6">
+							<legend><i class="far fa-calendar-check"></i> {{Programmation de l'appareil}}</legend>
+							<div class="form-group">
+								<label class="col-sm-4 control-label">{{Suivre la programmation}}
+									<sup><i class="fas fa-question-circle tooltips" title="{{Applique les créneaux du profil actif. Les commandes « Suivre la programmation » et « Suspendre la programmation » font la même chose depuis un scénario}}"></i></sup>
+								</label>
+								<div class="col-sm-6">
+									<input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="scheduleEnabled">
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-4 control-label">{{Rattrapage}}
+									<sup><i class="fas fa-question-circle tooltips" title="{{Au changement de profil, à la reprise de la programmation ou au redémarrage de Jeedom, applique tout de suite le dernier créneau passé au lieu d'attendre le suivant}}"></i></sup>
+								</label>
+								<div class="col-sm-6">
+									<input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="scheduleCatchUp">
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-6">
+							<legend><i class="fas fa-layer-group"></i> {{Profil}}</legend>
+							<div class="form-group">
+								<label class="col-sm-4 control-label">{{Profil actif}}</label>
+								<div class="col-sm-6">
+									<span class="label label-info" id="span_mideamsmartActiveProfile"></span>
+									<a class="btn btn-xs btn-default" id="bt_mideamsmartManageProfiles" style="margin-left:5px;"><i class="far fa-calendar-alt"></i> {{Gérer les profils}}</a>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-4 control-label">{{Afficher}}</label>
+								<div class="col-sm-6">
+									<select class="form-control" id="sel_mideamsmartSlotFilter"></select>
+								</div>
+							</div>
+							<div class="alert alert-warning" id="div_mideamsmartSchedulerWarning" style="display:none;"></div>
+						</div>
+					</fieldset>
+				</form>
+				<a class="btn btn-sm btn-success pull-right" id="bt_mideamsmartAddSlot" style="margin-bottom:5px;"><i class="fas fa-plus-circle"></i> {{Ajouter un créneau}}</a>
+				<div class="table-responsive" style="clear:both;">
+					<table id="table_mideamsmartSlots" class="table table-bordered table-condensed">
+						<thead>
+							<tr>
+								<th style="width:130px;">{{Profil}}</th>
+								<th>{{Jours}}</th>
+								<th style="width:110px;">{{Heure}}</th>
+								<th style="width:115px;">{{Action}}</th>
+								<th>{{Réglages (vide = inchangé)}}</th>
+								<th style="width:50px;"></th>
+							</tr>
+						</thead>
+						<tbody></tbody>
+					</table>
+				</div>
+			</div><!-- /.tabpanel #scheduletab-->
+
 			<!-- Onglet des commandes de l'équipement -->
 			<div role="tabpanel" class="tab-pane" id="commandtab">
-				<a class="btn btn-default btn-sm pull-right" id="bt_mideamsmartUpdateCommands" style="margin-top:5px;"><i class="fas fa-sync"></i> {{Mettre à jour les commandes}}</a>
+				<a class="btn btn-default btn-sm pull-right mideamsmartDeviceOnly" id="bt_mideamsmartUpdateCommands" style="margin-top:5px;"><i class="fas fa-sync"></i> {{Mettre à jour les commandes}}</a>
 				<br><br>
 				<div class="table-responsive">
 					<table id="table_cmd" class="table table-bordered table-condensed">

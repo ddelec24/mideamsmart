@@ -7,10 +7,12 @@ require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
 
 function mideamsmart_install() {
 	mideamsmart_setDefaultConfig();
+	mideamsmart::getScheduler(true);
 }
 
 function mideamsmart_update() {
 	mideamsmart_setDefaultConfig();
+	mideamsmart::getScheduler(true);
 }
 
 function mideamsmart_remove() {

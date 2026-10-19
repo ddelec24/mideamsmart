@@ -43,6 +43,11 @@ VALUES = {
 }
 
 
+def same_value(current: Any, expected: Any) -> bool:
+    # midea-local keeps some attributes as numbers (water level threshold) or booleans
+    return current == expected or str(current).lower() == str(expected).lower()
+
+
 class A1Driver(BaseDriver):
     # midea-local only reports availability changes, after its own reconnection attempts
     offline_threshold = 1
@@ -171,28 +176,31 @@ class A1Driver(BaseDriver):
         async with self._lock:
             await handler(value)
 
-    async def _set(self, attribute: str, value: Any) -> None:
+    async def _set(self, attribute: str, value: Any) -> bool:
         # set_attribute() sends on the socket: blocking call. The appliance answers with
         # its new state, which comes back through the update callback.
         await asyncio.to_thread(self.device.set_attribute, attribute, value)
+        # Each Set message is built from the known attributes: the next command (schedule slot,
+        # scenario) waits for this one to be confirmed, otherwise it would undo it
+        return await self._confirmed(attribute, value)
 
-    async def _wait_attribute(self, attribute: str, value: Any, timeout: float = SET_CONFIRMATION_TIMEOUT) -> None:
+    async def _confirmed(self, attribute: str, value: Any, timeout: float = SET_CONFIRMATION_TIMEOUT) -> bool:
         loop = asyncio.get_running_loop()
         deadline = loop.time() + timeout
-        while self.device.attributes.get(str(attribute)) != value:
+        while not same_value(self.device.attributes.get(str(attribute)), value):
             if loop.time() > deadline:
-                raise CommandError('deviceOffline')
+                _LOGGER.debug('[%s] %s=%s not confirmed by the appliance', self.config.label, attribute, value)
+                return False
             await asyncio.sleep(0.1)
+        return True
 
     async def set_mode(self, value: Any) -> None:
         mode = str(value).lower()
         if mode not in self.device.modes:
             raise CommandError('unsupportedValue')
-        if not self.device.attributes.get(str(A1.power)):
-            await self._set(A1.power, True)
-            # Each Set message is built from the known attributes: wait for the appliance to
-            # confirm the power on, otherwise the mode message would turn it off again
-            await self._wait_attribute(A1.power, True)
+        # The mode message would turn the appliance off again without the power on confirmation
+        if not self.device.attributes.get(str(A1.power)) and not await self._set(A1.power, True):
+            raise CommandError('deviceOffline')
         await self._set(A1.mode, mode)
 
     async def set_fan_speed(self, value: Any) -> None:

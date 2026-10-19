@@ -116,6 +116,12 @@ class DehumidifierIntegrationTest(IntegrationTestCase):
         await self.wait_for(lambda: self.values['mode'] == 'continuous' and self.values['power'] == 1)
         await self.driver.execute('setTargetHumidity', 90)
         await self.wait_for(lambda: self.values['targetHumidity'] == 85)
+        # Commands sent one after the other (schedule slot): the second one keeps the first one
+        await self.driver.execute('off', None)
+        await self.driver.execute('setMode', 'manual')
+        await self.driver.execute('setTargetHumidity', 45)
+        await self.wait_for(lambda: self.values['targetHumidity'] == 45)
+        self.assertEqual((self.values['power'], self.values['mode']), (1, 'manual'))
         await self.driver.execute('swingOn', None)
         await self.wait_for(lambda: self.values['swing'] == 1)
         await self.driver.execute('setWaterLevelSet', '75')
@@ -125,7 +131,7 @@ class DehumidifierIntegrationTest(IntegrationTestCase):
         diagnostic = self.driver.diagnostic()
         self.assertEqual((diagnostic['driver'], diagnostic['online']), ('A1Driver', True))
         self.assertTrue(diagnostic['library'].startswith('midea-local '))
-        self.assertEqual(diagnostic['deviceState']['mode'], 'continuous')
+        self.assertEqual(diagnostic['deviceState']['mode'], 'manual')
 
     async def test_stop_while_handling_an_update(self):
         # An update waiting for Jeedom (capabilities sending) while the driver stops

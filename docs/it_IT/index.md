@@ -13,6 +13,8 @@ L'account MSmartHome serve solo a:
 
 In seguito, tutti i comandi e le letture di stato passano direttamente dalla rete locale, senza il cloud Midea.
 
+Il plugin include una programmazione oraria, con profili comuni a tutti gli apparecchi (per esempio *Normale* e *Vacanze*).
+
 Apparecchi supportati:
 
 | Tipo | Apparecchio |
@@ -146,6 +148,57 @@ Il pulsante **Aggiorna i comandi** della scheda *Comandi* aggiunge i comandi man
 | `swing`, `childLock`, `anion`, `pump` + `…On`, `…Off` | A1 | Oscillazione, blocco bambini, ionizzatore, pompa (se l'apparecchio ne ha una) |
 | `filterCleaningReminder`, `resetFilter` | A1 | Promemoria di pulizia del filtro e suo azzeramento |
 | `online`, `refresh` | AC, CC, A1 | Apparecchio raggiungibile (0/1) e aggiornamento immediato |
+| `scheduleEnabled`, `scheduleOn`, `scheduleOff` | AC, CC, A1 | Programmazione seguita (0/1), seguire e sospendere la programmazione dell'apparecchio |
+| `profile`, `setProfile` | Programmazione | Nome del profilo attivo e scelta del profilo (identificativo o nome) |
+
+## Programmazione
+
+Il plugin può comandare i tuoi apparecchi secondo degli orari, per esempio con un programma per il periodo scolastico e un altro per le vacanze. Tutto avviene in Jeedom, in locale. I programmi dell'app MSmartHome non sono accessibili dalla rete locale: disattivali per evitare conflitti.
+
+### Profili comuni
+
+![Profili di programmazione](../images/scheduler.png)
+
+Il riquadro **Programmazione** della pagina del plugin apre il dispositivo *Programmazione*, creato automaticamente. Contiene i **profili**, comuni a tutti gli apparecchi (*Normale* e *Vacanze* per impostazione predefinita):
+
+- aggiungi, rinomina o elimina dei profili, poi salva;
+- scegli il **profilo attivo** qui, o con il comando azione *Scegli il profilo* (`setProfile`), per esempio in uno scenario avviato all'inizio e alla fine delle vacanze. Il comando accetta anche il nome del profilo;
+- il comando info *Profilo* (`profile`) indica il nome del profilo attivo;
+- disattivare il dispositivo *Programmazione* sospende la programmazione di tutti gli apparecchi.
+
+### Fasce di ogni apparecchio
+
+![Scheda Programmazione](../images/device_schedule.png)
+
+La scheda **Programmazione** di ogni apparecchio contiene le sue fasce. Una fascia comprende:
+
+- un profilo, dei giorni e un orario;
+- un'azione: **Accendi** o **Spegni**;
+- per *Accendi*, impostazioni facoltative: modalità, setpoint, ventilazione e preimpostazione (per esempio *Notte*) per un climatizzatore; modalità, umidità e ventilazione per un deumidificatore. Un'impostazione vuota non viene modificata, e scegliere una modalità accende l'apparecchio.
+
+Si applicano solo le fasce del profilo attivo. L'elenco **Mostra** filtra la tabella per profilo, e una nuova fascia viene aggiunta nel profilo mostrato.
+
+Opzioni dell'apparecchio:
+
+- **Segui la programmazione**: l'apparecchio applica le sue fasce. I comandi *Segui la programmazione* (`scheduleOn`) e *Sospendi la programmazione* (`scheduleOff`) fanno lo stesso da uno scenario, e l'info *Programmazione seguita* (`scheduleEnabled`) ne indica lo stato;
+- **Recupero** (attivo per impostazione predefinita): al cambio di profilo, alla ripresa della programmazione o al riavvio di Jeedom, l'ultima fascia passata viene applicata subito, senza attendere la successiva. Per esempio, passando a *Vacanze* alle 10, il climatizzatore prende lo stato previsto dalla fascia delle 8 del profilo *Vacanze*.
+
+Da sapere:
+
+- le fasce vengono controllate ogni minuto dall'attività *cron* del plugin, che deve restare attiva nella configurazione del plugin;
+- un'impostazione manuale (telecomando, widget, scenario) resta valida fino alla fascia successiva;
+- aggiungere o modificare una fascia non applica nulla subito: la fascia successiva viene applicata al suo orario.
+
+Esempio per un climatizzatore, nel periodo scolastico e in vacanza:
+
+| Profilo | Giorni | Ora | Azione |
+|---|---|---|---|
+| Normale | Lu-Ve | 07:00 | Accendi, Riscaldamento, 21 °C |
+| Normale | Lu-Ve | 08:00 | Accendi, 18 °C |
+| Normale | Lu-Ve | 16:30 | Accendi, Riscaldamento, 21 °C |
+| Normale | Lu-Ve | 20:30 | Accendi, 19 °C, preimpostazione Notte |
+| Vacanze | Lu-Do | 08:00 | Accendi, Riscaldamento, 20 °C |
+| Vacanze | Lu-Do | 21:00 | Spegni |
 
 ## Diagnostica e affidabilità
 

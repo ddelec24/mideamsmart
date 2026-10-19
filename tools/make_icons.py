@@ -108,6 +108,20 @@ def make_device_image(name):
         draw.rounded_rectangle([86 * s, 100 * s, 98 * s, 209 * s], radius=6 * s, fill=slot)
         draw.rounded_rectangle([211 * s, 100 * s, 223 * s, 209 * s], radius=6 * s, fill=slot)
         draw.rounded_rectangle([118 * s, 118 * s, 191 * s, 191 * s], radius=10 * s, outline=slot, width=6 * s)
+    elif name == 'scheduler':
+        # Calendar with a clock: the schedule equipment
+        draw.rounded_rectangle([72 * s, 82 * s, 237 * s, 232 * s], radius=18 * s, fill=WHITE)
+        draw.rectangle([72 * s, 112 * s, 237 * s, 120 * s], fill=slot)
+        for x in (110, 199):
+            draw.rounded_rectangle([(x - 7) * s, 66 * s, (x + 7) * s, 98 * s], radius=7 * s, fill=WHITE, outline=slot, width=4 * s)
+        for row in range(2):
+            for column in range(3):
+                x, y = 96 + column * 34, 138 + row * 30
+                draw.rounded_rectangle([x * s, y * s, (x + 18) * s, (y + 16) * s], radius=4 * s, fill=slot)
+        cx, cy, r = 212 * s, 214 * s, 46 * s
+        draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=WHITE, outline=slot, width=8 * s)
+        draw.line([(cx, cy), (cx, cy - 28 * s)], fill=slot, width=8 * s)
+        draw.line([(cx, cy), (cx + 22 * s, cy)], fill=slot, width=8 * s)
     else:
         draw_ac_unit(draw, (52 * s, 82 * s, 257 * s, 160 * s), slot, False)
     img = img.resize((SQUARE, SQUARE), Image.LANCZOS)
@@ -118,5 +132,5 @@ def make_device_image(name):
 
 if __name__ == '__main__':
     make_plugin_icon(sys.argv[1])
-    for device_type in ('ac', 'cc', 'a1'):
+    for device_type in ('ac', 'cc', 'a1', 'scheduler'):
         make_device_image(device_type)

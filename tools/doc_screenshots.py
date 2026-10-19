@@ -9,7 +9,10 @@ Runs in the official Playwright image, in the network of the Jeedom container (d
 JEEDOM_ADMIN_USER / JEEDOM_ADMIN_PASSWORD come from dev-env/.env. Expected data: an AC equipment and
 an A1 equipment, each in its own object, online through the fake appliances (tools/fake_device.py),
 and the light theme (core config theme_changeAccordingTime = 0). For the configuration capture, set
-an example account (e.g. mon.compte@exemple.fr), never a real one.
+an example account (e.g. mon.compte@exemple.fr), never a real one. For the schedule captures, the AC
+equipment has a few slots in two profiles (e.g. Normal and Vacances).
+
+ONLY=name1.png,name2.png (environment) saves only these captures.
 """
 import os
 import sys
@@ -23,14 +26,20 @@ SALON_ID = sys.argv[3]
 BUANDERIE_ID = sys.argv[4]
 
 
+ONLY = [name for name in os.environ.get('ONLY', '').split(',') if name]
+
+
 def shot(page, name, **kwargs):
+    if ONLY and name not in ONLY:
+        return
     path = os.path.join(OUT, name)
     page.screenshot(path=path, **kwargs)
     print('saved', path)
 
 
 with sync_playwright() as p:
-    browser = p.chromium.launch()
+    # French browser: 24 h time inputs
+    browser = p.chromium.launch(args=['--lang=fr-FR'])
     page = browser.new_page(viewport={'width': 1280, 'height': 860}, locale='fr-FR')
     page.goto(BASE + '/index.php')
     page.fill('#in_login_username', os.environ['JEEDOM_ADMIN_USER'])
@@ -69,8 +78,25 @@ with sync_playwright() as p:
     page.wait_for_timeout(1000)
     shot(page, 'device_commands.png', clip={'x': 0, 'y': 0, 'width': 1280, 'height': 640})
 
+    # Schedule tab
+    page.click('a[href="#scheduletab"]')
+    page.wait_for_selector('#table_mideamsmartSlots tr.mideamsmartSlot')
+    page.wait_for_timeout(800)
+    shot(page, 'device_schedule.png', clip={'x': 0, 'y': 0, 'width': 1280, 'height': 560})
+
+    # Schedule equipment (shared profiles)
+    page.goto(BASE + '/index.php?v=d&m=mideamsmart&p=mideamsmart')
+    page.wait_for_load_state('load')
+    page.wait_for_timeout(1000)
+    page.click('#bt_mideamsmartScheduler')
+    page.wait_for_selector('tr.mideamsmartProfile')
+    page.wait_for_timeout(800)
+    shot(page, 'scheduler.png', clip={'x': 0, 'y': 0, 'width': 1280, 'height': 480})
+
     # Diagnostic window
-    page.click('a[href="#eqlogictab"]')
+    page.goto(BASE + f'/index.php?v=d&m=mideamsmart&p=mideamsmart&id={AC_ID}')
+    page.wait_for_load_state('load')
+    page.wait_for_timeout(1500)
     page.click('#bt_mideamsmartDiagnostic')
     page.wait_for_function("document.getElementById('pre_mideamsmartDiagnosticDaemon') && document.getElementById('pre_mideamsmartDiagnosticDaemon').textContent.includes('driver')", timeout=20000)
     page.wait_for_timeout(500)

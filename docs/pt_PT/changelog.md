@@ -4,6 +4,15 @@
 >
 >Se não houver informação sobre a atualização, significa que esta diz respeito apenas à atualização da documentação, da tradução ou do texto.
 
+# 19/10/2026
+
+- Versão beta 0.10.0
+- Nova **programação** horária: perfis comuns a todos os aparelhos (*Normal* e *Férias* por predefinição, editáveis), períodos próprios de cada aparelho (dias, hora, ligar ou desligar, modo, temperatura definida, ventilação, predefinição ou humidade)
+- Novo equipamento *Programação*, aberto pelo mosaico com o mesmo nome: o seu comando *Escolher o perfil* muda todos os aparelhos de uma só vez, por exemplo a partir de um cenário de férias
+- Recuperação do último período passado ao mudar de perfil, ao retomar a programação ou ao reiniciar o Jeedom (desativável por aparelho)
+- Novos comandos *Seguir a programação* e *Suspender a programação* em cada aparelho
+- Desumidificador: vários comandos enviados seguidos (por exemplo modo e depois humidade) já não se anulam
+
 # 17/10/2026
 
 - Versão beta 0.9.2

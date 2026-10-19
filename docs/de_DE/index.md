@@ -13,6 +13,8 @@ Das MSmartHome-Konto dient nur dazu:
 
 Danach laufen alle Befehle und Zustandsabfragen direkt über das lokale Netzwerk, ohne die Midea-Cloud.
 
+Ein Zeitplan ist in das Plugin integriert, mit Profilen, die für alle Geräte gelten (zum Beispiel *Normal* und *Ferien*).
+
 Unterstützte Geräte:
 
 | Typ | Gerät |
@@ -146,6 +148,57 @@ Die Schaltfläche **Befehle aktualisieren** im Reiter *Befehle* legt fehlende Be
 | `swing`, `childLock`, `anion`, `pump` + `…On`, `…Off` | A1 | Schwenkung, Kindersicherung, Ionisator, Pumpe (falls vorhanden) |
 | `filterCleaningReminder`, `resetFilter` | A1 | Filterreinigungshinweis und dessen Zurücksetzen |
 | `online`, `refresh` | AC, CC, A1 | Gerät erreichbar (0/1) und sofortige Aktualisierung |
+| `scheduleEnabled`, `scheduleOn`, `scheduleOff` | AC, CC, A1 | Zeitplan befolgt (0/1), Zeitplan des Geräts befolgen und aussetzen |
+| `profile`, `setProfile` | Zeitplan | Name des aktiven Profils und Wahl des Profils (Kennung oder Name) |
+
+## Zeitplan
+
+Das Plugin kann Ihre Geräte nach Uhrzeiten steuern, zum Beispiel mit einem Programm für die Schulzeit und einem anderen für die Ferien. Alles geschieht in Jeedom, lokal. Die Programme der MSmartHome-App sind über das lokale Netzwerk nicht erreichbar: Deaktivieren Sie sie, um Konflikte zu vermeiden.
+
+### Gemeinsame Profile
+
+![Zeitplanprofile](../images/scheduler.png)
+
+Die Kachel **Zeitplan** auf der Plugin-Seite öffnet das automatisch angelegte Gerät *Zeitplan*. Es enthält die **Profile**, die für alle Geräte gelten (standardmäßig *Normal* und *Ferien*):
+
+- Profile hinzufügen, umbenennen oder löschen, dann speichern;
+- das **aktive Profil** hier wählen oder mit dem Aktionsbefehl *Profil wählen* (`setProfile`), zum Beispiel in einem Szenario, das zu Beginn und am Ende der Ferien ausgeführt wird. Der Befehl akzeptiert auch den Profilnamen;
+- der Infobefehl *Profil* (`profile`) enthält den Namen des aktiven Profils;
+- das Deaktivieren des Geräts *Zeitplan* setzt den Zeitplan aller Geräte aus.
+
+### Zeitabschnitte jedes Geräts
+
+![Reiter Zeitplan](../images/device_schedule.png)
+
+Der Reiter **Zeitplan** jedes Geräts enthält seine Zeitabschnitte. Ein Zeitabschnitt umfasst:
+
+- ein Profil, Tage und eine Uhrzeit;
+- eine Aktion: **Einschalten** oder **Ausschalten**;
+- für *Einschalten* optionale Einstellungen: Modus, Sollwert, Lüfterstufe und Voreinstellung (zum Beispiel *Nacht*) bei einer Klimaanlage; Modus, Luftfeuchte und Lüfterstufe bei einem Luftentfeuchter. Eine leere Einstellung wird nicht geändert, und die Wahl eines Modus schaltet das Gerät ein.
+
+Es gelten nur die Zeitabschnitte des aktiven Profils. Die Liste **Anzeigen** filtert die Tabelle nach Profil, und ein neuer Zeitabschnitt wird im angezeigten Profil hinzugefügt.
+
+Optionen des Geräts:
+
+- **Zeitplan befolgen**: Das Gerät wendet seine Zeitabschnitte an. Die Befehle *Zeitplan befolgen* (`scheduleOn`) und *Zeitplan aussetzen* (`scheduleOff`) tun dasselbe aus einem Szenario, und die Info *Zeitplan befolgt* (`scheduleEnabled`) zeigt den Zustand;
+- **Nachholen** (standardmäßig aktiv): Beim Profilwechsel, bei der Wiederaufnahme des Zeitplans oder beim Neustart von Jeedom wird der letzte vergangene Zeitabschnitt sofort angewendet, statt auf den nächsten zu warten. Wechselt man zum Beispiel um 10 Uhr auf *Ferien*, übernimmt die Klimaanlage den Zustand des 8-Uhr-Abschnitts des Profils *Ferien*.
+
+Gut zu wissen:
+
+- die Zeitabschnitte werden jede Minute von der *cron*-Aufgabe des Plugins geprüft, die in der Plugin-Konfiguration aktiv bleiben muss;
+- eine manuelle Einstellung (Fernbedienung, Widget, Szenario) bleibt bis zum nächsten Zeitabschnitt bestehen;
+- das Hinzufügen oder Ändern eines Zeitabschnitts wendet nichts sofort an: Der nächste Zeitabschnitt wird zu seiner Uhrzeit angewendet.
+
+Beispiel für eine Klimaanlage in der Schulzeit und in den Ferien:
+
+| Profil | Tage | Uhrzeit | Aktion |
+|---|---|---|---|
+| Normal | Mo bis Fr | 07:00 | Einschalten, Heizen, 21 °C |
+| Normal | Mo bis Fr | 08:00 | Einschalten, 18 °C |
+| Normal | Mo bis Fr | 16:30 | Einschalten, Heizen, 21 °C |
+| Normal | Mo bis Fr | 20:30 | Einschalten, 19 °C, Voreinstellung Nacht |
+| Ferien | Mo bis So | 08:00 | Einschalten, Heizen, 20 °C |
+| Ferien | Mo bis So | 21:00 | Ausschalten |
 
 ## Diagnose und Zuverlässigkeit
 

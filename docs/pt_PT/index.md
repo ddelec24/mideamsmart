@@ -13,6 +13,8 @@ A conta MSmartHome serve apenas para:
 
 Depois disso, todos os comandos e leituras de estado passam diretamente pela rede local, sem a nuvem da Midea.
 
+O plugin inclui uma programação horária, com perfis comuns a todos os aparelhos (por exemplo *Normal* e *Férias*).
+
 Aparelhos suportados:
 
 | Tipo | Aparelho |
@@ -146,6 +148,57 @@ O botão **Atualizar os comandos** do separador *Comandos* adiciona os comandos 
 | `swing`, `childLock`, `anion`, `pump` + `…On`, `…Off` | A1 | Oscilação, bloqueio para crianças, ionizador, bomba (se o aparelho tiver uma) |
 | `filterCleaningReminder`, `resetFilter` | A1 | Lembrete de limpeza do filtro e a sua reposição |
 | `online`, `refresh` | AC, CC, A1 | Aparelho acessível (0/1) e atualização imediata |
+| `scheduleEnabled`, `scheduleOn`, `scheduleOff` | AC, CC, A1 | Programação seguida (0/1), seguir e suspender a programação do aparelho |
+| `profile`, `setProfile` | Programação | Nome do perfil ativo e escolha do perfil (identificador ou nome) |
+
+## Programação
+
+O plugin pode comandar os seus aparelhos segundo horários, por exemplo com um programa para o período escolar e outro para as férias. Tudo acontece no Jeedom, em local. Os programas da aplicação MSmartHome não são acessíveis a partir da rede local: desative-os para evitar conflitos.
+
+### Perfis comuns
+
+![Perfis de programação](../images/scheduler.png)
+
+O mosaico **Programação** da página do plugin abre o equipamento *Programação*, criado automaticamente. Contém os **perfis**, comuns a todos os aparelhos (*Normal* e *Férias* por predefinição):
+
+- adicione, mude o nome ou elimine perfis e depois guarde;
+- escolha o **perfil ativo** aqui, ou com o comando de ação *Escolher o perfil* (`setProfile`), por exemplo num cenário lançado no início e no fim das férias. O comando também aceita o nome do perfil;
+- o comando de informação *Perfil* (`profile`) dá o nome do perfil ativo;
+- desativar o equipamento *Programação* suspende a programação de todos os aparelhos.
+
+### Períodos de cada aparelho
+
+![Separador Programação](../images/device_schedule.png)
+
+O separador **Programação** de cada aparelho contém os seus períodos. Um período inclui:
+
+- um perfil, dias e uma hora;
+- uma ação: **Ligar** ou **Desligar**;
+- para *Ligar*, definições opcionais: modo, temperatura definida, ventilação e predefinição (por exemplo *Noite*) para um ar condicionado; modo, humidade e ventilação para um desumidificador. Uma definição vazia não é alterada, e escolher um modo liga o aparelho.
+
+Só se aplicam os períodos do perfil ativo. A lista **Mostrar** filtra a tabela por perfil, e um novo período é adicionado no perfil mostrado.
+
+Opções do aparelho:
+
+- **Seguir a programação**: o aparelho aplica os seus períodos. Os comandos *Seguir a programação* (`scheduleOn`) e *Suspender a programação* (`scheduleOff`) fazem o mesmo a partir de um cenário, e a informação *Programação seguida* (`scheduleEnabled`) dá o estado;
+- **Recuperação** (ativada por predefinição): ao mudar de perfil, ao retomar a programação ou ao reiniciar o Jeedom, o último período passado é aplicado de imediato, sem esperar pelo seguinte. Por exemplo, ao passar para *Férias* às 10 h, o ar condicionado assume o estado previsto pelo período das 8 h do perfil *Férias*.
+
+A saber:
+
+- os períodos são verificados a cada minuto pela tarefa *cron* do plugin, que deve continuar ativa na configuração do plugin;
+- uma definição manual (comando à distância, widget, cenário) mantém-se até ao período seguinte;
+- adicionar ou alterar um período não aplica nada de imediato: o próximo período é aplicado à sua hora.
+
+Exemplo para um ar condicionado, no período escolar e nas férias:
+
+| Perfil | Dias | Hora | Ação |
+|---|---|---|---|
+| Normal | Seg a Sex | 07:00 | Ligar, Aquecimento, 21 °C |
+| Normal | Seg a Sex | 08:00 | Ligar, 18 °C |
+| Normal | Seg a Sex | 16:30 | Ligar, Aquecimento, 21 °C |
+| Normal | Seg a Sex | 20:30 | Ligar, 19 °C, predefinição Noite |
+| Férias | Seg a Dom | 08:00 | Ligar, Aquecimento, 20 °C |
+| Férias | Seg a Dom | 21:00 | Desligar |
 
 ## Diagnóstico e fiabilidade
 

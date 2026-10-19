@@ -19,6 +19,7 @@ Pilotage **local** des climatiseurs et déshumidificateurs Midea et des marques 
   | `0xCC` | Climatiseur commercial | [msmart-ng](https://github.com/mill1000/midea-msmart) |
   | `0xA1` | Déshumidificateur | [midea-local](https://github.com/midea-lan/midea-local) |
 
+- **Programmation** horaire intégrée : profils communs à tous les appareils (par exemple *Normal* et *Vacances*), créneaux propres à chaque appareil, bascule de profil par une commande de scénario, rattrapage du dernier créneau passé.
 - **Fiabilité** :
   - appareil hors ligne signalé, avec interrogations espacées ;
   - adresse IP retrouvée automatiquement après un changement ;
@@ -62,7 +63,7 @@ PROJECT.md       décisions et notes de conception
 
 ## English summary
 
-Local control of Midea air conditioners (`0xAC`, `0xCC`) and dehumidifiers (`0xA1`) for Jeedom 4.5+. The MSmartHome account is only used to list the appliances and retrieve, once, the V3 keys, which are checked with the appliance. Then everything runs on the local network. Commands are created from the capabilities of each appliance. The documentation is available in 7 languages in [`docs/`](docs/en_US/index.md).
+Local control of Midea air conditioners (`0xAC`, `0xCC`) and dehumidifiers (`0xA1`) for Jeedom 4.5+. The MSmartHome account is only used to list the appliances and retrieve, once, the V3 keys, which are checked with the appliance. Then everything runs on the local network. Commands are created from the capabilities of each appliance. A built-in schedule uses profiles shared by all the appliances (e.g. Normal and Holidays) and slots specific to each one. The documentation is available in 7 languages in [`docs/`](docs/en_US/index.md).
 
 ## Auteurs
 

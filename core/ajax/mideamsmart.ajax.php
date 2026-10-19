@@ -47,6 +47,22 @@ try {
 		ajax::success($eqLogic->getDiagnostic());
 	}
 
+	if (init('action') == 'getScheduleContext') {
+		$scheduler = mideamsmart::getScheduler();
+		$definitions = mideamsmart::getCommandDefinitions();
+		ajax::success(array(
+			'schedulerId' => is_object($scheduler) ? intval($scheduler->getId()) : null,
+			'schedulerEnabled' => is_object($scheduler) ? intval($scheduler->getIsEnable()) : 0,
+			'profiles' => is_object($scheduler) ? $scheduler->getProfiles() : array(),
+			'activeProfile' => is_object($scheduler) ? (string) $scheduler->getConfiguration('activeProfile', '') : '',
+			'enums' => $definitions['enums'],
+		));
+	}
+
+	if (init('action') == 'openScheduler') {
+		ajax::success(intval(mideamsmart::getScheduler(true)->getId()));
+	}
+
 	throw new Exception(__('Aucune méthode correspondante à', __FILE__) . ' : ' . init('action'));
 } catch (Exception $e) {
 	ajax::error(displayException($e), $e->getCode());

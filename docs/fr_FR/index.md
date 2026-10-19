@@ -13,6 +13,8 @@ Le compte MSmartHome sert uniquement à :
 
 Ensuite, toutes les commandes et lectures d'état passent directement par le réseau local, sans le cloud Midea.
 
+Une programmation horaire est intégrée au plugin, avec des profils communs à tous les appareils (par exemple *Normal* et *Vacances*).
+
 Appareils pris en charge :
 
 | Type | Appareil |
@@ -146,6 +148,57 @@ Le bouton **Mettre à jour les commandes** de l'onglet *Commandes* ajoute les co
 | `swing`, `childLock`, `anion`, `pump` + `…On`, `…Off` | A1 | Oscillation, verrouillage enfant, ioniseur, pompe (si l'appareil en a une) |
 | `filterCleaningReminder`, `resetFilter` | A1 | Rappel de nettoyage du filtre et sa réinitialisation |
 | `online`, `refresh` | AC, CC, A1 | Appareil joignable (0/1) et rafraîchissement immédiat |
+| `scheduleEnabled`, `scheduleOn`, `scheduleOff` | AC, CC, A1 | Programmation suivie (0/1), suivre et suspendre la programmation de l'appareil |
+| `profile`, `setProfile` | Programmation | Nom du profil actif et choix du profil (identifiant ou nom) |
+
+## Programmation
+
+Le plugin peut piloter vos appareils selon des horaires, par exemple avec un programme pour la période scolaire et un autre pour les vacances. Tout se passe dans Jeedom, en local. Les programmes de l'application MSmartHome ne sont pas accessibles depuis le réseau local : désactivez-les pour éviter les conflits.
+
+### Profils communs
+
+![Profils de programmation](../images/scheduler.png)
+
+La tuile **Programmation** de la page du plugin ouvre l'équipement *Programmation*, créé automatiquement. Il contient les **profils**, communs à tous les appareils (*Normal* et *Vacances* par défaut) :
+
+- ajoutez, renommez ou supprimez des profils, puis sauvegardez ;
+- choisissez le **profil actif** ici, ou avec la commande action *Choisir le profil* (`setProfile`), par exemple dans un scénario lancé au début et à la fin des vacances. La commande accepte aussi le nom du profil ;
+- la commande info *Profil* (`profile`) donne le nom du profil actif ;
+- désactiver l'équipement *Programmation* suspend la programmation de tous les appareils.
+
+### Créneaux de chaque appareil
+
+![Onglet Programmation](../images/device_schedule.png)
+
+L'onglet **Programmation** de chaque appareil contient ses créneaux. Un créneau comprend :
+
+- un profil, des jours et une heure ;
+- une action : **Allumer** ou **Éteindre** ;
+- pour *Allumer*, des réglages facultatifs : mode, consigne, ventilation et préréglage (par exemple *Nuit*) pour un climatiseur ; mode, humidité et ventilation pour un déshumidificateur. Un réglage laissé vide n'est pas modifié, et choisir un mode allume l'appareil.
+
+Seuls les créneaux du profil actif s'appliquent. La liste **Afficher** filtre le tableau par profil, et un nouveau créneau est ajouté dans le profil affiché.
+
+Options de l'appareil :
+
+- **Suivre la programmation** : l'appareil applique ses créneaux. Les commandes *Suivre la programmation* (`scheduleOn`) et *Suspendre la programmation* (`scheduleOff`) font la même chose depuis un scénario, et l'info *Programmation suivie* (`scheduleEnabled`) donne l'état ;
+- **Rattrapage** (activé par défaut) : au changement de profil, à la reprise de la programmation ou au redémarrage de Jeedom, le dernier créneau passé est appliqué tout de suite, sans attendre le suivant. Par exemple, en passant en *Vacances* à 10 h, la clim prend l'état prévu par le créneau de 8 h du profil *Vacances*.
+
+À savoir :
+
+- les créneaux sont vérifiés chaque minute par la tâche *cron* du plugin, qui doit rester active dans la configuration du plugin ;
+- un réglage manuel (télécommande, widget, scénario) reste en place jusqu'au créneau suivant ;
+- ajouter ou modifier un créneau n'applique rien tout de suite : le prochain créneau est appliqué à son heure.
+
+Exemple pour une clim, en période scolaire et en vacances :
+
+| Profil | Jours | Heure | Action |
+|---|---|---|---|
+| Normal | Lu à Ve | 07:00 | Allumer, Chauffage, 21 °C |
+| Normal | Lu à Ve | 08:00 | Allumer, 18 °C |
+| Normal | Lu à Ve | 16:30 | Allumer, Chauffage, 21 °C |
+| Normal | Lu à Ve | 20:30 | Allumer, 19 °C, préréglage Nuit |
+| Vacances | Lu à Di | 08:00 | Allumer, Chauffage, 20 °C |
+| Vacances | Lu à Di | 21:00 | Éteindre |
 
 ## Diagnostic et fiabilité
 

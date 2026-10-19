@@ -35,6 +35,7 @@ class Daemon:
             'removeDevice': self._on_remove_device,
             'syncDevices': self._on_sync_devices,
             'executeCommand': self._on_execute_command,
+            'executeCommands': self._on_execute_commands,
             'refreshCapabilities': self._on_refresh_capabilities,
             'getDiagnostic': self._on_get_diagnostic,
             'resendValues': self._on_resend_values,
@@ -95,16 +96,24 @@ class Daemon:
             await self._device_manager.remove_device(message['eqLogicId'])
 
     async def _on_execute_command(self, message: dict[str, Any]) -> None:
+        await self._execute(message.get('eqLogicId'), str(message.get('command') or ''), message.get('value'))
+
+    async def _on_execute_commands(self, message: dict[str, Any]) -> None:
+        """Commands of a schedule slot: executed in order (the mode turns the appliance on first)."""
         eq_logic_id = message.get('eqLogicId')
-        command = str(message.get('command') or '')
+        for item in message.get('commands') or []:
+            if isinstance(item, dict):
+                await self._execute(eq_logic_id, str(item.get('command') or ''), item.get('value'))
+
+    async def _execute(self, eq_logic_id: Any, command: str, value: Any) -> None:
         driver = self._device_manager.get_driver(eq_logic_id) if eq_logic_id is not None else None
         reason = None
         if driver is None:
             reason = 'deviceNotRunning'
         else:
-            _LOGGER.info('[%s] Command %s %s', driver.config.label, command, message.get('value', ''))
+            _LOGGER.info('[%s] Command %s %s', driver.config.label, command, '' if value is None else value)
             try:
-                await driver.execute(command, message.get('value'))
+                await driver.execute(command, value)
             except CommandError as error:
                 reason = error.reason
             except Exception as error:

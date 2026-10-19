@@ -4,6 +4,15 @@
 >
 >Wenn keine Informationen zum Update vorliegen, betrifft es nur Aktualisierungen der Dokumentation, der Übersetzung oder des Textes.
 
+# 19/10/2026
+
+- Betaversion 0.10.0
+- Neuer **Zeitplan**: Profile für alle Geräte (standardmäßig *Normal* und *Ferien*, änderbar), Zeitabschnitte für jedes Gerät (Tage, Uhrzeit, ein- oder ausschalten, Modus, Sollwert, Lüfterstufe, Voreinstellung oder Luftfeuchte)
+- Neues Gerät *Zeitplan*, geöffnet über die gleichnamige Kachel: Sein Befehl *Profil wählen* schaltet alle Geräte auf einmal um, zum Beispiel aus einem Ferien-Szenario
+- Nachholen des letzten vergangenen Zeitabschnitts beim Profilwechsel, bei der Wiederaufnahme des Zeitplans oder beim Neustart von Jeedom (pro Gerät abschaltbar)
+- Neue Befehle *Zeitplan befolgen* und *Zeitplan aussetzen* an jedem Gerät
+- Luftentfeuchter: Mehrere nacheinander gesendete Befehle (zum Beispiel Modus, dann Luftfeuchte) heben sich nicht mehr gegenseitig auf
+
 # 17/10/2026
 
 - Betaversion 0.9.2

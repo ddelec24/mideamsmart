@@ -4,6 +4,15 @@
 >
 >Se non ci sono informazioni sull'aggiornamento, significa che riguarda solo l'aggiornamento della documentazione, della traduzione o del testo.
 
+# 19/10/2026
+
+- Versione beta 0.10.0
+- Nuova **programmazione** oraria: profili comuni a tutti gli apparecchi (*Normale* e *Vacanze* per impostazione predefinita, modificabili), fasce proprie di ogni apparecchio (giorni, ora, accendere o spegnere, modalità, setpoint, ventilazione, preimpostazione o umidità)
+- Nuovo dispositivo *Programmazione*, aperto dal riquadro omonimo: il suo comando *Scegli il profilo* cambia tutti gli apparecchi in un colpo solo, per esempio da uno scenario delle vacanze
+- Recupero dell'ultima fascia passata al cambio di profilo, alla ripresa della programmazione o al riavvio di Jeedom (disattivabile per apparecchio)
+- Nuovi comandi *Segui la programmazione* e *Sospendi la programmazione* su ogni apparecchio
+- Deumidificatore: più comandi inviati di seguito (per esempio modalità poi umidità) non si annullano più a vicenda
+
 # 17/10/2026
 
 - Versione beta 0.9.2

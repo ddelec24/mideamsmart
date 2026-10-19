@@ -24,7 +24,17 @@ class mideamsmart extends eqLogic {
 	const DEVICE_TYPE_CC = 'CC';
 	const DEVICE_TYPE_A1 = 'A1';
 
+	// Equipment holding the shared schedule profiles (the appliances have a numeric Midea identifier)
+	const SCHEDULER_LOGICAL_ID = 'scheduler';
+	// A slot reached less than 5 minutes ago is applied even without catch-up (late cron)
+	const SCHEDULE_FRESH_DELAY = 300;
+	const SCHEDULE_LOOKBACK_DAYS = 7;
+
 	public static $_encryptConfigKey = array('cloudAccount', 'cloudPassword');
+
+	// Set by preSave for postSave: the schedule was resumed or edited by this save
+	private $_scheduleResumed = false;
+	private $_scheduleEdited = false;
 
 	/*     * ***********************Methode static*************************** */
 
@@ -51,6 +61,25 @@ class mideamsmart extends eqLogic {
 			return $deviceTypes[$deviceType];
 		}
 		return __('Type non supporté', __FILE__) . ' (0x' . $deviceType . ')';
+	}
+
+	/**
+	 * Midea appliances of the plugin: every equipment except the schedule one.
+	 * @param bool $_onlyEnable
+	 * @return mideamsmart[]
+	 */
+	public static function getDevices($_onlyEnable = false) {
+		$devices = array();
+		foreach (eqLogic::byType(__CLASS__, $_onlyEnable) as $eqLogic) {
+			if (!$eqLogic->isScheduler()) {
+				$devices[] = $eqLogic;
+			}
+		}
+		return $devices;
+	}
+
+	public function isScheduler() {
+		return $this->getLogicalId() === self::SCHEDULER_LOGICAL_ID;
 	}
 
 	public static function preConfig_socketport($_value) {
@@ -256,7 +285,7 @@ class mideamsmart extends eqLogic {
 	 */
 	public static function sendDevicesToDaemon() {
 		$devices = array();
-		foreach (eqLogic::byType(__CLASS__, true) as $eqLogic) {
+		foreach (self::getDevices(true) as $eqLogic) {
 			$devices[] = $eqLogic->getDaemonConfig();
 		}
 		self::sendToDaemon(array(
@@ -557,7 +586,7 @@ class mideamsmart extends eqLogic {
 	public static function health() {
 		$return = array();
 		$deamon_info = self::deamon_info();
-		$eqLogics = eqLogic::byType(__CLASS__, true);
+		$eqLogics = self::getDevices(true);
 		$offline = array();
 		foreach ($eqLogics as $eqLogic) {
 			$online = $eqLogic->getCmd('info', 'online');
@@ -590,7 +619,7 @@ class mideamsmart extends eqLogic {
 		$byType = array();
 		$online = 0;
 		$total = 0;
-		foreach (eqLogic::byType(__CLASS__, true) as $eqLogic) {
+		foreach (self::getDevices(true) as $eqLogic) {
 			$type = $eqLogic->getConfiguration('deviceType', '?') . ' V' . $eqLogic->getConfiguration('protocolVersion', '?');
 			$byType[$type] = isset($byType[$type]) ? $byType[$type] + 1 : 1;
 			$cmd = $eqLogic->getCmd('info', 'online');
@@ -641,7 +670,7 @@ class mideamsmart extends eqLogic {
 	 */
 	public static function syncDevices($_eqLogic = null) {
 		$knownDevices = array();
-		foreach (eqLogic::byType(__CLASS__) as $eqLogic) {
+		foreach (self::getDevices() as $eqLogic) {
 			if ($eqLogic->getLogicalId() === '') {
 				continue;
 			}
@@ -888,6 +917,12 @@ class mideamsmart extends eqLogic {
 	/*     * *********************Méthodes d'instance************************* */
 
 	public function preSave() {
+		if ($this->isScheduler()) {
+			$this->checkProfiles();
+			return;
+		}
+		$this->checkSchedule();
+
 		// Midea type in hexadecimal (AC, CC, A1…): it is displayed in the pages
 		$deviceType = strtoupper(trim($this->getConfiguration('deviceType', '')));
 		if ($deviceType !== '' && !preg_match('/^[0-9A-F]{2}$/', $deviceType)) {
@@ -935,8 +970,25 @@ class mideamsmart extends eqLogic {
 	}
 
 	public function postSave() {
+		if ($this->isScheduler()) {
+			$this->createSchedulerCommands();
+			// The active profile may have been changed in the page
+			self::runSchedules();
+			return;
+		}
 		// Options such as the temperature step change the commands display
 		$this->createCommands(false);
+		$this->checkAndUpdateCmd('scheduleEnabled', $this->getConfiguration('scheduleEnabled', 0));
+		if ($this->_scheduleResumed) {
+			// Resumed: the current slot is applied (catch-up) or the next one is waited for
+			$this->_scheduleResumed = false;
+			$this->resetSchedule();
+			self::runSchedules($this);
+		} elseif ($this->_scheduleEdited) {
+			// Editing the slots must not change the appliance state: wait for the next one
+			$this->_scheduleEdited = false;
+			$this->markScheduleApplied();
+		}
 		$deamon_info = self::deamon_info();
 		if ($deamon_info['state'] != 'ok') {
 			return;
@@ -953,6 +1005,10 @@ class mideamsmart extends eqLogic {
 	}
 
 	public function preRemove() {
+		if ($this->isScheduler()) {
+			return;
+		}
+		cache::delete($this->getScheduleCacheKey());
 		$deamon_info = self::deamon_info();
 		if ($deamon_info['state'] != 'ok') {
 			return;
@@ -1024,7 +1080,7 @@ class mideamsmart extends eqLogic {
 		if ($customImage !== null) {
 			return $customImage;
 		}
-		$deviceType = strtolower($this->getConfiguration('deviceType', ''));
+		$deviceType = $this->isScheduler() ? 'scheduler' : strtolower($this->getConfiguration('deviceType', ''));
 		$image = 'plugins/' . __CLASS__ . '/desktop/img/' . $deviceType . '.png';
 		if ($deviceType !== '' && file_exists(__DIR__ . '/../../../../' . $image)) {
 			return $image;
@@ -1046,6 +1102,380 @@ class mideamsmart extends eqLogic {
 			$pollingInterval = config::byKey('defaultPollingInterval', __CLASS__, self::DEFAULT_POLLING_INTERVAL);
 		}
 		return intval($pollingInterval);
+	}
+
+	/*     * ************************Programmation************************** */
+
+	/**
+	 * Equipment holding the schedule profiles.
+	 * @param bool $_create Creates it when it is missing
+	 * @return mideamsmart|null
+	 */
+	public static function getScheduler($_create = false) {
+		$scheduler = eqLogic::byLogicalId(self::SCHEDULER_LOGICAL_ID, __CLASS__);
+		if (is_object($scheduler)) {
+			return $scheduler;
+		}
+		if (!$_create) {
+			return null;
+		}
+		$scheduler = new self();
+		$scheduler->setEqType_name(__CLASS__);
+		$scheduler->setLogicalId(self::SCHEDULER_LOGICAL_ID);
+		$scheduler->setName(__('Programmation', __FILE__));
+		$scheduler->setIsEnable(1);
+		$scheduler->setIsVisible(1);
+		$scheduler->setConfiguration('profiles', array(
+			array('id' => '1', 'name' => __('Normal', __FILE__)),
+			array('id' => '2', 'name' => __('Vacances', __FILE__)),
+		));
+		$scheduler->setConfiguration('nextProfileId', 3);
+		$scheduler->setConfiguration('activeProfile', '1');
+		$scheduler->save();
+		log::add(__CLASS__, 'info', __('Équipement de programmation créé', __FILE__) . ' : ' . $scheduler->getHumanName());
+		return $scheduler;
+	}
+
+	/**
+	 * @return array Profiles of the schedule equipment: array(array('id' => '1', 'name' => 'Normal'), ...)
+	 */
+	public function getProfiles() {
+		$profiles = $this->getConfiguration('profiles', array());
+		return is_array($profiles) ? array_values($profiles) : array();
+	}
+
+	/**
+	 * @return array|null Active profile of the schedule equipment
+	 */
+	public function getActiveProfile() {
+		$activeProfile = (string) $this->getConfiguration('activeProfile', '');
+		foreach ($this->getProfiles() as $profile) {
+			if ((string) $profile['id'] === $activeProfile) {
+				return $profile;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Checks the profiles of the schedule equipment and gives an identifier to the new ones.
+	 * The identifiers are never reused: the slots of a deleted profile are not taken over by a new one.
+	 */
+	private function checkProfiles() {
+		$nextId = max(1, intval($this->getConfiguration('nextProfileId', 1)));
+		foreach ($this->getProfiles() as $profile) {
+			if (isset($profile['id']) && ctype_digit((string) $profile['id'])) {
+				$nextId = max($nextId, intval($profile['id']) + 1);
+			}
+		}
+		$profiles = array();
+		$names = array();
+		foreach ($this->getProfiles() as $profile) {
+			// | and ; separate the values of the profile list command
+			$name = trim(str_replace(array('|', ';'), '', isset($profile['name']) ? (string) $profile['name'] : ''));
+			if ($name === '') {
+				throw new Exception(__('Le nom d\'un profil ne peut pas être vide', __FILE__));
+			}
+			$key = mb_strtolower($name);
+			if (isset($names[$key])) {
+				throw new Exception(__('Nom de profil en double', __FILE__) . ' : ' . htmlspecialchars($name));
+			}
+			$names[$key] = true;
+			$id = isset($profile['id']) ? trim((string) $profile['id']) : '';
+			if ($id === '') {
+				$id = (string) $nextId++;
+			}
+			$profiles[] = array('id' => $id, 'name' => $name);
+		}
+		if (count($profiles) == 0) {
+			throw new Exception(__('Créez au moins un profil', __FILE__));
+		}
+		$this->setConfiguration('profiles', $profiles);
+		$this->setConfiguration('nextProfileId', $nextId);
+		if ($this->getActiveProfile() === null) {
+			$this->setConfiguration('activeProfile', $profiles[0]['id']);
+		}
+	}
+
+	private function createSchedulerCommands() {
+		$info = $this->getCmd('info', 'profile');
+		if (!is_object($info)) {
+			$info = new mideamsmartCmd();
+			$info->setEqLogic_id($this->getId());
+			$info->setLogicalId('profile');
+			$info->setName(__('Profil', __FILE__));
+			$info->setType('info');
+			$info->setSubType('string');
+			$info->setOrder(1);
+			$info->setIsVisible(0);
+			$info->save();
+		}
+		$action = $this->getCmd('action', 'setProfile');
+		if (!is_object($action)) {
+			$action = new mideamsmartCmd();
+			$action->setEqLogic_id($this->getId());
+			$action->setLogicalId('setProfile');
+			$action->setName(__('Choisir le profil', __FILE__));
+			$action->setType('action');
+			$action->setSubType('select');
+			$action->setOrder(2);
+			$action->setIsVisible(1);
+		}
+		$values = array();
+		foreach ($this->getProfiles() as $profile) {
+			$values[] = $profile['id'] . '|' . $profile['name'];
+		}
+		$action->setConfiguration('listValue', implode(';', $values));
+		$action->setValue($info->getId());
+		$action->save();
+		$activeProfile = $this->getActiveProfile();
+		$this->checkAndUpdateCmd('profile', is_array($activeProfile) ? $activeProfile['name'] : '');
+	}
+
+	/**
+	 * Changes the active profile (command of the schedule equipment) and applies it at once.
+	 * @param string $_value Profile identifier or name (case insensitive)
+	 */
+	public function setActiveProfile($_value) {
+		$value = trim((string) $_value);
+		foreach ($this->getProfiles() as $profile) {
+			if ((string) $profile['id'] !== $value && mb_strtolower($profile['name']) !== mb_strtolower($value)) {
+				continue;
+			}
+			if ((string) $this->getConfiguration('activeProfile', '') !== (string) $profile['id']) {
+				log::add(__CLASS__, 'info', __('Profil de programmation actif', __FILE__) . ' : ' . $profile['name']);
+			}
+			$this->setConfiguration('activeProfile', (string) $profile['id']);
+			// Direct save: no preSave/postSave, the profiles do not change
+			$this->save(true);
+			$this->checkAndUpdateCmd('profile', $profile['name']);
+			self::runSchedules();
+			return;
+		}
+		throw new Exception(__('Profil de programmation inconnu', __FILE__) . ' : ' . htmlspecialchars($value));
+	}
+
+	/**
+	 * Checks the schedule of an appliance (slots edited in the page).
+	 */
+	private function checkSchedule() {
+		$slots = $this->getConfiguration('scheduleSlots', array());
+		$checkedSlots = array();
+		foreach (is_array($slots) ? $slots : array() as $slot) {
+			if (!is_array($slot)) {
+				continue;
+			}
+			$time = isset($slot['time']) ? trim((string) $slot['time']) : '';
+			if (!preg_match('/^([01][0-9]|2[0-3]):[0-5][0-9]$/', $time)) {
+				throw new Exception(__('Heure de créneau invalide', __FILE__) . ' : ' . htmlspecialchars($time));
+			}
+			$days = array();
+			foreach ((isset($slot['days']) && is_array($slot['days'])) ? $slot['days'] : array() as $day) {
+				if (intval($day) >= 1 && intval($day) <= 7) {
+					$days[intval($day)] = intval($day);
+				}
+			}
+			if (count($days) == 0) {
+				throw new Exception(__('Choisissez au moins un jour pour le créneau de', __FILE__) . ' ' . $time);
+			}
+			ksort($days);
+			$checkedSlot = array(
+				'profile' => isset($slot['profile']) ? (string) $slot['profile'] : '',
+				'days' => array_values($days),
+				'time' => $time,
+				'action' => (isset($slot['action']) && $slot['action'] == 'off') ? 'off' : 'on',
+			);
+			if ($checkedSlot['action'] == 'on') {
+				foreach (array('mode', 'fanSpeed', 'preset') as $key) {
+					if (isset($slot[$key]) && trim((string) $slot[$key]) !== '') {
+						$checkedSlot[$key] = trim((string) $slot[$key]);
+					}
+				}
+				foreach (array('targetTemperature' => array(0, 50), 'targetHumidity' => array(0, 100)) as $key => $limits) {
+					$value = isset($slot[$key]) ? str_replace(',', '.', trim((string) $slot[$key])) : '';
+					if ($value === '') {
+						continue;
+					}
+					if (!is_numeric($value) || floatval($value) < $limits[0] || floatval($value) > $limits[1]) {
+						throw new Exception(__('Valeur invalide dans le créneau de', __FILE__) . ' ' . $time . ' : ' . htmlspecialchars($value));
+					}
+					$checkedSlot[$key] = floatval($value);
+				}
+			}
+			$checkedSlots[] = $checkedSlot;
+		}
+		usort($checkedSlots, function ($a, $b) {
+			return strcmp($a['profile'] . ' ' . $a['time'], $b['profile'] . ' ' . $b['time']);
+		});
+		$this->setConfiguration('scheduleSlots', $checkedSlots);
+		$scheduleEnabled = ($this->getConfiguration('scheduleEnabled', 0) == 1) ? 1 : 0;
+		$this->setConfiguration('scheduleEnabled', $scheduleEnabled);
+		$this->setConfiguration('scheduleCatchUp', ($this->getConfiguration('scheduleCatchUp', 1) == 1) ? 1 : 0);
+
+		$previous = ($this->getId() != '') ? self::byId($this->getId()) : null;
+		$previousSlots = is_object($previous) ? $previous->getConfiguration('scheduleSlots', array()) : array();
+		$this->_scheduleResumed = ($scheduleEnabled == 1 && (!is_object($previous) || $previous->getConfiguration('scheduleEnabled', 0) != 1));
+		$this->_scheduleEdited = (json_encode($previousSlots) !== json_encode($checkedSlots));
+	}
+
+	/**
+	 * Suspends or resumes the schedule of the appliance (commands scheduleOff and scheduleOn).
+	 * @param bool $_enabled
+	 */
+	public function setScheduleEnabled($_enabled) {
+		$enabled = $_enabled ? 1 : 0;
+		$resumed = ($enabled == 1 && $this->getConfiguration('scheduleEnabled', 0) != 1);
+		$this->setConfiguration('scheduleEnabled', $enabled);
+		// Direct save: the daemon configuration does not change
+		$this->save(true);
+		$this->checkAndUpdateCmd('scheduleEnabled', $enabled);
+		log::add(__CLASS__, 'info', $this->getHumanName() . ' : ' . ($enabled ? __('programmation suivie', __FILE__) : __('programmation suspendue', __FILE__)));
+		if ($resumed) {
+			$this->resetSchedule();
+			self::runSchedules($this);
+		}
+	}
+
+	public static function cron() {
+		self::runSchedules();
+	}
+
+	/**
+	 * Applies the schedule slots that are due.
+	 * @param mideamsmart|null $_eqLogic Only this appliance, or every appliance that follows the schedule
+	 */
+	public static function runSchedules($_eqLogic = null) {
+		$scheduler = self::getScheduler();
+		if (!is_object($scheduler) || $scheduler->getIsEnable() != 1) {
+			return;
+		}
+		$profileId = (string) $scheduler->getConfiguration('activeProfile', '');
+		$now = time();
+		foreach (is_object($_eqLogic) ? array($_eqLogic) : self::getDevices(true) as $eqLogic) {
+			if ($eqLogic->getIsEnable() != 1 || $eqLogic->getConfiguration('scheduleEnabled', 0) != 1) {
+				continue;
+			}
+			try {
+				$eqLogic->runSchedule($profileId, $now);
+			} catch (Exception $e) {
+				log::add(__CLASS__, 'warning', $eqLogic->getHumanName() . ' : ' . __('créneau de programmation non appliqué', __FILE__) . ' : ' . $e->getMessage());
+			}
+		}
+	}
+
+	/**
+	 * Most recent past occurrence of the slots of a profile, over the last 7 days.
+	 * @param array $_slots
+	 * @param string $_profileId
+	 * @param int $_now Timestamp
+	 * @return array|null array('slot' => array, 'timestamp' => int)
+	 */
+	public static function findLastOccurrence($_slots, $_profileId, $_now) {
+		$last = null;
+		foreach (is_array($_slots) ? $_slots : array() as $slot) {
+			if (!is_array($slot) || !isset($slot['profile'], $slot['time'], $slot['days']) || (string) $slot['profile'] !== (string) $_profileId) {
+				continue;
+			}
+			if (!preg_match('/^([0-9]{2}):([0-9]{2})$/', $slot['time'], $matches)) {
+				continue;
+			}
+			$days = array_map('intval', (array) $slot['days']);
+			for ($i = 0; $i <= self::SCHEDULE_LOOKBACK_DAYS; $i++) {
+				$day = strtotime('-' . $i . ' days', $_now);
+				$timestamp = mktime(intval($matches[1]), intval($matches[2]), 0, date('n', $day), date('j', $day), date('Y', $day));
+				if ($timestamp > $_now || !in_array(intval(date('N', $day)), $days)) {
+					continue;
+				}
+				if ($last === null || $timestamp > $last['timestamp']) {
+					$last = array('slot' => $slot, 'timestamp' => $timestamp);
+				}
+				break;
+			}
+		}
+		return $last;
+	}
+
+	private static function getOccurrenceKey($_occurrence, $_profileId) {
+		if ($_occurrence === null) {
+			return $_profileId . '|';
+		}
+		return $_profileId . '|' . sha1(json_encode($_occurrence['slot'])) . '|' . date('Y-m-d H:i', $_occurrence['timestamp']);
+	}
+
+	private function getScheduleCacheKey() {
+		return __CLASS__ . '::schedule::' . $this->getId();
+	}
+
+	public function getScheduleSlots() {
+		$slots = $this->getConfiguration('scheduleSlots', array());
+		return is_array($slots) ? $slots : array();
+	}
+
+	/**
+	 * Applies the current slot of the profile when it was not applied yet.
+	 * @param string $_profileId
+	 * @param int $_now Timestamp
+	 * @return bool A new occurrence was handled
+	 */
+	public function runSchedule($_profileId, $_now) {
+		$occurrence = self::findLastOccurrence($this->getScheduleSlots(), $_profileId, $_now);
+		$key = self::getOccurrenceKey($occurrence, $_profileId);
+		if (cache::byKey($this->getScheduleCacheKey())->getValue('') === $key) {
+			return false;
+		}
+		if ($occurrence !== null) {
+			$fresh = ($_now - $occurrence['timestamp']) < self::SCHEDULE_FRESH_DELAY;
+			if ($fresh || $this->getConfiguration('scheduleCatchUp', 1) == 1) {
+				// Not remembered when the daemon cannot be reached: new try at the next minute
+				$this->applyScheduleSlot($occurrence['slot'], $fresh);
+			}
+		}
+		cache::set($this->getScheduleCacheKey(), $key);
+		return true;
+	}
+
+	private function markScheduleApplied() {
+		$scheduler = self::getScheduler();
+		if (!is_object($scheduler)) {
+			return;
+		}
+		$profileId = (string) $scheduler->getConfiguration('activeProfile', '');
+		cache::set($this->getScheduleCacheKey(), self::getOccurrenceKey(self::findLastOccurrence($this->getScheduleSlots(), $profileId, time()), $profileId));
+	}
+
+	private function resetSchedule() {
+		cache::delete($this->getScheduleCacheKey());
+	}
+
+	/**
+	 * Sends the commands of a slot to the appliance, in one message (executed in this order).
+	 * @param array $_slot
+	 * @param bool $_fresh false when the slot is caught up
+	 */
+	public function applyScheduleSlot($_slot, $_fresh = true) {
+		$commands = array();
+		if ($_slot['action'] == 'off') {
+			$commands[] = array('command' => 'off', 'value' => null);
+		} else {
+			// Choosing a mode turns the appliance on
+			if (isset($_slot['mode']) && is_object($this->getCmd('action', 'setMode'))) {
+				$commands[] = array('command' => 'setMode', 'value' => $_slot['mode']);
+			} else {
+				$commands[] = array('command' => 'on', 'value' => null);
+			}
+			foreach (array('targetTemperature' => 'setTargetTemperature', 'fanSpeed' => 'setFanSpeed', 'preset' => 'setPreset', 'targetHumidity' => 'setTargetHumidity') as $key => $logicalId) {
+				if (!isset($_slot[$key])) {
+					continue;
+				}
+				if (!is_object($this->getCmd('action', $logicalId))) {
+					log::add(__CLASS__, 'debug', $this->getHumanName() . ' : ' . __('commande absente, ignorée', __FILE__) . ' : ' . $logicalId);
+					continue;
+				}
+				$commands[] = array('command' => $logicalId, 'value' => $_slot[$key]);
+			}
+		}
+		self::sendToDaemon(array('action' => 'executeCommands', 'eqLogicId' => intval($this->getId()), 'commands' => $commands));
+		log::add(__CLASS__, 'info', $this->getHumanName() . ' : ' . __('créneau de programmation appliqué', __FILE__) . ' ' . $_slot['time'] . ($_fresh ? '' : ' (' . __('rattrapage', __FILE__) . ')') . ' : ' . json_encode($commands));
 	}
 
 	/*     * **********************Getteur Setteur*************************** */
@@ -1072,6 +1502,17 @@ class mideamsmartCmd extends cmd {
 		}
 		if ($this->getSubType() != 'other' && ($value === null || $value === '')) {
 			throw new Exception(__('Aucune valeur fournie pour la commande', __FILE__) . ' ' . $this->getHumanName());
+		}
+		// Commands handled by Jeedom only
+		if ($eqLogic->isScheduler()) {
+			if ($this->getLogicalId() == 'setProfile') {
+				$eqLogic->setActiveProfile($value);
+			}
+			return;
+		}
+		if ($this->getLogicalId() == 'scheduleOn' || $this->getLogicalId() == 'scheduleOff') {
+			$eqLogic->setScheduleEnabled($this->getLogicalId() == 'scheduleOn');
+			return;
 		}
 		mideamsmart::sendToDaemon(array(
 			'action' => 'executeCommand',

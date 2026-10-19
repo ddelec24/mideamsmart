@@ -4,6 +4,15 @@
 >
 >If there is no information about the update, it means that it only concerns documentation, translation or text updates.
 
+# 19/10/2026
+
+- Beta version 0.10.0
+- New **schedule**: profiles shared by all the appliances (*Normal* and *Holidays* by default, editable), slots specific to each appliance (days, time, turn on or off, mode, setpoint, fan speed, preset or humidity)
+- New *Schedule* equipment, opened by the tile of the same name: its *Choose the profile* command switches every appliance at once, for example from a holidays scenario
+- Catch-up of the last past slot when the profile changes, when the schedule is resumed or when Jeedom restarts (can be disabled per appliance)
+- New *Follow the schedule* and *Suspend the schedule* commands on each appliance
+- Dehumidifier: several commands sent in a row (for example mode then humidity) no longer cancel each other
+
 # 17/10/2026
 
 - Beta version 0.9.2

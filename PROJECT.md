@@ -1,7 +1,7 @@
 # mideamsmart — Récapitulatif projet
 
 > Document de référence du plugin, à relire avant chaque étape et à mettre à jour à chaque décision.
-> Dernière mise à jour : 2026-10-16 (étapes 1 à 8 terminées ; 0.9.1-beta : corrections des premiers retours testeur ; 0.9.2-beta : copie du diagnostic en HTTP, 2026-10-17)
+> Dernière mise à jour : 2026-10-19 (étapes 1 à 8 terminées ; 0.9.1 et 0.9.2-beta : retours testeur ; 0.10.0-beta : programmation, section 13)
 
 ## 1. Contexte
 
@@ -478,3 +478,78 @@ mideamsmart/
   - `lastCommunication` avance à chaque interrogation, avec des valeurs simulées fixes ;
   - « Mettre à jour les commandes » passe de 19 à 18 commandes (`defrostActive` retirée) ;
   - nouveaux champs visibles dans la fenêtre de diagnostic.
+
+## 13. Programmation — 0.10.0-beta (2026-10-19)
+
+**Demande** (testeur, 2026-10-19) : programmes différents en période scolaire et en vacances, avec bascule automatique par son automatisme « vacances scolaires ». Les programmes de l'appli MSmartHome sont inaccessibles : le protocole local n'a qu'une minuterie simple, non décodée par msmart-ng, et aucune bibliothèque ne connaît d'API cloud pour les programmes. La programmation est donc faite dans Jeedom, en local.
+
+**Choix validés par Damien** :
+1. **Profils communs** au compte, **créneaux par équipement** ;
+2. **rattrapage** du dernier créneau passé, activé par défaut et désactivable par équipement.
+
+### Modèle
+- **Équipement « Programmation »** : eqLogic du plugin, `logicalId = 'scheduler'` (les appareils ont un identifiant Midea numérique), méthode `isScheduler()`.
+  - Configuration `profiles` : `[{id: '1', name: 'Normal'}, {id: '2', name: 'Vacances'}]`. L'`id` est stable, donc renommer un profil ne casse pas les créneaux.
+  - Configuration `activeProfile` : id du profil actif.
+  - Commandes :
+    - info `profile` (texte) : nom du profil actif, utilisable dans les scénarios ;
+    - action `setProfile` (liste) : `id|nom`. Accepte aussi un nom, sans tenir compte de la casse.
+  - Créé à l'installation ou à la mise à jour, et par la tuile « Programmation » de la page du plugin s'il a été supprimé. Désactivé = programmation suspendue partout.
+  - Exclu de tout ce qui concerne les appareils : démon, synchronisation, santé, infos communauté, liste « Mes appareils ».
+- **Par appareil** (AC, CC, A1) :
+  - configuration `scheduleEnabled` (0 par défaut, « Suivre la programmation »), `scheduleCatchUp` (1 par défaut) et `scheduleSlots` ;
+  - créneau : `{profile, days: [1..7] (ISO, 1 = lundi), time: 'HH:MM', action: 'on'|'off', mode, targetTemperature, fanSpeed, preset, targetHumidity}`. Un champ vide laisse le réglage inchangé ;
+  - commandes locales (jamais envoyées au démon) : info `scheduleEnabled` ; actions `scheduleOn` (Suivre la programmation) et `scheduleOff` (Suspendre la programmation).
+
+### Exécution
+- `cron()` du plugin, chaque minute. Pour chaque appareil actif qui suit la programmation :
+  - l'**occurrence courante** est le créneau du profil actif dont la dernière échéance (jour + heure, sur 7 jours glissants) est la plus récente avant maintenant ;
+  - clé = `profil | empreinte du créneau | date de l'échéance`, comparée à la dernière clé appliquée, gardée en cache (`mideamsmart::schedule::<id>`) ;
+  - si la clé change, le créneau est appliqué quand l'échéance date de moins de 5 min (créneau « frais », tolère un cron en retard) ou quand le rattrapage est actif. Sinon la clé est simplement mémorisée ;
+  - si le démon n'est pas joignable, la clé n'est pas mémorisée et l'essai est refait à la minute suivante.
+- Ce que donne le rattrapage :
+  - **changement de profil** (la clé contient le profil) : appliqué tout de suite, sans attendre le cron ;
+  - **reprise** de la programmation (`scheduleOn`, ou case cochée) : la clé est effacée ;
+  - **redémarrage de Jeedom** : cache perdu ou créneau manqué.
+  - Enregistrer l'équipement sans changer « Suivre » marque l'occurrence courante comme appliquée : modifier un créneau ne fait pas bouger la clim.
+- Application : action `executeCommands` du démon (liste `[{command, value}]` exécutée dans l'ordre, dans une seule tâche).
+  - `off` → `off` ;
+  - `on` → `setMode` (qui allume) ou `on`, puis `setTargetTemperature`, `setFanSpeed`, `setPreset` (AC/CC) ou `setTargetHumidity` (A1) ;
+  - seulement les commandes qui existent sur l'équipement.
+- Un réglage manuel (télécommande, widget) reste en place jusqu'au créneau suivant.
+
+### Interface
+- Tuile « Programmation » dans la zone Gestion de la page du plugin : ouvre l'équipement Programmation, et le crée s'il manque. Sur cet équipement, le panneau « Profils » remplace les panneaux propres aux appareils.
+- Onglet « Programmation » des appareils :
+  - cases Suivre et Rattrapage, rappel du profil actif ;
+  - tableau des créneaux : profil, jours, heure, action, mode, consigne, ventilation, préréglage ou humidité ;
+  - listes construites depuis les capacités de l'appareil et les libellés de `commands.json` ;
+  - contexte (profils, profil actif) lu en ajax à l'affichage (`getScheduleContext`).
+
+### Correctif trouvé en route : commandes A1 enchaînées
+- Un créneau envoie plusieurs commandes à la suite (`setMode` puis `setTargetHumidity`).
+- midea-local construit chaque message Set à partir des attributs connus : la consigne d'humidité, envoyée avant la confirmation du mode, remettait l'ancien mode. Constaté sur la trame du faux appareil : mode 02, puis 03.
+- `A1Driver._set()` attend maintenant que l'appareil confirme l'attribut, au plus `SET_CONFIRMATION_TIMEOUT`, sans erreur si la confirmation n'arrive pas, avant de rendre la main. La comparaison `same_value` tolère nombre et texte (seuil du réservoir).
+- Ce cas concernait aussi les scénarios qui enchaînaient deux commandes.
+
+### Validé (2026-10-19)
+- 42 tests du démon. Nouveaux :
+  - `executeCommands` exécute dans l'ordre, et une commande refusée n'arrête pas les suivantes ;
+  - commandes A1 enchaînées (le test échoue sans le correctif).
+- `findLastOccurrence` : semaine, week-end et passage à l'heure d'hiver (25/10/2026).
+- Jeedom de dev (faux appareils), scénario complet :
+  - reprise : créneau frais appliqué ;
+  - second passage : rien ;
+  - profil Vacances choisi par son nom : rattrapage ;
+  - suspension puis reprise : rattrapage ;
+  - sans rattrapage : rien ;
+  - créneau modifié : rien ;
+  - jour manquant et profil inconnu : refusés.
+- Cron réel de Jeedom : créneau A1 appliqué à son heure, mode et humidité conservés.
+- Interface (Playwright, aucune erreur JS) :
+  - tuile Programmation et profils (ajout de « Absent », id 3, `nextProfileId` 4) ;
+  - 6 créneaux sur 2 profils, enregistrés puis relus ;
+  - suppression de tous les créneaux enregistrée (`[]`) ;
+  - champs A1 : mode, humidité, ventilation.
+- Le faux AC ne simule pas les préréglages : `setPreset sleep` est bien envoyé (log du démon), mais l'état ne change pas.
+- Captures `scheduler.png`, `device_schedule.png` et `plugin_devices.png` (tuile) prises avec `ONLY=` dans `tools/doc_screenshots.py` ; Chromium lancé avec `LANG=fr_FR.UTF-8` pour des heures sur 24 h.

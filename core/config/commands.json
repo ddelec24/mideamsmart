@@ -192,6 +192,9 @@
 		{ "logicalId": "pumpOn", "name": "{{Pompe marche}}", "type": "action", "subType": "other", "types": ["A1"], "feature": "pump", "value": "pump" },
 		{ "logicalId": "pumpOff", "name": "{{Pompe arrêt}}", "type": "action", "subType": "other", "types": ["A1"], "feature": "pump", "value": "pump" },
 		{ "logicalId": "filterCleaningReminder", "name": "{{Filtre à nettoyer}}", "type": "info", "subType": "binary", "types": ["A1"], "template": "core::tmplicon", "displayParameters": {"_icon_on_": "<i class='fas fa-filter icon_red'></i>", "_icon_off_": "<i class='fas fa-filter icon_green'></i>"} },
-		{ "logicalId": "resetFilter", "name": "{{Réinitialiser le rappel du filtre}}", "type": "action", "subType": "other", "types": ["A1"], "isVisible": 0 }
+		{ "logicalId": "resetFilter", "name": "{{Réinitialiser le rappel du filtre}}", "type": "action", "subType": "other", "types": ["A1"], "isVisible": 0 },
+		{ "logicalId": "scheduleEnabled", "name": "{{Programmation suivie}}", "type": "info", "subType": "binary", "types": ["AC", "CC", "A1"], "isVisible": 0, "template": "core::tmplicon", "displayParameters": {"_icon_on_": "<i class='far fa-calendar-check icon_green'></i>", "_icon_off_": "<i class='far fa-calendar-times'></i>"} },
+		{ "logicalId": "scheduleOn", "name": "{{Suivre la programmation}}", "type": "action", "subType": "other", "types": ["AC", "CC", "A1"], "value": "scheduleEnabled", "isVisible": 0 },
+		{ "logicalId": "scheduleOff", "name": "{{Suspendre la programmation}}", "type": "action", "subType": "other", "types": ["AC", "CC", "A1"], "value": "scheduleEnabled", "isVisible": 0 }
 	]
 }

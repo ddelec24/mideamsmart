@@ -35,6 +35,11 @@ $jeedomInfo = array(
 		'timeout' => intval($eqLogic->getStatus('timeout', 0)),
 		'commands' => count($eqLogic->getCmd()),
 	),
+	'schedule' => array(
+		'enabled' => intval($eqLogic->getConfiguration('scheduleEnabled', 0)),
+		'catchUp' => intval($eqLogic->getConfiguration('scheduleCatchUp', 1)),
+		'slots' => count($eqLogic->getScheduleSlots()),
+	),
 	'capabilities' => $capabilities,
 );
 sendVarToJS('mideamsmartDiagnostic', array(

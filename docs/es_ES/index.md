@@ -13,6 +13,8 @@ La cuenta MSmartHome solo sirve para:
 
 Después, todos los comandos y lecturas de estado pasan directamente por la red local, sin la nube de Midea.
 
+El plugin incluye una programación horaria, con perfiles comunes a todos los aparatos (por ejemplo *Normal* y *Vacaciones*).
+
 Aparatos compatibles:
 
 | Tipo | Aparato |
@@ -146,6 +148,57 @@ El botón **Actualizar los comandos** de la pestaña *Comandos* añade los coman
 | `swing`, `childLock`, `anion`, `pump` + `…On`, `…Off` | A1 | Oscilación, bloqueo infantil, ionizador, bomba (si el aparato tiene una) |
 | `filterCleaningReminder`, `resetFilter` | A1 | Aviso de limpieza del filtro y su restablecimiento |
 | `online`, `refresh` | AC, CC, A1 | Aparato accesible (0/1) y actualización inmediata |
+| `scheduleEnabled`, `scheduleOn`, `scheduleOff` | AC, CC, A1 | Programación seguida (0/1), seguir y suspender la programación del aparato |
+| `profile`, `setProfile` | Programación | Nombre del perfil activo y elección del perfil (identificador o nombre) |
+
+## Programación
+
+El plugin puede controlar sus aparatos según horarios, por ejemplo con un programa para el periodo escolar y otro para las vacaciones. Todo ocurre en Jeedom, en local. Los programas de la aplicación MSmartHome no son accesibles desde la red local: desactívelos para evitar conflictos.
+
+### Perfiles comunes
+
+![Perfiles de programación](../images/scheduler.png)
+
+El icono **Programación** de la página del plugin abre el equipo *Programación*, creado automáticamente. Contiene los **perfiles**, comunes a todos los aparatos (*Normal* y *Vacaciones* por defecto):
+
+- añada, renombre o elimine perfiles y luego guarde;
+- elija el **perfil activo** aquí, o con el comando de acción *Elegir el perfil* (`setProfile`), por ejemplo en un escenario lanzado al principio y al final de las vacaciones. El comando también acepta el nombre del perfil;
+- el comando de información *Perfil* (`profile`) da el nombre del perfil activo;
+- desactivar el equipo *Programación* suspende la programación de todos los aparatos.
+
+### Franjas de cada aparato
+
+![Pestaña Programación](../images/device_schedule.png)
+
+La pestaña **Programación** de cada aparato contiene sus franjas. Una franja incluye:
+
+- un perfil, unos días y una hora;
+- una acción: **Encender** o **Apagar**;
+- para *Encender*, ajustes opcionales: modo, consigna, ventilación y preajuste (por ejemplo *Noche*) para un aire acondicionado; modo, humedad y ventilación para un deshumidificador. Un ajuste vacío no se modifica, y elegir un modo enciende el aparato.
+
+Solo se aplican las franjas del perfil activo. La lista **Mostrar** filtra la tabla por perfil, y una nueva franja se añade en el perfil mostrado.
+
+Opciones del aparato:
+
+- **Seguir la programación**: el aparato aplica sus franjas. Los comandos *Seguir la programación* (`scheduleOn`) y *Suspender la programación* (`scheduleOff`) hacen lo mismo desde un escenario, y la información *Programación seguida* (`scheduleEnabled`) da el estado;
+- **Recuperación** (activada por defecto): al cambiar de perfil, al reanudar la programación o al reiniciar Jeedom, la última franja pasada se aplica de inmediato, sin esperar a la siguiente. Por ejemplo, al pasar a *Vacaciones* a las 10 h, el aire acondicionado toma el estado previsto por la franja de las 8 h del perfil *Vacaciones*.
+
+Conviene saber:
+
+- las franjas se comprueban cada minuto con la tarea *cron* del plugin, que debe seguir activa en la configuración del plugin;
+- un ajuste manual (mando, widget, escenario) se mantiene hasta la franja siguiente;
+- añadir o modificar una franja no aplica nada de inmediato: la próxima franja se aplica a su hora.
+
+Ejemplo para un aire acondicionado, en periodo escolar y en vacaciones:
+
+| Perfil | Días | Hora | Acción |
+|---|---|---|---|
+| Normal | Lu a Vi | 07:00 | Encender, Calefacción, 21 °C |
+| Normal | Lu a Vi | 08:00 | Encender, 18 °C |
+| Normal | Lu a Vi | 16:30 | Encender, Calefacción, 21 °C |
+| Normal | Lu a Vi | 20:30 | Encender, 19 °C, preajuste Noche |
+| Vacaciones | Lu a Do | 08:00 | Encender, Calefacción, 20 °C |
+| Vacaciones | Lu a Do | 21:00 | Apagar |
 
 ## Diagnóstico y fiabilidad
 

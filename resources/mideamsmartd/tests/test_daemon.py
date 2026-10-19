@@ -6,10 +6,12 @@ import os
 import socket
 import tempfile
 import unittest
+from unittest import mock
 
 from aiohttp import web
 
 from mideamsmart_daemon.daemon import Daemon
+from mideamsmart_daemon.drivers.base import CommandError
 from mideamsmart_daemon.jeedom import JeedomSocketServer, merge_dict, redact
 
 APIKEY = 'test-apikey'
@@ -169,6 +171,28 @@ class DaemonTest(unittest.IsolatedAsyncioTestCase):
         # The socket is closed
         with self.assertRaises(OSError):
             await send_to_daemon(self.socket_port, {'apikey': APIKEY, 'action': 'stop'})
+
+    async def test_execute_commands_in_order(self):
+        daemon = self.make_daemon()
+        executed = []
+
+        class Driver:
+            config = mock.Mock(label='AC')
+
+            async def execute(self, command, value):
+                await asyncio.sleep(0.01 if command == 'setMode' else 0)
+                if command == 'setPreset':
+                    raise CommandError('unsupportedValue')
+                executed.append((command, value))
+
+        with mock.patch.object(daemon.device_manager, 'get_driver', return_value=Driver()):
+            await daemon.handle_message({'action': 'executeCommands', 'eqLogicId': 7, 'commands': [
+                {'command': 'setMode', 'value': 'heat'}, {'command': 'setPreset', 'value': 'sleep'},
+                {'command': 'setTargetTemperature', 'value': 19}, 'invalid']})
+        # The mode (which turns the appliance on) first, a refused command does not stop the next ones
+        self.assertEqual(executed, [('setMode', 'heat'), ('setTargetTemperature', 19)])
+        error = await self.jeedom.wait_for('commandError')
+        self.assertEqual((error['command'], error['reason']), ('setPreset', 'unsupportedValue'))
 
     async def test_unreachable_jeedom(self):
         daemon = self.make_daemon(callback_url=f'http://127.0.0.1:{free_port()}/jeemideamsmart.php')

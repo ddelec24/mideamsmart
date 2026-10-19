@@ -4,6 +4,15 @@
 >
 >S'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 19/10/2026
+
+- Version bêta 0.10.0
+- Nouvelle **programmation** horaire : profils communs à tous les appareils (*Normal* et *Vacances* par défaut, modifiables), créneaux propres à chaque appareil (jours, heure, allumer ou éteindre, mode, consigne, ventilation, préréglage ou humidité)
+- Nouvel équipement *Programmation*, ouvert par la tuile du même nom : sa commande *Choisir le profil* bascule tous les appareils d'un coup, par exemple depuis un scénario de vacances
+- Rattrapage du dernier créneau passé au changement de profil, à la reprise de la programmation ou au redémarrage de Jeedom (désactivable par appareil)
+- Nouvelles commandes *Suivre la programmation* et *Suspendre la programmation* sur chaque appareil
+- Déshumidificateur : plusieurs commandes envoyées à la suite (par exemple mode puis humidité) ne s'annulent plus
+
 # 17/10/2026
 
 - Version bêta 0.9.2
