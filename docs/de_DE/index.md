@@ -121,7 +121,7 @@ Die Befehle werden automatisch **entsprechend den von jedem Gerät gemeldeten Fu
 
 Text-Infobefehle enthalten einen **stabilen, sprachunabhängigen Code** (zum Beispiel `cool`): Verwenden Sie diese Codes in Ihren Szenarien. Die zugehörigen Aktionsbefehle bieten übersetzte Bezeichnungen. Infos, die bereits von einer verknüpften Aktion angezeigt werden, sind standardmäßig ausgeblendet.
 
-Die Schaltfläche **Befehle aktualisieren** im Reiter *Befehle* legt fehlende Befehle an, entfernt die Befehle von Funktionen, die das Gerät nicht mehr meldet, und liest anschließend seine Funktionen neu ein. Namen und Einstellungen Ihrer vorhandenen Befehle bleiben erhalten.
+Die Schaltfläche **Befehle aktualisieren** im Reiter *Befehle* legt fehlende Befehle an, entfernt die Befehle von Funktionen, die das Gerät nicht mehr meldet, und liest anschließend seine Funktionen neu ein. Namen und Einstellungen Ihrer vorhandenen Befehle bleiben erhalten. Befehle, die Sie selbst zum Gerät hinzugefügt haben (dem Plugin unbekannte logische Kennung), werden nie entfernt.
 
 | Logische ID | Geräte | Inhalt |
 |---|---|---|

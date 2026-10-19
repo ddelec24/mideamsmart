@@ -448,15 +448,18 @@ class mideamsmart extends eqLogic {
 		$created = 0;
 		$order = 0;
 		if ($_removeObsolete) {
-			// Commands of another appliance type (type changed by hand)
+			// Commands of another appliance type (type changed by hand). The commands added by the
+			// user (logicalId unknown to the plugin) are kept
+			$pluginLogicalIds = array();
 			$typeLogicalIds = array();
 			foreach ($definitions['commands'] as $definition) {
+				$pluginLogicalIds[] = $definition['logicalId'];
 				if (in_array($deviceType, $definition['types'])) {
 					$typeLogicalIds[] = $definition['logicalId'];
 				}
 			}
 			foreach ($this->getCmd() as $cmd) {
-				if (!in_array($cmd->getLogicalId(), $typeLogicalIds)) {
+				if (in_array($cmd->getLogicalId(), $pluginLogicalIds) && !in_array($cmd->getLogicalId(), $typeLogicalIds)) {
 					$cmd->remove();
 				}
 			}

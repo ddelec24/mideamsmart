@@ -6,6 +6,8 @@
 
 # 19/10/2026
 
+- Version bêta 0.10.1
+- Les commandes ajoutées à la main sur un équipement (par un script ou un scénario) ne sont plus supprimées par **Mettre à jour les commandes** ni à la réception des capacités de l'appareil
 - Version bêta 0.10.0
 - Nouvelle **programmation** horaire : profils communs à tous les appareils (*Normal* et *Vacances* par défaut, modifiables), créneaux propres à chaque appareil (jours, heure, allumer ou éteindre, mode, consigne, ventilation, préréglage ou humidité)
 - Nouvel équipement *Programmation*, ouvert par la tuile du même nom : sa commande *Choisir le profil* bascule tous les appareils d'un coup, par exemple depuis un scénario de vacances

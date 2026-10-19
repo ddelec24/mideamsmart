@@ -6,6 +6,8 @@
 
 # 19/10/2026
 
+- Versione beta 0.10.1
+- I comandi aggiunti a mano a un dispositivo (da uno script o da uno scenario) non vengono più rimossi da **Aggiorna i comandi** né alla ricezione delle funzionalità dell'apparecchio
 - Versione beta 0.10.0
 - Nuova **programmazione** oraria: profili comuni a tutti gli apparecchi (*Normale* e *Vacanze* per impostazione predefinita, modificabili), fasce proprie di ogni apparecchio (giorni, ora, accendere o spegnere, modalità, setpoint, ventilazione, preimpostazione o umidità)
 - Nuovo dispositivo *Programmazione*, aperto dal riquadro omonimo: il suo comando *Scegli il profilo* cambia tutti gli apparecchi in un colpo solo, per esempio da uno scenario delle vacanze

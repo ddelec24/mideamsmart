@@ -121,7 +121,7 @@ Commands are created automatically **according to the capabilities reported by e
 
 Text info commands hold a **stable code**, independent of the language (for example `cool`): use these codes in your scenarios. The related action commands offer translated labels. Infos already displayed by a linked action are hidden by default.
 
-The **Update commands** button of the *Commands* tab adds the missing commands, removes those of the features the appliance no longer reports, then reads its capabilities again. The names and settings of your existing commands are kept.
+The **Update commands** button of the *Commands* tab adds the missing commands, removes those of the features the appliance no longer reports, then reads its capabilities again. The names and settings of your existing commands are kept. The commands you added yourself to the equipment (logical identifier unknown to the plugin) are never removed.
 
 | Logical ID | Appliances | Content |
 |---|---|---|

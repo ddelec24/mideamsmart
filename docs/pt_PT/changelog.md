@@ -6,6 +6,8 @@
 
 # 19/10/2026
 
+- Versão beta 0.10.1
+- Os comandos adicionados à mão a um equipamento (por um script ou um cenário) já não são removidos por **Atualizar os comandos** nem ao receber as capacidades do aparelho
 - Versão beta 0.10.0
 - Nova **programação** horária: perfis comuns a todos os aparelhos (*Normal* e *Férias* por predefinição, editáveis), períodos próprios de cada aparelho (dias, hora, ligar ou desligar, modo, temperatura definida, ventilação, predefinição ou humidade)
 - Novo equipamento *Programação*, aberto pelo mosaico com o mesmo nome: o seu comando *Escolher o perfil* muda todos os aparelhos de uma só vez, por exemplo a partir de um cenário de férias

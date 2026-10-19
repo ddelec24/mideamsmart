@@ -6,6 +6,8 @@
 
 # 19/10/2026
 
+- Betaversion 0.10.1
+- Von Hand zu einem Gerät hinzugefügte Befehle (per Skript oder Szenario) werden nicht mehr durch **Befehle aktualisieren** oder beim Empfang der Gerätefunktionen entfernt
 - Betaversion 0.10.0
 - Neuer **Zeitplan**: Profile für alle Geräte (standardmäßig *Normal* und *Ferien*, änderbar), Zeitabschnitte für jedes Gerät (Tage, Uhrzeit, ein- oder ausschalten, Modus, Sollwert, Lüfterstufe, Voreinstellung oder Luftfeuchte)
 - Neues Gerät *Zeitplan*, geöffnet über die gleichnamige Kachel: Sein Befehl *Profil wählen* schaltet alle Geräte auf einmal um, zum Beispiel aus einem Ferien-Szenario

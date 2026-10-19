@@ -121,7 +121,7 @@ I comandi vengono creati automaticamente **in base alle funzionalità comunicate
 
 I comandi info di tipo testo contengono un **codice stabile**, indipendente dalla lingua (ad esempio `cool`): usa questi codici negli scenari. I comandi action associati propongono etichette tradotte. Le info già mostrate da un'azione collegata sono nascoste per impostazione predefinita.
 
-Il pulsante **Aggiorna i comandi** della scheda *Comandi* aggiunge i comandi mancanti, rimuove quelli delle funzioni che l'apparecchio non dichiara più, poi rilegge le sue funzionalità. I nomi e le impostazioni dei comandi esistenti vengono mantenuti.
+Il pulsante **Aggiorna i comandi** della scheda *Comandi* aggiunge i comandi mancanti, rimuove quelli delle funzioni che l'apparecchio non dichiara più, poi rilegge le sue funzionalità. I nomi e le impostazioni dei comandi esistenti vengono mantenuti. I comandi che hai aggiunto tu stesso al dispositivo (identificativo logico sconosciuto al plugin) non vengono mai rimossi.
 
 | Identificativo logico | Apparecchi | Contenuto |
 |---|---|---|

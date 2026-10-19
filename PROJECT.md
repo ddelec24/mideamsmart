@@ -553,3 +553,9 @@ mideamsmart/
   - champs A1 : mode, humidité, ventilation.
 - Le faux AC ne simule pas les préréglages : `setPreset sleep` est bien envoyé (log du démon), mais l'état ne change pas.
 - Captures `scheduler.png`, `device_schedule.png` et `plugin_devices.png` (tuile) prises avec `ONLY=` dans `tools/doc_screenshots.py` ; Chromium lancé avec `LANG=fr_FR.UTF-8` pour des heures sur 24 h.
+
+### 0.10.1-beta (2026-10-19) — commandes ajoutées par l'utilisateur
+- Retour testeur : une commande info ajoutée par script sur un équipement du plugin (`custom_humidite`) était supprimée par « Mettre à jour les commandes ».
+- Cause : `createCommands(true)` supprimait toute commande absente des définitions du type. Le même nettoyage tourne automatiquement au passage des capacités par défaut aux capacités reçues.
+- Correction : seules les commandes dont le logicalId est défini dans `commands.json` (autre type d'appareil, fonction non déclarée) sont supprimées ; les autres sont conservées.
+- Pas de recréation à chaque actualisation : les commandes existantes sont mises à jour sur place (mêmes id). Vérifié sur le Jeedom de dev : commande perso conservée, commande A1 sur un AC supprimée, id des commandes du plugin inchangés.

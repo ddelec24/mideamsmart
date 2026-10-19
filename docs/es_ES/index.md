@@ -121,7 +121,7 @@ Los comandos se crean automáticamente **según las capacidades que comunica cad
 
 Los comandos info de tipo texto contienen un **código estable**, independiente del idioma (por ejemplo `cool`): use estos códigos en sus escenarios. Los comandos action asociados ofrecen etiquetas traducidas. Las infos ya mostradas por una acción vinculada se ocultan por defecto.
 
-El botón **Actualizar los comandos** de la pestaña *Comandos* añade los comandos que faltan, elimina los de las funciones que el aparato ya no declara y vuelve a leer sus capacidades. Se conservan los nombres y ajustes de sus comandos existentes.
+El botón **Actualizar los comandos** de la pestaña *Comandos* añade los comandos que faltan, elimina los de las funciones que el aparato ya no declara y vuelve a leer sus capacidades. Se conservan los nombres y ajustes de sus comandos existentes. Los comandos que usted mismo haya añadido al equipo (identificador lógico desconocido para el plugin) nunca se eliminan.
 
 | Identificador lógico | Aparatos | Contenido |
 |---|---|---|

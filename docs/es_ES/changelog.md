@@ -6,6 +6,8 @@
 
 # 19/10/2026
 
+- Versión beta 0.10.1
+- Los comandos añadidos a mano a un equipo (por un script o un escenario) ya no se eliminan con **Actualizar los comandos** ni al recibir las capacidades del aparato
 - Versión beta 0.10.0
 - Nueva **programación** horaria: perfiles comunes a todos los aparatos (*Normal* y *Vacaciones* por defecto, modificables), franjas propias de cada aparato (días, hora, encender o apagar, modo, consigna, ventilación, preajuste o humedad)
 - Nuevo equipo *Programación*, abierto con el icono del mismo nombre: su comando *Elegir el perfil* cambia todos los aparatos a la vez, por ejemplo desde un escenario de vacaciones

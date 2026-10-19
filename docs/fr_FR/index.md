@@ -121,7 +121,7 @@ Les commandes sont créées automatiquement **selon les capacités remontées pa
 
 Les commandes info de type texte contiennent un **code stable**, indépendant de la langue (par exemple `cool`) : utilisez ces codes dans vos scénarios. Les commandes action associées proposent des libellés traduits. Les infos déjà affichées par une action liée sont masquées par défaut.
 
-Le bouton **Mettre à jour les commandes** de l'onglet *Commandes* ajoute les commandes manquantes, supprime celles des fonctions que l'appareil ne déclare plus, puis relit ses capacités. Les noms et réglages de vos commandes existantes sont conservés.
+Le bouton **Mettre à jour les commandes** de l'onglet *Commandes* ajoute les commandes manquantes, supprime celles des fonctions que l'appareil ne déclare plus, puis relit ses capacités. Les noms et réglages de vos commandes existantes sont conservés. Les commandes que vous avez ajoutées vous-même à l'équipement (identifiant logique inconnu du plugin) ne sont jamais supprimées.
 
 | Identifiant logique | Appareils | Contenu |
 |---|---|---|

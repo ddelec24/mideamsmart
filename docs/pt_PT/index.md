@@ -121,7 +121,7 @@ Os comandos são criados automaticamente **de acordo com as capacidades comunica
 
 Os comandos info de tipo texto contêm um **código estável**, independente do idioma (por exemplo `cool`): use estes códigos nos seus cenários. Os comandos action associados propõem etiquetas traduzidas. As infos já apresentadas por uma ação ligada ficam ocultas por predefinição.
 
-O botão **Atualizar os comandos** do separador *Comandos* adiciona os comandos em falta, remove os das funções que o aparelho já não declara e volta a ler as suas capacidades. Os nomes e definições dos comandos existentes são mantidos.
+O botão **Atualizar os comandos** do separador *Comandos* adiciona os comandos em falta, remove os das funções que o aparelho já não declara e volta a ler as suas capacidades. Os nomes e definições dos comandos existentes são mantidos. Os comandos que adicionou ao equipamento (identificador lógico desconhecido do plugin) nunca são removidos.
 
 | Identificador lógico | Aparelhos | Conteúdo |
 |---|---|---|

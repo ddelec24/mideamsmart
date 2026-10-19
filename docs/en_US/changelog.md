@@ -6,6 +6,8 @@
 
 # 19/10/2026
 
+- Beta version 0.10.1
+- The commands added by hand to an equipment (by a script or a scenario) are no longer removed by **Update commands** or when the capabilities of the appliance are received
 - Beta version 0.10.0
 - New **schedule**: profiles shared by all the appliances (*Normal* and *Holidays* by default, editable), slots specific to each appliance (days, time, turn on or off, mode, setpoint, fan speed, preset or humidity)
 - New *Schedule* equipment, opened by the tile of the same name: its *Choose the profile* command switches every appliance at once, for example from a holidays scenario
